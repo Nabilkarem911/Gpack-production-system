@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G.PACK - إدارة المخزون والأصناف</title>
+    <title>G.PACK - دليل الأصناف</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -17,9 +17,9 @@
         .gpack-btn:hover { background-color: #e6bd45; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
-        /* Modal & Loader Styles */
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+        /* Loader */
         .loader { border: 3px solid #f3f3f3; border-radius: 50%; border-top: 3px solid #3e206d; width: 20px; height: 20px; -webkit-animation: spin 1s linear infinite; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -33,6 +33,7 @@
                 <span>G.PACK</span>
             </h1>
         </div>
+
         <div class="p-6 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20">
             <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400">
                 <i class="fas fa-user text-yellow-400"></i>
@@ -42,29 +43,53 @@
                 <p class="text-xs text-gray-300">Admin</p>
             </div>
         </div>
-        <nav class="flex-1 overflow-y-auto py-4">
+
+        <nav class="flex-1 overflow-y-auto py-4 space-y-1">
             <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
                 <i class="fas fa-th-large w-5"></i> الرئيسية
             </a>
-            <a href="#" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
+            
+            <a href="products.html" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors">
+                <i class="fas fa-box w-5"></i> الأصناف
+            </a>
+
+            <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
                 <i class="fas fa-file-invoice-dollar w-5"></i> عروض الأسعار
             </a>
-            <a href="#" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
-                <i class="fas fa-industry w-5"></i> أوامر الإنتاج
+
+            <a href="production_orders.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
+                <i class="fas fa-industry w-5"></i> أوامر التشغيل
             </a>
-            <a href="#" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
-                <i class="fas fa-truck w-5"></i> الموردين
+
+            <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
+                <i class="fas fa-cubes w-5"></i> المستودعات
             </a>
-            <a href="#" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
+
+            <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
                 <i class="fas fa-users w-5"></i> العملاء
             </a>
-            <a href="products.html" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors">
-                <i class="fas fa-cubes w-5"></i> المخزون والأصناف
+
+            <a href="employees.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
+                <i class="fas fa-id-card w-5"></i> الموظفين
             </a>
-             <a href="#" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
-                <i class="fas fa-chart-line w-5"></i> التقارير
+
+            <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
+                <i class="fas fa-list-alt w-5"></i> القوائم
+            </a>
+
+            <a href="permissions.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
+                <i class="fas fa-user-shield w-5"></i> الصلاحيات
+            </a>
+
+            <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
+                <i class="fas fa-tasks w-5"></i> المهام
+            </a>
+
+            <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
+                <i class="fas fa-file-signature w-5"></i> الشروط العامة
             </a>
         </nav>
+
         <div class="p-4 border-t border-purple-800/50">
             <button class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2">
                 <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
@@ -75,14 +100,14 @@
     <main class="flex-1 flex flex-col overflow-hidden relative">
         <header class="h-20 bg-white shadow-sm flex items-center justify-between px-8 z-10">
             <div class="flex items-center gap-4">
-                <h2 class="text-xl font-bold text-gray-800">إدارة المخزون والأصناف</h2>
+                <h2 class="text-xl font-bold text-gray-800">دليل الأصناف (Master Items)</h2>
                 <div id="loadingIndicator" class="hidden flex items-center gap-2 text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
                     <div class="loader"></div> جاري التحديث...
                 </div>
             </div>
             <div class="flex items-center gap-6">
                 <div class="relative hidden md:block">
-                    <input type="text" id="searchInput" placeholder="بحث باسم الصنف..." class="pl-10 pr-4 py-2 w-64 rounded-lg bg-gray-100 border-none focus:ring-2 focus:ring-purple-500 text-sm">
+                    <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="بحث باسم الصنف..." class="pl-10 pr-4 py-2 w-64 rounded-lg bg-gray-100 border-none focus:ring-2 focus:ring-purple-500 text-sm">
                     <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
                 </div>
                 <button onclick="openAddModal()" class="gpack-btn px-4 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2">
@@ -94,24 +119,43 @@
 
         <div class="flex-1 overflow-y-auto p-8">
             
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="bg-white rounded-t-2xl border-b border-gray-100 p-4 flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-filter text-gray-400"></i>
+                    <span class="text-sm font-bold text-gray-600">تصفية:</span>
+                </div>
+                <select id="filterCategory" onchange="filterTable()" class="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block p-2.5 outline-none">
+                    <option value="all">جميع التصنيفات</option>
+                    <option value="ورقيات">ورقيات</option>
+                    <option value="بلاستيك">بلاستيك</option>
+                    <option value="طباعة">طباعة</option>
+                    <option value="تغليف">تغليف</option>
+                </select>
+                <select id="filterUnit" onchange="filterTable()" class="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block p-2.5 outline-none">
+                    <option value="all">جميع الوحدات</option>
+                    <option value="كرتون">كرتون</option>
+                    <option value="حبة">حبة</option>
+                    <option value="كيلو">كيلو</option>
+                </select>
+            </div>
+
+            <div class="bg-white rounded-b-2xl shadow-sm border border-gray-100 border-t-0 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-right">
-                        <thead class="bg-gray-50 text-gray-500 text-xs uppercase border-b border-gray-100">
+                        <thead class="bg-gray-50 text-gray-500 text-xs uppercase border-b border-gray-200">
                             <tr>
                                 <th class="px-6 py-4 font-medium">اسم الصنف</th>
                                 <th class="px-6 py-4 font-medium">التصنيف</th>
-                                <th class="px-6 py-4 font-medium">المقاس / الوحدة</th>
-                                <th class="px-6 py-4 font-medium">المورد</th>
-                                <th class="px-6 py-4 font-medium">سعر التكلفة</th>
+                                <th class="px-6 py-4 font-medium">الوحدة</th>
+                                <th class="px-6 py-4 font-medium">المقاس</th>
+                                <th class="px-6 py-4 font-medium">فترة التسليم</th>
                                 <th class="px-6 py-4 font-medium">سعر البيع</th>
-                                <th class="px-6 py-4 font-medium">المخزون الحالي</th>
-                                <th class="px-6 py-4 font-medium">الإجراء</th>
+                                <th class="px-6 py-4 font-medium">الإجراءات</th>
                             </tr>
                         </thead>
-                        <tbody id="productsTableBody" class="divide-y divide-gray-100 text-sm">
+                        <tbody id="productsTableBody" class="divide-y divide-gray-100 text-sm bg-white">
                             <tr>
-                                <td colspan="8" class="text-center py-8 text-gray-400">جاري تحميل البيانات...</td>
+                                <td colspan="7" class="text-center py-8 text-gray-400">جاري تحميل الأصناف...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -125,40 +169,34 @@
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto transform transition-all scale-95" id="productModalContent">
             <div class="modal-content py-4 text-right px-6">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100 mb-4">
-                    <p class="text-xl font-bold text-purple-800">إضافة صنف جديد</p>
+                    <p class="text-xl font-bold text-purple-800">بطاقة صنف جديد</p>
                     <div class="modal-close cursor-pointer z-50" onclick="toggleModal('productModal')">
                         <i class="fas fa-times text-gray-500 hover:text-red-500"></i>
                     </div>
                 </div>
 
                 <form id="addProductForm" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2">اسم الصنف <span class="text-red-500">*</span></label>
-                            <input type="text" id="pName" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-4 focus:border-purple-500 focus:bg-white focus:outline-none" placeholder="مثال: أكواب ورق 12 أونص" required>
-                        </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">اسم الصنف <span class="text-red-500">*</span></label>
+                        <input type="text" id="pName" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-4 focus:bg-white focus:border-purple-500 outline-none transition-colors" placeholder="مثال: أكواب ورق 12 أونص (دبل)" required>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2">التصنيف</label>
-                            <select id="pCategory" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-4 focus:border-purple-500 focus:bg-white focus:outline-none">
+                            <select id="pCategory" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-4 focus:bg-white focus:border-purple-500 outline-none">
                                 <option value="ورقيات">ورقيات</option>
                                 <option value="بلاستيك">بلاستيك</option>
-                                <option value="طباعة">خدمات طباعة</option>
-                                <option value="تغليف">مواد تغليف</option>
+                                <option value="طباعة">طباعة</option>
+                                <option value="تغليف">تغليف</option>
                                 <option value="أخرى">أخرى</option>
                             </select>
                         </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2">المقاس</label>
-                            <input type="text" id="pSize" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-4 focus:border-purple-500 focus:bg-white focus:outline-none" placeholder="مثال: 43*43 سم">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2">وحدة القياس <span class="text-red-500">*</span></label>
-                            <select id="pUnit" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-4 focus:border-purple-500 focus:bg-white focus:outline-none">
-                                <option value="حبة">حبة</option>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">وحدة القياس</label>
+                            <select id="pUnit" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-4 focus:bg-white focus:border-purple-500 outline-none">
                                 <option value="كرتون">كرتون</option>
+                                <option value="حبة">حبة</option>
                                 <option value="كيلو">كيلو</option>
                                 <option value="رولة">رولة</option>
                                 <option value="متر">متر</option>
@@ -166,39 +204,38 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2">سعر التكلفة (شراء)</label>
-                            <input type="number" step="0.01" id="pCostPrice" class="w-full bg-white border border-gray-200 rounded-lg py-2 px-4 focus:border-purple-500 focus:outline-none" placeholder="0.00" required>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">المقاس / الأبعاد</label>
+                            <input type="text" id="pSize" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-4 focus:bg-white focus:border-purple-500 outline-none" placeholder="مثال: 43*43 سم">
                         </div>
                         <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2">سعر البيع</label>
-                            <input type="number" step="0.01" id="pSellPrice" class="w-full bg-white border border-gray-200 rounded-lg py-2 px-4 focus:border-purple-500 focus:outline-none" placeholder="0.00" required>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2">المورد / المصنع</label>
-                            <select id="pSupplier" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-4 focus:border-purple-500 focus:bg-white focus:outline-none">
-                                <option value="">اختر المورد...</option>
-                                </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2">المخزون الافتتاحي</label>
-                            <input type="number" id="pStock" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-4 focus:border-purple-500 focus:bg-white focus:outline-none" value="0">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2">حد الطلب (للتنبيه)</label>
-                            <input type="number" id="pMinStock" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-4 focus:border-purple-500 focus:bg-white focus:outline-none" value="10">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">فترة التسليم المتوقعة</label>
+                            <input type="text" id="pDelivery" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-4 focus:bg-white focus:border-purple-500 outline-none" placeholder="مثال: 3-5 أيام عمل">
                         </div>
                     </div>
 
-                    <div class="pt-4 flex items-center justify-end gap-3 border-t border-gray-100 mt-4">
+                    <div class="grid grid-cols-2 gap-4 bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">سعر التكلفة (ريال)</label>
+                            <input type="number" step="0.01" id="pCost" class="w-full bg-white border border-gray-200 rounded-lg py-2 px-4 focus:border-purple-500 outline-none" placeholder="0.00" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">سعر البيع (ريال) <span class="text-red-500">*</span></label>
+                            <input type="number" step="0.01" id="pSell" class="w-full bg-white border border-gray-200 rounded-lg py-2 px-4 focus:border-purple-500 outline-none" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">ملاحظات / وصف</label>
+                        <textarea id="pNotes" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-4 focus:bg-white focus:border-purple-500 outline-none" rows="2" placeholder="مواصفات إضافية للصنف..."></textarea>
+                    </div>
+
+                    <div class="pt-4 flex items-center justify-end gap-3 border-t border-gray-100 mt-2">
                         <button type="button" onclick="toggleModal('productModal')" class="bg-gray-100 text-gray-700 py-2 px-6 rounded-lg font-bold hover:bg-gray-200 transition-colors">إلغاء</button>
                         <button type="submit" class="gpack-btn py-2 px-8 rounded-lg font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2">
                             <span id="saveBtnText">حفظ الصنف</span>
-                            <i id="saveBtnIcon" class="fas fa-check"></i>
+                            <i id="saveBtnIcon" class="fas fa-save"></i>
                         </button>
                     </div>
                 </form>
@@ -207,132 +244,15 @@
     </div>
 
     <script>
-        // إعدادات الاتصال بالسيرفر
+        // إعدادات Supabase
         const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // تنسيق العملة
         const formatCurrency = (amount) => new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR' }).format(amount);
+        let allProducts = []; // لتخزين البيانات للفلترة
 
-        // 1. جلب وعرض المنتجات
-        async function fetchProducts() {
-            document.getElementById('loadingIndicator').classList.remove('hidden');
-            
-            // جلب المنتجات مع اسم المورد (Join)
-            const { data: products, error } = await supabase
-                .from('products')
-                .select(`
-                    *,
-                    suppliers (company_name)
-                `)
-                .order('created_at', { ascending: false });
-
-            const tableBody = document.getElementById('productsTableBody');
-            tableBody.innerHTML = '';
-
-            if (error) {
-                console.error(error);
-                tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-500">حدث خطأ في جلب البيانات</td></tr>`;
-            } else if (products.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-gray-400">لا توجد أصناف مضافة. ابدأ بإضافة صنف جديد!</td></tr>`;
-            } else {
-                products.forEach(p => {
-                    // تحديد لون المخزون
-                    let stockBadge = 'bg-green-100 text-green-700';
-                    if (p.stock_quantity <= p.min_stock_level) stockBadge = 'bg-red-100 text-red-700 font-bold animate-pulse';
-                    else if (p.stock_quantity < p.min_stock_level * 2) stockBadge = 'bg-yellow-100 text-yellow-700';
-
-                    const row = `
-                        <tr class="hover:bg-purple-50 transition-colors border-b border-gray-50 last:border-none">
-                            <td class="px-6 py-4 font-bold text-gray-800">${p.name}</td>
-                            <td class="px-6 py-4 text-gray-600"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${p.category || '-'}</span></td>
-                            <td class="px-6 py-4 text-gray-600">${p.size || '-'} <span class="text-xs text-gray-400">(${p.unit})</span></td>
-                            <td class="px-6 py-4 text-blue-600 text-xs">${p.suppliers?.company_name || 'غير محدد'}</td>
-                            <td class="px-6 py-4 text-gray-600">${formatCurrency(p.purchase_price)}</td>
-                            <td class="px-6 py-4 font-bold text-green-600">${formatCurrency(p.selling_price)}</td>
-                            <td class="px-6 py-4">
-                                <span class="${stockBadge} px-3 py-1 rounded-full text-xs">${p.stock_quantity}</span>
-                            </td>
-                            <td class="px-6 py-4 flex gap-2">
-                                <button onclick="deleteProduct('${p.id}')" class="text-red-400 hover:text-red-600" title="حذف"><i class="fas fa-trash"></i></button>
-                                <button class="text-blue-400 hover:text-blue-600" title="تعديل (قريباً)"><i class="fas fa-edit"></i></button>
-                            </td>
-                        </tr>
-                    `;
-                    tableBody.innerHTML += row;
-                });
-            }
-            document.getElementById('loadingIndicator').classList.add('hidden');
-        }
-
-        // 2. جلب الموردين للقائمة المنسدلة
-        async function fetchSuppliersForDropdown() {
-            const { data: suppliers } = await supabase.from('suppliers').select('id, company_name');
-            const select = document.getElementById('pSupplier');
-            select.innerHTML = '<option value="">اختر المورد...</option>'; // Reset
-            if (suppliers) {
-                suppliers.forEach(s => {
-                    select.innerHTML += `<option value="${s.id}">${s.company_name}</option>`;
-                });
-            }
-        }
-
-        // 3. إضافة منتج جديد
-        document.getElementById('addProductForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            // UI Loading
-            const btnText = document.getElementById('saveBtnText');
-            const btnIcon = document.getElementById('saveBtnIcon');
-            const originalText = btnText.innerText;
-            btnText.innerText = 'جاري الحفظ...';
-            btnIcon.className = 'fas fa-spinner fa-spin';
-
-            // Collect Data
-            const newProduct = {
-                name: document.getElementById('pName').value,
-                category: document.getElementById('pCategory').value,
-                size: document.getElementById('pSize').value,
-                unit: document.getElementById('pUnit').value,
-                purchase_price: document.getElementById('pCostPrice').value,
-                selling_price: document.getElementById('pSellPrice').value,
-                supplier_id: document.getElementById('pSupplier').value || null, // Handle empty
-                stock_quantity: document.getElementById('pStock').value,
-                min_stock_level: document.getElementById('pMinStock').value
-            };
-
-            const { error } = await supabase.from('products').insert([newProduct]);
-
-            if (error) {
-                alert('خطأ: ' + error.message);
-            } else {
-                toggleModal('productModal');
-                document.getElementById('addProductForm').reset();
-                fetchProducts(); // Refresh Table
-                // Success Toast
-                const toast = document.createElement('div');
-                toast.className = 'fixed bottom-5 left-5 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-bounce z-50';
-                toast.innerHTML = '<i class="fas fa-check-circle"></i> تم حفظ الصنف بنجاح';
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
-            }
-
-            // Reset UI
-            btnText.innerText = originalText;
-            btnIcon.className = 'fas fa-check';
-        });
-
-        // 4. حذف منتج
-        async function deleteProduct(id) {
-            if(confirm('هل أنت متأكد من حذف هذا الصنف؟ لا يمكن التراجع.')) {
-                const { error } = await supabase.from('products').delete().eq('id', id);
-                if (!error) fetchProducts();
-                else alert('لا يمكن الحذف لأنه مرتبط بطلبات قديمة');
-            }
-        }
-
-        // Modal Logic
+        // دالة المودال
         function toggleModal(modalID) {
             const modal = document.getElementById(modalID);
             const content = document.getElementById(modalID + 'Content');
@@ -348,11 +268,131 @@
         }
 
         function openAddModal() {
-            fetchSuppliersForDropdown(); // Fetch suppliers every time we open
+            document.getElementById('addProductForm').reset();
             toggleModal('productModal');
         }
 
-        // Init
+        // جلب المنتجات
+        async function fetchProducts() {
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            
+            const { data, error } = await supabase
+                .from('products')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error(error);
+                alert("خطأ في الاتصال بقاعدة البيانات");
+            } else {
+                allProducts = data; // تخزين البيانات محلياً للفلترة
+                renderTable(allProducts);
+            }
+            document.getElementById('loadingIndicator').classList.add('hidden');
+        }
+
+        // رسم الجدول
+        function renderTable(products) {
+            const tbody = document.getElementById('productsTableBody');
+            tbody.innerHTML = '';
+
+            if (products.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400">لا توجد أصناف مطابقة</td></tr>`;
+                return;
+            }
+
+            products.forEach(p => {
+                const row = `
+                    <tr class="hover:bg-purple-50 transition-colors border-b border-gray-50 last:border-none">
+                        <td class="px-6 py-4 font-bold text-gray-800">${p.name}</td>
+                        <td class="px-6 py-4 text-gray-600"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${p.category || '-'}</span></td>
+                        <td class="px-6 py-4 text-gray-600">${p.unit}</td>
+                        <td class="px-6 py-4 text-gray-600 font-mono text-xs">${p.size || '-'}</td>
+                        <td class="px-6 py-4 text-gray-600 text-sm">${p.delivery_period || 'فوري'}</td>
+                        <td class="px-6 py-4 font-bold text-green-600">${formatCurrency(p.selling_price)}</td>
+                        <td class="px-6 py-4 flex gap-3">
+                            <button class="text-blue-500 hover:text-blue-700" title="تعديل"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:text-red-700" title="حذف"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // منطق الفلترة والبحث
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categoryFilter = document.getElementById('filterCategory').value;
+            const unitFilter = document.getElementById('filterUnit').value;
+
+            const filtered = allProducts.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(searchTerm);
+                const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
+                const matchesUnit = unitFilter === 'all' || p.unit === unitFilter;
+                return matchesSearch && matchesCategory && matchesUnit;
+            });
+
+            renderTable(filtered);
+        }
+
+        // حفظ صنف جديد
+        document.getElementById('addProductForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btnText = document.getElementById('saveBtnText');
+            const btnIcon = document.getElementById('saveBtnIcon');
+            const originalText = btnText.innerText;
+            
+            btnText.innerText = 'جاري الحفظ...';
+            btnIcon.className = 'fas fa-spinner fa-spin';
+
+            const newProduct = {
+                name: document.getElementById('pName').value,
+                category: document.getElementById('pCategory').value,
+                unit: document.getElementById('pUnit').value,
+                size: document.getElementById('pSize').value,
+                delivery_period: document.getElementById('pDelivery').value,
+                purchase_price: document.getElementById('pCost').value,
+                selling_price: document.getElementById('pSell').value,
+                notes: document.getElementById('pNotes').value,
+                // قيم افتراضية للمخزون (لأن دي صفحة تعريف أصناف مش جرد)
+                stock_quantity: 0,
+                min_stock_level: 10 
+            };
+
+            const { error } = await supabase.from('products').insert([newProduct]);
+
+            if (error) {
+                alert('خطأ: ' + error.message);
+            } else {
+                toggleModal('productModal');
+                fetchProducts(); // تحديث الجدول
+                
+                // Toast
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-5 left-5 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-bounce z-50';
+                toast.innerHTML = '<i class="fas fa-check-circle"></i> تم إضافة الصنف بنجاح';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+            
+            btnText.innerText = originalText;
+            btnIcon.className = 'fas fa-save';
+        });
+
+        // حذف صنف
+        async function deleteProduct(id) {
+            if(confirm('هل أنت متأكد من حذف هذا الصنف نهائياً؟')) {
+                const { error } = await supabase.from('products').delete().eq('id', id);
+                if(!error) {
+                    fetchProducts();
+                } else {
+                    alert("لا يمكن الحذف: هذا الصنف مرتبط بطلبات سابقة.");
+                }
+            }
+        }
+
+        // التشغيل عند الفتح
         window.onload = fetchProducts;
     </script>
 </body>
