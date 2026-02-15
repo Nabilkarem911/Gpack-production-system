@@ -19,12 +19,10 @@
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
-        
         /* تصميم التابات */
-        .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; }
+        .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; cursor: pointer; }
         .tab-btn:hover { color: #3e206d; }
         .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background-color: #f3f4f6; }
-        
         .hidden-row { display: none; }
         .rotate-180 { transform: rotate(180deg); transition: transform 0.3s; }
     </style>
@@ -169,14 +167,14 @@
         <div class="modal-container bg-white w-11/12 md:max-w-4xl mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto transform transition-all scale-95" style="max-height: 90vh;">
             <div class="modal-content py-4 text-right px-6">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100 mb-4">
-                    <p class="text-xl font-bold text-purple-800">تعريف صنف جديد</p>
+                    <p class="text-xl font-bold text-purple-800" id="productModalTitle">تعريف صنف جديد</p>
                     <div class="modal-close cursor-pointer" onclick="toggleModal('productModal')">
                         <i class="fas fa-times text-gray-500"></i>
                     </div>
                 </div>
 
                 <form id="smartProductForm" class="space-y-6">
-                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <input type="hidden" id="pId"> <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-gray-700 text-xs font-bold mb-1">اسم الصنف (مثال: أكواب ورق دبل)</label>
@@ -202,7 +200,7 @@
                         <table class="w-full text-right text-sm">
                             <thead class="bg-gray-50 text-gray-500">
                                 <tr>
-                                    <th class="p-2">اسم المقاس (مثال: 4 أونص)</th>
+                                    <th class="p-2">اسم المقاس</th>
                                     <th class="p-2">تكلفة التصنيع</th>
                                     <th class="p-2">سعر البيع</th>
                                     <th class="p-2">تنبيه المخزون</th>
@@ -230,6 +228,7 @@
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto transform transition-all scale-95">
             <div class="modal-content py-4 text-right px-6">
                 <h3 class="font-bold text-lg mb-4 text-gray-800" id="simpleModalTitle">إضافة جديد</h3>
+                <input type="hidden" id="simpleId">
                 <input type="text" id="simpleInput" class="w-full border border-gray-300 rounded-lg p-3 mb-4 focus:border-purple-500 outline-none" placeholder="الاسم...">
                 <div class="flex gap-2">
                     <button onclick="saveSimpleItem()" class="flex-1 gpack-btn py-2 rounded-lg font-bold">حفظ</button>
@@ -240,28 +239,22 @@
     </div>
 
     <script>
+        // إعداد الاتصال (اسم متغير مختلف لتجنب التعارض)
         const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // الحالة الحالية للتاب (الافتراضي: الأصناف)
         let currentTab = 'products';
 
-        // --- نظام التابات (Tabs Logic) ---
+        // --- نظام التابات ---
         function switchTab(tabName) {
             currentTab = tabName;
-            
-            // إخفاء كل المحتويات
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            
-            // إزالة التنشيط من كل الأزرار
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             
-            // إظهار المحتوى المختار
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             document.getElementById(`btn-${tabName}`).classList.add('active');
 
-            // تغيير نص الزر الرئيسي حسب التاب
             const btnText = document.getElementById('mainActionBtnText');
             if(tabName === 'products') {
                 btnText.innerText = 'إضافة صنف جديد';
@@ -275,28 +268,30 @@
             }
         }
 
-        // --- فتح المودال المناسب ---
+        // --- المودال ---
         function openActionModal() {
             if(currentTab === 'products') {
+                document.getElementById('productModalTitle').innerText = 'تعريف صنف جديد';
+                document.getElementById('pId').value = ''; // Reset ID for new
                 loadDropdowns();
                 document.getElementById('smartProductForm').reset();
                 document.getElementById('variantsContainer').innerHTML = '';
-                addVariantRow(); // إضافة صف فارغ افتراضي
+                addVariantRow();
                 toggleModal('productModal');
             } else {
-                // فتح مودال الإضافة البسيط (للتصنيفات والوحدات)
+                document.getElementById('simpleId').value = '';
                 document.getElementById('simpleInput').value = '';
                 document.getElementById('simpleModalTitle').innerText = currentTab === 'categories' ? 'إضافة تصنيف جديد' : 'إضافة وحدة قياس';
                 toggleModal('simpleModal');
             }
         }
 
-        // --- جلب وعرض المنتجات ---
+        // --- الأصناف (Products) ---
         async function fetchProducts() {
             const tbody = document.getElementById('productsTableBody');
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr>';
 
-            const { data: products, error } = await supabase
+            const { data: products, error } = await supabaseClient
                 .from('products')
                 .select(`*, categories(name), units(name)`)
                 .order('created_at', { ascending: false });
@@ -308,8 +303,8 @@
             }
 
             for(const p of products) {
-                // جلب عدد المقاسات لكل صنف
-                const { count } = await supabase.from('product_variants').select('*', { count: 'exact', head: true }).eq('product_id', p.id);
+                // جلب عدد المقاسات
+                const { count } = await supabaseClient.from('product_variants').select('*', { count: 'exact', head: true }).eq('product_id', p.id);
                 
                 const row = `
                     <tr class="hover:bg-gray-50 border-b border-gray-100 group">
@@ -322,8 +317,9 @@
                         <td class="px-6 py-4"><span class="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">${p.categories?.name || '-'}</span></td>
                         <td class="px-6 py-4 text-gray-600">${p.units?.name || '-'}</td>
                         <td class="px-6 py-4 text-gray-600"><span class="bg-blue-50 text-blue-600 px-2 rounded text-xs font-bold">${count || 0} مقاسات</span></td>
-                        <td class="px-6 py-4">
-                            <button onclick="deleteParentProduct('${p.id}')" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                        <td class="px-6 py-4 flex gap-2 justify-end">
+                            <button onclick="editProduct('${p.id}')" class="text-blue-500 hover:text-blue-700" title="تعديل"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteParentProduct('${p.id}')" class="text-red-400 hover:text-red-600" title="حذف"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                     <tr id="variants-${p.id}" class="hidden-row bg-gray-50">
@@ -350,8 +346,7 @@
                 row.classList.remove('hidden-row');
                 icon.classList.add('rotate-180');
                 
-                // جلب بيانات المقاسات
-                const { data: variants } = await supabase.from('product_variants').select('*').eq('product_id', prodId);
+                const { data: variants } = await supabaseClient.from('product_variants').select('*').eq('product_id', prodId);
                 tbody.innerHTML = '';
                 if(variants && variants.length > 0) {
                     variants.forEach(v => {
@@ -373,39 +368,89 @@
             }
         }
 
-        // --- منطق إضافة المقاسات في المودال ---
-        function addVariantRow() {
+        // --- تعديل المنتج (Edit) ---
+        async function editProduct(prodId) {
+            document.getElementById('productModalTitle').innerText = 'تعديل الصنف';
+            document.getElementById('pId').value = prodId; // Set ID
+            
+            await loadDropdowns();
+            
+            // 1. Get Parent Data
+            const { data: prod } = await supabaseClient.from('products').select('*').eq('id', prodId).single();
+            if(prod) {
+                document.getElementById('pName').value = prod.name;
+                document.getElementById('pCategorySelect').value = prod.category_id;
+                document.getElementById('pUnitSelect').value = prod.unit_id;
+            }
+
+            // 2. Get Variants Data
+            const { data: variants } = await supabaseClient.from('product_variants').select('*').eq('product_id', prodId);
             const container = document.getElementById('variantsContainer');
-            const rowId = Date.now();
+            container.innerHTML = '';
+            
+            if(variants && variants.length > 0) {
+                variants.forEach(v => {
+                    addVariantRow(v); // Pass data to fill row
+                });
+            } else {
+                addVariantRow();
+            }
+
+            toggleModal('productModal');
+        }
+
+        // --- إضافة صف مقاس (فارغ أو ببيانات) ---
+        function addVariantRow(data = null) {
+            const container = document.getElementById('variantsContainer');
+            const rowId = Date.now() + Math.random().toString(16).slice(2);
+            
+            const sizeVal = data ? data.size_name : '';
+            const costVal = data ? data.cost_price : '';
+            const sellVal = data ? data.selling_price : '';
+            const minVal = data ? data.min_stock_level : '10';
+            const varId = data ? data.id : ''; // Keep ID for updates
+
             const row = `
                 <tr id="row-${rowId}" class="border-b border-gray-50">
-                    <td class="p-2"><input type="text" name="size_name[]" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs" placeholder="مقاس.." required></td>
-                    <td class="p-2"><input type="number" name="cost_price[]" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs" placeholder="0"></td>
-                    <td class="p-2"><input type="number" name="selling_price[]" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs" placeholder="0" required></td>
-                    <td class="p-2"><input type="number" name="min_stock[]" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs" value="10"></td>
+                    <input type="hidden" name="variant_id[]" value="${varId}">
+                    <td class="p-2"><input type="text" name="size_name[]" value="${sizeVal}" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs" required></td>
+                    <td class="p-2"><input type="number" name="cost_price[]" value="${costVal}" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs"></td>
+                    <td class="p-2"><input type="number" name="selling_price[]" value="${sellVal}" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs" required></td>
+                    <td class="p-2"><input type="number" name="min_stock[]" value="${minVal}" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs"></td>
                     <td class="p-2 text-center"><button type="button" onclick="document.getElementById('row-${rowId}').remove()" class="text-red-400 hover:text-red-600"><i class="fas fa-times"></i></button></td>
                 </tr>
             `;
             container.insertAdjacentHTML('beforeend', row);
         }
 
-        // حفظ المنتج (الأب + الأبناء)
+        // --- حفظ المنتج (إضافة أو تعديل) ---
         document.getElementById('smartProductForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            const pId = document.getElementById('pId').value;
             const pName = document.getElementById('pName').value;
             const pCat = document.getElementById('pCategorySelect').value;
             const pUnit = document.getElementById('pUnitSelect').value;
 
-            // 1. حفظ الأب
-            const { data: prodData, error: prodError } = await supabase
-                .from('products')
-                .insert([{ name: pName, category_id: pCat, unit_id: pUnit }])
-                .select()
-                .single();
+            let prodData;
+            
+            // 1. Upsert Parent (Insert or Update)
+            if (pId) {
+                const { data, error } = await supabaseClient.from('products').update({ name: pName, category_id: pCat, unit_id: pUnit }).eq('id', pId).select().single();
+                prodData = data;
+            } else {
+                const { data, error } = await supabaseClient.from('products').insert([{ name: pName, category_id: pCat, unit_id: pUnit }]).select().single();
+                prodData = data;
+            }
 
-            if(prodError) { alert("خطأ: " + prodError.message); return; }
+            if(!prodData) { alert("حدث خطأ أثناء الحفظ"); return; }
 
-            // 2. تجميع وحفظ المقاسات
+            // 2. Handle Variants
+            // Note: For simplicity in this version, we will delete old variants and re-insert visible ones to sync state perfectly.
+            // (This ensures deleted rows are removed from DB).
+            if (pId) {
+                await supabaseClient.from('product_variants').delete().eq('product_id', pId);
+            }
+
             const variants = [];
             const sizes = document.getElementsByName('size_name[]');
             const costs = document.getElementsByName('cost_price[]');
@@ -419,73 +464,100 @@
                     cost_price: costs[i].value || 0,
                     selling_price: sells[i].value || 0,
                     min_stock_level: mins[i].value || 0,
-                    stock_quantity: 0
+                    stock_quantity: 0 // New variants start at 0
                 });
             }
 
-            const { error: varError } = await supabase.from('product_variants').insert(variants);
-            if(!varError) {
-                toggleModal('productModal');
-                fetchProducts();
-                // Alert Toast
-                const toast = document.createElement('div');
-                toast.className = 'fixed bottom-5 left-5 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-bounce z-50';
-                toast.innerHTML = '<i class="fas fa-check-circle"></i> تم الحفظ بنجاح';
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
+            if(variants.length > 0) {
+                await supabaseClient.from('product_variants').insert(variants);
             }
+
+            toggleModal('productModal');
+            fetchProducts();
+            alert("✅ تم الحفظ بنجاح");
         });
 
         // --- إدارة التصنيفات والوحدات ---
         async function fetchCategories() {
-            const { data } = await supabase.from('categories').select('*').order('created_at');
+            const { data } = await supabaseClient.from('categories').select('*').order('created_at');
             const list = document.getElementById('categoriesList');
             list.innerHTML = '';
-            if(data) data.forEach(c => list.innerHTML += `<li class="p-3 flex justify-between bg-gray-50 mb-1 rounded"><span>${c.name}</span> <button onclick="deleteItem('categories', '${c.id}')" class="text-red-400"><i class="fas fa-trash"></i></button></li>`);
+            if(data) data.forEach(c => {
+                list.innerHTML += `
+                <li class="p-3 flex justify-between bg-gray-50 mb-1 rounded items-center">
+                    <span>${c.name}</span>
+                    <div class="flex gap-2">
+                        <button onclick="editSimpleItem('categories', '${c.id}', '${c.name}')" class="text-blue-500"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteItem('categories', '${c.id}')" class="text-red-400"><i class="fas fa-trash"></i></button>
+                    </div>
+                </li>`;
+            });
         }
 
         async function fetchUnits() {
-            const { data } = await supabase.from('units').select('*').order('created_at');
+            const { data } = await supabaseClient.from('units').select('*').order('created_at');
             const list = document.getElementById('unitsList');
             list.innerHTML = '';
-            if(data) data.forEach(u => list.innerHTML += `<li class="p-3 flex justify-between bg-gray-50 mb-1 rounded"><span>${u.name}</span> <button onclick="deleteItem('units', '${u.id}')" class="text-red-400"><i class="fas fa-trash"></i></button></li>`);
+            if(data) data.forEach(u => {
+                list.innerHTML += `
+                <li class="p-3 flex justify-between bg-gray-50 mb-1 rounded items-center">
+                    <span>${u.name}</span>
+                    <div class="flex gap-2">
+                        <button onclick="editSimpleItem('units', '${u.id}', '${u.name}')" class="text-blue-500"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteItem('units', '${u.id}')" class="text-red-400"><i class="fas fa-trash"></i></button>
+                    </div>
+                </li>`;
+            });
+        }
+
+        function editSimpleItem(type, id, name) {
+            document.getElementById('simpleId').value = id;
+            document.getElementById('simpleInput').value = name;
+            document.getElementById('simpleModalTitle').innerText = type === 'categories' ? 'تعديل تصنيف' : 'تعديل وحدة';
+            toggleModal('simpleModal');
         }
 
         async function saveSimpleItem() {
+            const id = document.getElementById('simpleId').value;
             const name = document.getElementById('simpleInput').value;
             if(!name) return;
+            
             const table = currentTab === 'categories' ? 'categories' : 'units';
-            const { error } = await supabase.from(table).insert([{ name }]);
-            if(!error) {
-                toggleModal('simpleModal');
-                currentTab === 'categories' ? fetchCategories() : fetchUnits();
+            
+            if(id) {
+                await supabaseClient.from(table).update({ name }).eq('id', id);
+            } else {
+                await supabaseClient.from(table).insert([{ name }]);
             }
+            
+            toggleModal('simpleModal');
+            currentTab === 'categories' ? fetchCategories() : fetchUnits();
         }
 
         async function deleteItem(table, id) {
             if(confirm('حذف؟')) {
-                await supabase.from(table).delete().eq('id', id);
+                await supabaseClient.from(table).delete().eq('id', id);
                 table === 'categories' ? fetchCategories() : fetchUnits();
             }
         }
 
         async function deleteParentProduct(id) {
-            if(confirm('حذف الصنف وجميع مقاساته؟')) {
-                await supabase.from('products').delete().eq('id', id);
+            if(confirm('هل أنت متأكد من حذف الصنف وجميع مقاساته؟')) {
+                await supabaseClient.from('products').delete().eq('id', id);
                 fetchProducts();
             }
         }
 
-        // Helpers
+        // --- Helpers ---
         async function loadDropdowns() {
-            const { data: cats } = await supabase.from('categories').select('*');
+            const { data: cats } = await supabaseClient.from('categories').select('*');
             const catSelect = document.getElementById('pCategorySelect');
-            catSelect.innerHTML = '';
+            catSelect.innerHTML = '<option value="">اختر..</option>';
             if(cats) cats.forEach(c => catSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`);
 
-            const { data: units } = await supabase.from('units').select('*');
+            const { data: units } = await supabaseClient.from('units').select('*');
             const unitSelect = document.getElementById('pUnitSelect');
-            unitSelect.innerHTML = '';
+            unitSelect.innerHTML = '<option value="">اختر..</option>';
             if(units) units.forEach(u => unitSelect.innerHTML += `<option value="${u.id}">${u.name}</option>`);
         }
 
