@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G.PACK System 2.0 - Real Data</title>
+    <title>G.PACK System 2.0 - Fixed</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -20,7 +20,6 @@
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
-        /* Loading Skeleton Animation */
         .skeleton { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; background-color: #e5e7eb; border-radius: 4px; color: transparent; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
     </style>
@@ -298,10 +297,12 @@
     </div>
 
     <script>
-        // 1. إعدادات الاتصال بالسيرفر
+        // إعدادات الاتصال بالسيرفر
         const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // Fix: Use a unique variable name to avoid shadowing the global 'supabase' object
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // 2. دوال مساعدة
         const formatCurrency = (amount) => {
@@ -312,50 +313,50 @@
         async function fetchDashboardData() {
             // تحديث حالة الاتصال
             document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-wifi"></i> متصل';
-            document.getElementById('connectionStatus').classList.remove('text-red-500', 'bg-red-50');
-            document.getElementById('connectionStatus').classList.add('text-green-600', 'bg-green-50');
+            document.getElementById('connectionStatus').classList.remove('text-xs', 'text-green-600', 'bg-green-50'); // Reset style to ensure visibility if needed
+            document.getElementById('connectionStatus').className = "text-xs text-green-600 font-bold bg-green-50 px-3 py-1 rounded-full border border-green-200 flex items-center gap-1";
 
             // أ. جلب العدادات (Stats)
             try {
                 // عدد العملاء
-                const { count: clientsCount } = await supabase.from('clients').select('*', { count: 'exact', head: true });
-                document.getElementById('totalClients').innerText = clientsCount + ' عميل';
+                const { count: clientsCount } = await supabaseClient.from('clients').select('*', { count: 'exact', head: true });
+                document.getElementById('totalClients').innerText = (clientsCount || 0) + ' عميل';
 
                 // عدد العروض المعلقة (Status = quote)
-                const { count: quotesCount } = await supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'quote');
-                document.getElementById('pendingQuotes').innerText = quotesCount + ' عرض';
+                const { count: quotesCount } = await supabaseClient.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'quote');
+                document.getElementById('pendingQuotes').innerText = (quotesCount || 0) + ' عرض';
 
                 // عدد الأوامر النشطة (Status = production)
-                const { count: activeOrdersCount } = await supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'production');
-                document.getElementById('activeOrders').innerText = activeOrdersCount + ' طلبات';
+                const { count: activeOrdersCount } = await supabaseClient.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'production');
+                document.getElementById('activeOrders').innerText = (activeOrdersCount || 0) + ' طلبات';
 
-                // مبيعات الشهر الحالي (يحتاج دالة تجميع، سنحسبها في المتصفح مؤقتاً)
+                // مبيعات الشهر الحالي
                 const startOfMonth = new Date();
                 startOfMonth.setDate(1);
                 startOfMonth.setHours(0,0,0,0);
                 
-                const { data: salesData } = await supabase
+                const { data: salesData } = await supabaseClient
                     .from('orders')
                     .select('total_amount')
                     .gte('created_at', startOfMonth.toISOString());
                 
-                const totalSales = salesData.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+                const totalSales = salesData ? salesData.reduce((sum, order) => sum + (order.total_amount || 0), 0) : 0;
                 document.getElementById('monthlySales').innerText = formatCurrency(totalSales);
 
             } catch (err) {
                 console.error("Error fetching stats:", err);
             }
 
-            // ب. جلب أحدث الطلبات (Recent Orders Table)
+            // ب. جلب أحدث الطلبات
             try {
-                const { data: recentOrders, error } = await supabase
+                const { data: recentOrders, error } = await supabaseClient
                     .from('orders')
                     .select('*, clients(name)')
                     .order('created_at', { ascending: false })
                     .limit(5);
 
                 const tableBody = document.getElementById('recentOrdersTable');
-                tableBody.innerHTML = ''; // مسح الرسالة القديمة
+                tableBody.innerHTML = '';
 
                 if (recentOrders && recentOrders.length > 0) {
                     recentOrders.forEach(order => {
@@ -386,9 +387,9 @@
                 console.error("Error fetching table:", err);
             }
 
-            // ج. جلب حالة المخزون (Products)
+            // ج. جلب حالة المخزون
             try {
-                const { data: products } = await supabase
+                const { data: products } = await supabaseClient
                     .from('products')
                     .select('name, stock_quantity, min_stock_level')
                     .limit(3);
@@ -398,7 +399,6 @@
 
                 if (products && products.length > 0) {
                     products.forEach(product => {
-                        // حساب نسبة المخزون (افتراضي 1000 كحد أقصى للعرض فقط)
                         const maxStock = 1000;
                         const percentage = Math.min((product.stock_quantity / maxStock) * 100, 100);
                         
@@ -440,34 +440,30 @@
                 console.error("Error fetching products:", err);
             }
 
-            // د. تحديث الرسم البياني (بيانات حقيقية - مبيعات السنة)
+            // د. تحديث الرسم البياني
             await updateChartWithRealData();
         }
 
         async function updateChartWithRealData() {
-            // جلب كل طلبات السنة الحالية
             const currentYear = new Date().getFullYear();
-            const { data: yearlyOrders } = await supabase
+            const { data: yearlyOrders } = await supabaseClient
                 .from('orders')
                 .select('created_at, total_amount')
                 .gte('created_at', `${currentYear}-01-01`);
 
-            // تجهيز مصفوفة الشهور (12 شهر)
             const salesByMonth = Array(12).fill(0);
             const ordersByMonth = Array(12).fill(0);
 
             if (yearlyOrders) {
                 yearlyOrders.forEach(order => {
-                    const monthIndex = new Date(order.created_at).getMonth(); // 0 = Jan
+                    const monthIndex = new Date(order.created_at).getMonth();
                     salesByMonth[monthIndex] += order.total_amount;
                     ordersByMonth[monthIndex] += 1;
                 });
             }
 
-            // إعداد الرسم البياني
             const ctx = document.getElementById('salesChart').getContext('2d');
             
-            // تدمير الرسم القديم لو موجود
             if(window.myChart instanceof Chart) {
                 window.myChart.destroy();
             }
@@ -515,10 +511,8 @@
             });
         }
 
-        // تشغيل التحميل عند فتح الصفحة
         window.onload = fetchDashboardData;
 
-        // Modal Logic (نفس السابق)
         function toggleModal(modalID){
             const modal = document.getElementById(modalID);
             const content = document.getElementById(modalID + 'Content');
@@ -549,7 +543,7 @@
             const city = document.getElementById('clientCity').value;
             const address = document.getElementById('clientAddress').value;
 
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('clients')
                 .insert([{ name: name, phone: phone, city: city, address: address }])
                 .select();
@@ -557,7 +551,7 @@
             if (error) {
                 alert('خطأ: ' + error.message);
             } else {
-                fetchDashboardData(); // تحديث الداشبورد بالكامل
+                fetchDashboardData(); 
                 toggleModal('clientModal');
                 document.getElementById('addClientForm').reset();
                 const toast = document.createElement('div');
