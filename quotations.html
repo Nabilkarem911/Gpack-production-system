@@ -24,49 +24,33 @@
         .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
         .search-item:hover { background-color: #f9f9f9; }
 
-        /* ================= طباعة احترافية (A4) ================= */
+        /* طباعة A4 */
         @media print {
             @page { size: A4; margin: 0; }
             body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            
             aside, header, #listView, #quoteControls, .no-print, .actions-col, #addClientBtn, #topBar { display: none !important; }
-            
-            #quoteFormView { 
-                display: block !important; 
-                position: absolute; top: 0; left: 0; 
-                width: 210mm; min-height: 297mm; 
-                padding: 0; margin: 0; 
-                box-shadow: none; border: none; 
-            }
+            #quoteFormView { display: block !important; position: absolute; top: 0; left: 0; width: 210mm; min-height: 297mm; padding: 0; margin: 0; box-shadow: none; border: none; }
             .print-container { padding: 10mm; }
-
             .print-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 3px solid #3e206d; padding-bottom: 15px; margin-bottom: 20px; }
             .print-table th { background-color: #3e206d !important; color: white !important; -webkit-print-color-adjust: exact; }
             .print-table tr:nth-child(even) { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
-
-            /* نقط الشروط الملونة */
+            input, select, textarea { border: none !important; background: transparent !important; resize: none; appearance: none; padding: 0; }
+            
+            /* الشروط */
             .term-row { display: flex; align-items: center; margin-bottom: 8px; }
-            .term-bullet { 
-                display: inline-block !important; 
-                width: 12px; height: 12px; 
-                background-color: #3e206d !important; 
-                border-radius: 50%; 
-                margin-left: 10px; 
-                flex-shrink: 0; 
-                -webkit-print-color-adjust: exact;
-            }
+            .term-bullet { display: inline-block !important; width: 10px; height: 10px; background-color: #3e206d !important; border-radius: 50%; margin-left: 10px; flex-shrink: 0; -webkit-print-color-adjust: exact; }
             .term-row input[type="checkbox"] { display: none; }
             .term-row:has(input[type="checkbox"]:not(:checked)) { display: none; }
-            .term-text { border: none !important; padding: 0 !important; font-size: 12px; width: 100%; font-weight: 600; color: #374151; }
+            .term-checkbox { display: none !important; }
+            .term-text { border: none !important; padding: 0 !important; font-size: 11px; width: 100%; font-weight: 600; color: #374151; }
 
-            /* جدول الإجماليات */
+            /* الإجماليات */
             .totals-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             .totals-table td { padding: 8px; border-bottom: 1px solid #eee; }
-            .totals-label { text-align: right; font-weight: bold; color: #4b5563; width: 60%; }
-            .totals-value { text-align: left; font-family: monospace; font-weight: bold; width: 40%; direction: ltr; }
+            .totals-label { text-align: left; font-weight: bold; color: #4b5563; padding-left: 10px; }
+            .totals-value { text-align: right; font-family: monospace; font-weight: bold; direction: ltr; }
 
-            /* الفوتر */
-            .print-footer { display: block !important; position: fixed; bottom: 0; left: 0; width: 100%; background: #3e206d !important; color: white !important; padding: 10px 20px; -webkit-print-color-adjust: exact; }
+            .print-footer { display: block !important; position: fixed; bottom: 0; left: 0; width: 100%; background: #3e206d !important; color: white !important; padding: 10px; -webkit-print-color-adjust: exact; }
             .bank-info { font-size: 14px; font-weight: bold; }
         }
     </style>
@@ -76,18 +60,12 @@
     <aside class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-20 hidden md:flex no-print">
         <div class="h-20 flex items-center justify-center border-b border-purple-800/50">
             <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2">
-                <i class="fas fa-box-open gpack-yellow"></i>
-                <span>G.PACK</span>
+                <i class="fas fa-box-open gpack-yellow"></i> <span>G.PACK</span>
             </h1>
         </div>
         <div class="p-6 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20">
-            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400">
-                <i class="fas fa-user text-yellow-400"></i>
-            </div>
-            <div>
-                <p class="text-sm font-bold">المدير العام</p>
-                <p class="text-xs text-gray-300">Admin</p>
-            </div>
+            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400"><i class="fas fa-user text-yellow-400"></i></div>
+            <div><p class="text-sm font-bold">المدير العام</p><p class="text-xs text-gray-300">Admin</p></div>
         </div>
         <nav class="flex-1 overflow-y-auto py-4 space-y-1">
             <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors"><i class="fas fa-th-large w-5"></i> الرئيسية</a>
@@ -103,9 +81,7 @@
             <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors"><i class="fas fa-file-signature w-5"></i> الشروط العامة</a>
         </nav>
         <div class="p-4 border-t border-purple-800/50">
-            <button class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2">
-                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-            </button>
+            <button class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
         </div>
     </aside>
 
@@ -147,6 +123,7 @@
 
             <div id="quoteFormView" class="hidden bg-white rounded-2xl shadow-lg border border-gray-100 p-0 max-w-5xl mx-auto print:p-0 print:border-none print:shadow-none">
                 <div class="print-container p-10">
+                    
                     <div class="hidden print-header">
                         <div class="flex items-center gap-4 w-2/3">
                             <img src="https://i.postimg.cc/GHsRS3C1/logo.png" alt="G.PACK" style="height: 100px; width: auto;">
@@ -208,12 +185,8 @@
                             <tbody id="itemsContainer" class="text-sm"></tbody>
                         </table>
                         <div class="flex gap-2 mt-2 no-print">
-                            <button type="button" onclick="addItemRow()" class="flex-1 text-sm text-purple-600 font-bold hover:bg-purple-50 px-4 py-2 border border-dashed border-purple-300 rounded transition">
-                                + إضافة بند
-                            </button>
-                            <button type="button" onclick="openMiniProductModal()" class="bg-green-50 text-green-600 px-4 py-2 rounded border border-green-200 hover:bg-green-100 text-sm font-bold">
-                                <i class="fas fa-magic"></i> إضافة صنف/مقاس سريع
-                            </button>
+                            <button onclick="addItemRow()" class="flex-1 text-sm text-purple-600 font-bold hover:bg-purple-50 px-4 py-2 border border-dashed border-purple-300 rounded transition">+ إضافة بند</button>
+                            <button onclick="openMiniProductModal()" class="bg-green-50 text-green-600 px-4 py-2 rounded border border-green-200 hover:bg-green-100 text-sm font-bold"><i class="fas fa-magic"></i> إضافة صنف/مقاس سريع</button>
                         </div>
                     </div>
 
@@ -262,9 +235,9 @@
                     </div>
 
                     <div class="mt-8 pt-4 border-t flex justify-end gap-3 no-print mx-6" id="quoteControls">
-                        <button type="button" onclick="closeForm()" class="bg-gray-100 px-6 py-2 rounded font-bold hover:bg-gray-200">إلغاء</button>
-                        <button type="button" onclick="preparePrint()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700 shadow-md"><i class="fas fa-print"></i> معاينة وطباعة</button>
-                        <button type="button" onclick="saveQuote()" id="saveBtn" class="bg-green-600 text-white px-8 py-2 rounded font-bold shadow-md hover:bg-green-700"><i class="fas fa-save"></i> حفظ</button>
+                        <button onclick="closeForm()" class="bg-gray-100 px-6 py-2 rounded font-bold hover:bg-gray-200">إلغاء</button>
+                        <button onclick="preparePrint()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700 shadow-md"><i class="fas fa-print"></i> معاينة وطباعة</button>
+                        <button onclick="saveQuote()" id="saveBtn" class="bg-green-600 text-white px-8 py-2 rounded font-bold shadow-md hover:bg-green-700"><i class="fas fa-save"></i> حفظ</button>
                     </div>
                 </div>
             </div>
@@ -279,8 +252,8 @@
             <input type="text" id="mcPerson" class="w-full border p-2 rounded mb-2" placeholder="الشخص المسؤول">
             <input type="tel" id="mcPhone" class="w-full border p-2 rounded mb-4" placeholder="الجوال">
             <div class="flex justify-end gap-2">
-                <button type="button" onclick="toggleModal('miniClientModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button>
-                <button type="button" onclick="saveMiniClient()" class="gpack-btn px-4 py-2 rounded">حفظ</button>
+                <button onclick="toggleModal('miniClientModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button>
+                <button onclick="saveMiniClient()" class="gpack-btn px-4 py-2 rounded">حفظ</button>
             </div>
         </div>
     </div>
@@ -297,7 +270,7 @@
             <div id="existProdInputs" class="hidden"><select id="mpExistSelect" class="w-full border p-2 rounded mb-2 bg-white"></select></div>
             <input type="text" id="mpSize" class="w-full border p-2 rounded mb-2" placeholder="المقاس">
             <input type="number" id="mpPrice" class="w-full border p-2 rounded mb-4" placeholder="السعر">
-            <div class="flex justify-end gap-2"><button type="button" onclick="toggleModal('miniProductModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button><button type="button" onclick="saveMiniProduct()" class="gpack-btn px-4 py-2 rounded">حفظ</button></div>
+            <div class="flex justify-end gap-2"><button onclick="toggleModal('miniProductModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button><button onclick="saveMiniProduct()" class="gpack-btn px-4 py-2 rounded">حفظ</button></div>
         </div>
     </div>
 
@@ -310,13 +283,11 @@
             </h3>
             <div class="overflow-x-auto max-h-80 overflow-y-auto border rounded-lg">
                 <table class="w-full text-right text-sm">
-                    <thead class="bg-purple-50 text-purple-900 sticky top-0">
-                        <tr><th class="p-2">الصنف</th><th class="p-2">المقاس</th><th class="p-2">الكمية</th><th class="p-2">السعر</th><th class="p-2">التاريخ</th><th class="p-2">الحالة</th></tr>
-                    </thead>
+                    <thead class="bg-purple-50 text-purple-900 sticky top-0"><tr><th class="p-2">الصنف</th><th class="p-2">المقاس</th><th class="p-2">الكمية</th><th class="p-2">السعر</th><th class="p-2">التاريخ</th></tr></thead>
                     <tbody id="infoHistoryList" class="bg-white text-gray-700 divide-y"></tbody>
                 </table>
             </div>
-            <div class="mt-4 pt-2 border-t text-right"><button type="button" onclick="toggleModal('clientInfoModal')" class="bg-gray-100 px-4 py-1 rounded text-sm font-bold">إغلاق</button></div>
+            <div class="mt-4 pt-2 border-t text-right"><button onclick="toggleModal('clientInfoModal')" class="bg-gray-100 px-4 py-1 rounded text-sm font-bold">إغلاق</button></div>
         </div>
     </div>
 
@@ -331,7 +302,7 @@
                     <tbody id="productHistoryBody" class="bg-white"></tbody>
                 </table>
             </div>
-            <div class="mt-4 pt-2 border-t text-right"><button type="button" onclick="toggleModal('productHistoryModal')" class="bg-gray-100 px-4 py-1 rounded text-sm">إغلاق</button></div>
+            <div class="mt-4 pt-2 border-t text-right"><button onclick="toggleModal('productHistoryModal')" class="bg-gray-100 px-4 py-1 rounded text-sm">إغلاق</button></div>
         </div>
     </div>
 
@@ -340,7 +311,7 @@
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h3 class="font-bold text-lg text-purple-800">تحويل لإنتاج / استلام دفعة</h3>
-                <button type="button" onclick="toggleModal('convertModal')"><i class="fas fa-times text-gray-500"></i></button>
+                <button onclick="toggleModal('convertModal')"><i class="fas fa-times text-gray-500"></i></button>
             </div>
             <input type="hidden" id="convQuoteId"><input type="hidden" id="convClientId">
             <div class="bg-green-50 p-4 rounded-lg mb-4 border border-green-100">
@@ -356,8 +327,8 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 pt-4 border-t">
-                <button type="button" onclick="toggleModal('convertModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button>
-                <button type="button" onclick="executeConversion()" class="gpack-btn px-6 py-2 rounded font-bold shadow">تأكيد وتحويل</button>
+                <button onclick="toggleModal('convertModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button>
+                <button onclick="executeConversion()" class="gpack-btn px-6 py-2 rounded font-bold shadow">تأكيد وتحويل</button>
             </div>
         </div>
     </div>
@@ -417,10 +388,10 @@
             if(orders && orders.length > 0) {
                 orders.forEach(o => {
                     let actions = isArchiveView ? 
-                        `<button type="button" onclick="restoreQuote('${o.id}')" class="text-green-500 hover:bg-green-50 p-2 rounded" title="استرجاع"><i class="fas fa-trash-restore"></i></button>` :
-                        `<button type="button" onclick="editQuote('${o.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded" title="تعديل"><i class="fas fa-edit"></i></button>
-                         <button type="button" onclick="openConvertModal('${o.id}', '${o.client_id}')" class="text-green-500 hover:bg-green-50 p-2 rounded" title="تحويل"><i class="fas fa-money-bill-wave"></i></button>
-                         <button type="button" onclick="archiveQuote('${o.id}')" class="text-red-500 hover:bg-red-50 p-2 rounded" title="أرشفة"><i class="fas fa-trash"></i></button>`;
+                        `<button onclick="restoreQuote('${o.id}')" class="text-green-500 hover:bg-green-50 p-2 rounded" title="استرجاع"><i class="fas fa-trash-restore"></i></button>` :
+                        `<button onclick="editQuote('${o.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded" title="تعديل"><i class="fas fa-edit"></i></button>
+                         <button onclick="openConvertModal('${o.id}', '${o.client_id}')" class="text-green-500 hover:bg-green-50 p-2 rounded" title="تحويل"><i class="fas fa-money-bill-wave"></i></button>
+                         <button onclick="archiveQuote('${o.id}')" class="text-red-500 hover:bg-red-50 p-2 rounded" title="أرشفة"><i class="fas fa-trash"></i></button>`;
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-gray-50 border-b">
@@ -441,23 +412,29 @@
             const container = document.getElementById('itemsContainer');
             const rowId = Date.now() + Math.random().toString(16).slice(2);
             
-            const row = `
-                <tr id="row-${rowId}" class="border-b hover:bg-gray-50">
-                    <td class="p-2 border text-center w-10 index-cell"></td>
-                    <td class="p-2 border relative flex items-center gap-2">
-                        <input type="text" class="w-full border-none bg-transparent p-1 text-sm prod-search outline-none" placeholder="ابحث..." oninput="searchProduct(this, '${rowId}')" onfocus="searchProduct(this, '${rowId}')" value="${data ? data.pName : ''}">
-                        <button type="button" onclick="showProductHistory('${rowId}')" class="text-gray-400 hover:text-purple-600 no-print" title="تاريخ الصنف"><i class="fas fa-eye"></i></button>
-                        <div id="res-${rowId}" class="search-results shadow-lg"></div>
-                    </td>
-                    <td class="p-2 border"><select id="var-${rowId}" onchange="onVariantSelect(this, '${rowId}')" class="w-full border-none bg-transparent text-sm outline-none"><option value="${data ? data.variant_id : ''}">...</option></select></td>
-                    <td class="p-2 border"><input type="number" id="qty-${rowId}" oninput="calcRow('${rowId}')" value="${data ? data.quantity : 1}" min="1" class="w-full border-none bg-transparent text-center font-bold outline-none"></td>
-                    <td class="p-2 border"><input type="number" id="price-${rowId}" oninput="calcRow('${rowId}')" value="${data ? data.unit_price : 0}" class="w-full border-none bg-transparent text-center outline-none"></td>
-                    <td class="p-2 border text-center font-bold text-gray-700 row-total" id="total-${rowId}">0.00</td>
-                    <td class="p-2 border text-center no-print"><button type="button" onclick="this.closest('tr').remove(); reindexRows(); calculateTotals()" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></td>
-                </tr>`;
-            container.insertAdjacentHTML('beforeend', row);
+            const row = document.createElement('tr');
+            row.id = `row-${rowId}`;
+            row.className = "border-b hover:bg-gray-50";
+            row.innerHTML = `
+                <td class="p-2 border text-center w-10 index-cell"></td>
+                <td class="p-2 border relative flex items-center gap-2">
+                    <input type="text" class="w-full border-none bg-transparent p-1 text-sm prod-search outline-none" placeholder="ابحث..." oninput="searchProduct(this, '${rowId}')" onfocus="searchProduct(this, '${rowId}')">
+                    <button type="button" onclick="showProductHistory('${rowId}')" class="text-gray-400 hover:text-purple-600 no-print" title="تاريخ الصنف"><i class="fas fa-eye"></i></button>
+                    <div id="res-${rowId}" class="search-results shadow-lg"></div>
+                </td>
+                <td class="p-2 border"><select id="var-${rowId}" onchange="onVariantSelect(this, '${rowId}')" class="w-full border-none bg-transparent text-sm outline-none"><option value="">...</option></select></td>
+                <td class="p-2 border"><input type="number" id="qty-${rowId}" oninput="calcRow('${rowId}')" value="1" min="1" class="w-full border-none bg-transparent text-center font-bold outline-none"></td>
+                <td class="p-2 border"><input type="number" id="price-${rowId}" oninput="calcRow('${rowId}')" value="0" class="w-full border-none bg-transparent text-center outline-none"></td>
+                <td class="p-2 border text-center font-bold text-gray-700 row-total" id="total-${rowId}">0.00</td>
+                <td class="p-2 border text-center no-print"><button type="button" onclick="this.closest('tr').remove(); reindexRows(); calculateTotals()" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></td>
+            `;
+            container.appendChild(row);
             
             if(data) {
+                // Manually set values after row creation to ensure they stick
+                row.querySelector('.prod-search').value = data.pName;
+                document.getElementById(`qty-${rowId}`).value = data.quantity;
+                document.getElementById(`price-${rowId}`).value = data.unit_price;
                 const prod = productsList.find(p => p.name === data.pName);
                 if(prod) fillVariants(prod, rowId, data.variant_id);
                 calcRow(rowId);
@@ -526,7 +503,7 @@
             document.getElementById('grandTotal').innerText = (sub * 1.15).toFixed(2);
         }
 
-        // --- Terms (Auto Populate) ---
+        // --- Terms (Editable) ---
         function renderTermsList() {
             const list = document.getElementById('termsList');
             list.innerHTML = '';
