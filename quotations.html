@@ -15,42 +15,61 @@
         .gpack-yellow { color: #fccf4d; }
         .gpack-btn { background-color: #fccf4d; color: #3e206d; transition: all 0.3s; }
         .gpack-btn:hover { background-color: #e6bd45; transform: translateY(-2px); }
+        
         .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
+        
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         
+        /* Search Dropdown */
         .search-results { position: absolute; background: white; border: 1px solid #ddd; max-height: 150px; overflow-y: auto; width: 100%; z-index: 50; top: 100%; display: none; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
         .search-item:hover { background-color: #f9f9f9; }
 
-        /* طباعة A4 */
+        /* Print CSS - Fixed */
         @media print {
             @page { size: A4; margin: 0; }
             body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             aside, header, #listView, #quoteControls, .no-print, .actions-col, #addClientBtn, #topBar { display: none !important; }
-            #quoteFormView { display: block !important; position: absolute; top: 0; left: 0; width: 210mm; min-height: 297mm; padding: 0; margin: 0; box-shadow: none; border: none; }
+            
+            #quoteFormView { 
+                display: block !important; 
+                position: absolute; top: 0; left: 0; 
+                width: 210mm; min-height: 297mm; 
+                padding: 0; margin: 0; 
+                box-shadow: none; border: none; 
+            }
             .print-container { padding: 10mm; }
+
             .print-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 3px solid #3e206d; padding-bottom: 15px; margin-bottom: 20px; }
             .print-table th { background-color: #3e206d !important; color: white !important; -webkit-print-color-adjust: exact; }
             .print-table tr:nth-child(even) { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
+            
             input, select, textarea { border: none !important; background: transparent !important; resize: none; appearance: none; padding: 0; }
             
-            /* الشروط */
+            /* Terms with Dots */
             .term-row { display: flex; align-items: center; margin-bottom: 8px; }
-            .term-bullet { display: inline-block !important; width: 10px; height: 10px; background-color: #3e206d !important; border-radius: 50%; margin-left: 10px; flex-shrink: 0; -webkit-print-color-adjust: exact; }
+            .term-bullet { 
+                display: inline-block !important; 
+                width: 10px; height: 10px; 
+                background-color: #3e206d !important; 
+                border-radius: 50%; 
+                margin-left: 10px; 
+                flex-shrink: 0; 
+                -webkit-print-color-adjust: exact;
+            }
             .term-row input[type="checkbox"] { display: none; }
             .term-row:has(input[type="checkbox"]:not(:checked)) { display: none; }
-            .term-checkbox { display: none !important; }
             .term-text { border: none !important; padding: 0 !important; font-size: 11px; width: 100%; font-weight: 600; color: #374151; }
 
-            /* الإجماليات */
+            /* Totals Table */
             .totals-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             .totals-table td { padding: 8px; border-bottom: 1px solid #eee; }
             .totals-label { text-align: left; font-weight: bold; color: #4b5563; padding-left: 10px; }
             .totals-value { text-align: right; font-family: monospace; font-weight: bold; direction: ltr; }
 
-            .print-footer { display: block !important; position: fixed; bottom: 0; left: 0; width: 100%; background: #3e206d !important; color: white !important; padding: 10px; -webkit-print-color-adjust: exact; }
+            .print-footer { display: block !important; position: fixed; bottom: 0; left: 0; width: 100%; background: #3e206d !important; color: white !important; padding: 15px; -webkit-print-color-adjust: exact; }
             .bank-info { font-size: 14px; font-weight: bold; }
         }
     </style>
@@ -59,9 +78,7 @@
 
     <aside class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-20 hidden md:flex no-print">
         <div class="h-20 flex items-center justify-center border-b border-purple-800/50">
-            <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2">
-                <i class="fas fa-box-open gpack-yellow"></i> <span>G.PACK</span>
-            </h1>
+            <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2"><i class="fas fa-box-open gpack-yellow"></i> <span>G.PACK</span></h1>
         </div>
         <div class="p-6 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20">
             <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400"><i class="fas fa-user text-yellow-400"></i></div>
@@ -147,9 +164,9 @@
                             <div class="flex-1">
                                 <label class="block text-sm font-bold mb-1 text-purple-900">العميل</label>
                                 <div class="flex gap-2">
-                                    <select id="qClient" class="w-full border rounded p-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
-                                    <button type="button" onclick="showClientInfo()" class="bg-blue-100 text-blue-600 px-3 rounded hover:bg-blue-200" title="سجل تعاملات العميل"><i class="fas fa-history"></i></button>
-                                    <button type="button" onclick="openMiniClientModal()" class="bg-purple-100 text-purple-700 px-3 rounded hover:bg-purple-200" title="عميل جديد"><i class="fas fa-plus"></i></button>
+                                    <select id="qClient" class="w-full border rounded p-2 bg-white text-sm"></select>
+                                    <button onclick="showClientInfo()" type="button" class="bg-blue-100 text-blue-600 px-3 rounded hover:bg-blue-200" title="سجل تعاملات العميل"><i class="fas fa-history"></i></button>
+                                    <button onclick="openMiniClientModal()" type="button" class="bg-purple-100 text-purple-700 px-3 rounded hover:bg-purple-200" title="عميل جديد"><i class="fas fa-plus"></i></button>
                                 </div>
                             </div>
                             <div>
@@ -170,7 +187,7 @@
                     </div>
 
                     <div class="mb-6 mx-6 print:mx-0">
-                        <table class="w-full text-right border-collapse print-table">
+                        <table class="w-full text-right border-collapse print-table" id="itemsTable">
                             <thead class="bg-purple-900 text-white text-sm">
                                 <tr>
                                     <th class="p-3 border w-10 text-center">#</th>
@@ -185,13 +202,13 @@
                             <tbody id="itemsContainer" class="text-sm"></tbody>
                         </table>
                         <div class="flex gap-2 mt-2 no-print">
-                            <button onclick="addItemRow()" class="flex-1 text-sm text-purple-600 font-bold hover:bg-purple-50 px-4 py-2 border border-dashed border-purple-300 rounded transition">+ إضافة بند</button>
-                            <button onclick="openMiniProductModal()" class="bg-green-50 text-green-600 px-4 py-2 rounded border border-green-200 hover:bg-green-100 text-sm font-bold"><i class="fas fa-magic"></i> إضافة صنف/مقاس سريع</button>
+                            <button onclick="addItemRow()" type="button" class="flex-1 text-sm text-purple-600 font-bold hover:bg-purple-50 px-4 py-2 border border-dashed border-purple-300 rounded transition">+ إضافة بند</button>
+                            <button onclick="openMiniProductModal()" type="button" class="bg-green-50 text-green-600 px-4 py-2 rounded border border-green-200 hover:bg-green-100 text-sm font-bold"><i class="fas fa-magic"></i> إضافة صنف/مقاس سريع</button>
                         </div>
                     </div>
 
                     <div class="mb-6 mx-6 print:mx-0 page-break-inside-avoid">
-                        <h3 class="font-bold text-gray-800 mb-2 border-b pb-1">الشروط والأحكام والملاحظات:</h3>
+                        <h3 class="font-bold text-gray-800 mb-2 border-b pb-1">الشروط والأحكام:</h3>
                         <div id="termsList" class="space-y-1 text-sm text-gray-700"></div>
                         <textarea id="customTerms" class="w-full border rounded p-2 mt-4 text-sm bg-gray-50 no-print focus:ring-1 focus:ring-purple-500" placeholder="ملاحظات إضافية لهذا العرض فقط..."></textarea>
                         <p id="printCustomTerms" class="hidden text-sm mt-2 font-bold"></p>
@@ -263,8 +280,8 @@
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <h3 class="font-bold text-lg mb-4 text-purple-800">إضافة صنف/مقاس</h3>
             <div class="flex gap-2 mb-4 bg-gray-100 p-1 rounded">
-                <button type="button" onclick="toggleProductMode('new')" id="btnNewProd" class="flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800">صنف جديد</button>
-                <button type="button" onclick="toggleProductMode('exist')" id="btnExistProd" class="flex-1 py-1 rounded text-sm text-gray-500">إضافة مقاس</button>
+                <button onclick="toggleProductMode('new')" id="btnNewProd" class="flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800">صنف جديد</button>
+                <button onclick="toggleProductMode('exist')" id="btnExistProd" class="flex-1 py-1 rounded text-sm text-gray-500">إضافة مقاس</button>
             </div>
             <div id="newProdInputs"><input type="text" id="mpName" class="w-full border p-2 rounded mb-2" placeholder="اسم الصنف"></div>
             <div id="existProdInputs" class="hidden"><select id="mpExistSelect" class="w-full border p-2 rounded mb-2 bg-white"></select></div>
@@ -380,10 +397,13 @@
             const tbody = document.getElementById('quotesTableBody');
             tbody.innerHTML = '';
             
-            let query = supabaseClient.from('orders').select('*, clients(name)').eq('status', 'quote').order('created_at', { ascending: false });
-            if (isArchiveView) query = supabaseClient.from('orders').select('*, clients(name)').eq('status', 'archived').order('created_at', { ascending: false });
-
-            const { data: orders } = await query;
+            // Fixed: Explicit Status Check
+            let statusQuery = isArchiveView ? 'archived' : 'quote';
+            const { data: orders } = await supabaseClient
+                .from('orders')
+                .select('*, clients(name)')
+                .eq('status', statusQuery)
+                .order('created_at', { ascending: false });
 
             if(orders && orders.length > 0) {
                 orders.forEach(o => {
@@ -412,9 +432,10 @@
             const container = document.getElementById('itemsContainer');
             const rowId = Date.now() + Math.random().toString(16).slice(2);
             
+            // Create Row Element first
             const row = document.createElement('tr');
-            row.id = `row-${rowId}`;
             row.className = "border-b hover:bg-gray-50";
+            row.id = `row-${rowId}`;
             row.innerHTML = `
                 <td class="p-2 border text-center w-10 index-cell"></td>
                 <td class="p-2 border relative flex items-center gap-2">
@@ -428,10 +449,10 @@
                 <td class="p-2 border text-center font-bold text-gray-700 row-total" id="total-${rowId}">0.00</td>
                 <td class="p-2 border text-center no-print"><button type="button" onclick="this.closest('tr').remove(); reindexRows(); calculateTotals()" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></td>
             `;
-            container.appendChild(row);
-            
+            container.appendChild(row); // Append first
+
+            // Fill Data if Edit
             if(data) {
-                // Manually set values after row creation to ensure they stick
                 row.querySelector('.prod-search').value = data.pName;
                 document.getElementById(`qty-${rowId}`).value = data.quantity;
                 document.getElementById(`price-${rowId}`).value = data.unit_price;
