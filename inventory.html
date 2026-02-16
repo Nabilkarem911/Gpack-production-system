@@ -23,10 +23,8 @@
         .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; cursor: pointer; padding: 10px 20px; }
         .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background-color: #f9fafb; }
         
-        /* حالة المخزون */
-        .stock-high { color: #10B981; background: #ECFDF5; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
-        .stock-low { color: #EF4444; background: #FEF2F2; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
-        .stock-med { color: #F59E0B; background: #FFFBEB; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
+        .stock-high { color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .stock-low { color: #b91c1c; background: #fee2e2; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -86,7 +84,6 @@
         </header>
 
         <div class="flex-1 overflow-y-auto p-8">
-            
             <div class="bg-white rounded-t-2xl border-b border-gray-100 flex overflow-x-auto">
                 <button onclick="switchTab('stock')" id="tab-stock-btn" class="tab-btn active">أرصدة الأصناف</button>
                 <button onclick="switchTab('warehouses')" id="tab-warehouses-btn" class="tab-btn">المستودعات</button>
@@ -97,21 +94,11 @@
                 
                 <div id="tab-stock" class="tab-content block">
                     <div class="flex justify-between mb-4">
-                        <input type="text" id="stockSearch" onkeyup="filterStock()" placeholder="بحث باسم الصنف أو المقاس..." class="border rounded-lg p-2 w-64 text-sm focus:outline-none focus:border-purple-500">
-                        <select id="warehouseFilter" onchange="filterStock()" class="border rounded-lg p-2 text-sm w-48">
-                            <option value="all">كل المستودعات</option>
-                        </select>
+                        <input type="text" id="stockSearch" onkeyup="filterStock()" placeholder="بحث..." class="border rounded-lg p-2 w-64 text-sm focus:outline-none focus:border-purple-500">
+                        <select id="warehouseFilter" onchange="filterStock()" class="border rounded-lg p-2 text-sm w-48"><option value="all">كل المستودعات</option></select>
                     </div>
                     <table class="w-full text-right text-sm">
-                        <thead class="bg-gray-50 text-gray-600">
-                            <tr>
-                                <th class="p-3">اسم الصنف</th>
-                                <th class="p-3">المقاس</th>
-                                <th class="p-3">المستودع</th>
-                                <th class="p-3 text-center">الكمية الحالية</th>
-                                <th class="p-3">الحالة</th>
-                            </tr>
-                        </thead>
+                        <thead class="bg-gray-50 text-gray-600"><tr><th class="p-3">اسم الصنف</th><th class="p-3">المقاس</th><th class="p-3">المستودع</th><th class="p-3 text-center">الكمية</th><th class="p-3">الحالة</th></tr></thead>
                         <tbody id="stockTableBody"></tbody>
                     </table>
                 </div>
@@ -125,92 +112,64 @@
 
                 <div id="tab-movements" class="tab-content hidden">
                     <table class="w-full text-right text-sm">
-                        <thead class="bg-gray-50 text-gray-600">
-                            <tr>
-                                <th class="p-3">التاريخ</th>
-                                <th class="p-3">نوع الحركة</th>
-                                <th class="p-3">الصنف / المقاس</th>
-                                <th class="p-3">من</th>
-                                <th class="p-3">إلى</th>
-                                <th class="p-3">الكمية</th>
-                                <th class="p-3">ملاحظات</th>
-                            </tr>
-                        </thead>
+                        <thead class="bg-gray-50 text-gray-600"><tr><th class="p-3">التاريخ</th><th class="p-3">النوع</th><th class="p-3">الصنف</th><th class="p-3">من</th><th class="p-3">إلى</th><th class="p-3">الكمية</th><th class="p-3">ملاحظات</th></tr></thead>
                         <tbody id="movementsTableBody"></tbody>
                     </table>
                 </div>
-
             </div>
         </div>
     </main>
 
     <div id="moveModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-lg mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto transform transition-all scale-95 p-6">
+        <div class="modal-container bg-white w-11/12 md:max-w-lg mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <div class="flex justify-between items-center pb-3 border-b mb-4">
                 <p class="text-xl font-bold text-gray-800">حركة مخزون جديدة</p>
                 <button onclick="toggleModal('moveModal')"><i class="fas fa-times text-gray-500"></i></button>
             </div>
             <form id="moveForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold mb-1">نوع الحركة</label>
-                    <div class="flex gap-2">
-                        <label class="flex-1 cursor-pointer">
-                            <input type="radio" name="moveType" value="supply" checked class="peer sr-only">
-                            <div class="bg-gray-100 peer-checked:bg-green-100 peer-checked:text-green-700 peer-checked:border-green-500 border border-transparent rounded-lg p-2 text-center text-sm font-bold transition">📥 توريد (إضافة)</div>
-                        </label>
-                        <label class="flex-1 cursor-pointer">
-                            <input type="radio" name="moveType" value="dispense" class="peer sr-only">
-                            <div class="bg-gray-100 peer-checked:bg-red-100 peer-checked:text-red-700 peer-checked:border-red-500 border border-transparent rounded-lg p-2 text-center text-sm font-bold transition">📤 صرف (خصم)</div>
-                        </label>
-                        <label class="flex-1 cursor-pointer">
-                            <input type="radio" name="moveType" value="adjust" class="peer sr-only">
-                            <div class="bg-gray-100 peer-checked:bg-yellow-100 peer-checked:text-yellow-700 peer-checked:border-yellow-500 border border-transparent rounded-lg p-2 text-center text-sm font-bold transition">⚖️ جرد (تسوية)</div>
-                        </label>
-                    </div>
+                <div class="flex gap-2 bg-gray-100 p-1 rounded-lg">
+                    <label class="flex-1 cursor-pointer"><input type="radio" name="moveType" value="supply" checked class="peer sr-only"><div class="peer-checked:bg-white peer-checked:shadow text-center p-2 rounded text-sm font-bold text-gray-600 peer-checked:text-green-600">📥 توريد (زيادة)</div></label>
+                    <label class="flex-1 cursor-pointer"><input type="radio" name="moveType" value="dispense" class="peer sr-only"><div class="peer-checked:bg-white peer-checked:shadow text-center p-2 rounded text-sm font-bold text-gray-600 peer-checked:text-red-600">📤 صرف (خصم)</div></label>
                 </div>
-                
-                <div>
-                    <label class="block text-sm font-bold mb-1">المستودع</label>
-                    <select id="mWarehouse" class="w-full border rounded p-2 text-sm bg-white" required></select>
-                </div>
-
+                <div><label class="block text-sm font-bold mb-1">المستودع</label><select id="mWarehouse" class="w-full border p-2 rounded"></select></div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold mb-1">الصنف</label>
-                        <select id="mProduct" onchange="loadVariantsForMove(this.value)" class="w-full border rounded p-2 text-sm bg-white" required>
-                            <option value="">اختر الصنف...</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold mb-1">المقاس</label>
-                        <select id="mVariant" class="w-full border rounded p-2 text-sm bg-white" disabled required>
-                            <option value="">...</option>
-                        </select>
-                    </div>
+                    <div><label class="block text-sm font-bold mb-1">الصنف</label><select id="mProduct" onchange="loadVariantsForMove(this.value, 'mVariant')" class="w-full border p-2 rounded"><option>اختر..</option></select></div>
+                    <div><label class="block text-sm font-bold mb-1">المقاس</label><select id="mVariant" class="w-full border p-2 rounded" disabled><option>...</option></select></div>
                 </div>
+                <div><label class="block text-sm font-bold mb-1">الكمية</label><input type="number" id="mQty" class="w-full border p-2 rounded text-center" min="1" required></div>
+                <div><label class="block text-sm font-bold mb-1">ملاحظات</label><input type="text" id="mNotes" class="w-full border p-2 rounded" placeholder="رقم الفاتورة..."></div>
+                <div class="pt-4 flex justify-end gap-2 border-t"><button type="button" onclick="toggleModal('moveModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button><button type="submit" class="gpack-btn px-6 py-2 rounded font-bold">تنفيذ</button></div>
+            </form>
+        </div>
+    </div>
 
-                <div>
-                    <label class="block text-sm font-bold mb-1">الكمية</label>
-                    <input type="number" id="mQty" class="w-full border rounded p-2 text-center font-bold" min="1" required>
+    <div id="transferModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-lg mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
+            <div class="flex justify-between items-center pb-3 border-b mb-4">
+                <p class="text-xl font-bold text-gray-800">نقل داخلي بين المستودعات</p>
+                <button onclick="toggleModal('transferModal')"><i class="fas fa-times text-gray-500"></i></button>
+            </div>
+            <form id="transferForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-bold mb-1 text-red-600">من مستودع (سحب)</label><select id="tFrom" class="w-full border p-2 rounded bg-red-50"></select></div>
+                    <div><label class="block text-sm font-bold mb-1 text-green-600">إلى مستودع (إيداع)</label><select id="tTo" class="w-full border p-2 rounded bg-green-50"></select></div>
                 </div>
-
-                <div>
-                    <label class="block text-sm font-bold mb-1">ملاحظات / سبب الحركة</label>
-                    <input type="text" id="mNotes" class="w-full border rounded p-2 text-sm" placeholder="مثال: فاتورة شراء رقم 101">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-bold mb-1">الصنف</label><select id="tProduct" onchange="loadVariantsForMove(this.value, 'tVariant')" class="w-full border p-2 rounded"><option>اختر..</option></select></div>
+                    <div><label class="block text-sm font-bold mb-1">المقاس</label><select id="tVariant" class="w-full border p-2 rounded" disabled><option>...</option></select></div>
                 </div>
-
-                <div class="pt-4 flex justify-end gap-2 border-t">
-                    <button type="button" onclick="toggleModal('moveModal')" class="bg-gray-100 px-4 py-2 rounded font-bold">إلغاء</button>
-                    <button type="submit" class="gpack-btn px-6 py-2 rounded font-bold shadow-md">تنفيذ الحركة</button>
-                </div>
+                <div><label class="block text-sm font-bold mb-1">الكمية</label><input type="number" id="tQty" class="w-full border p-2 rounded text-center" min="1" required></div>
+                <div><label class="block text-sm font-bold mb-1">ملاحظات</label><input type="text" id="tNotes" class="w-full border p-2 rounded"></div>
+                <div class="pt-4 flex justify-end gap-2 border-t"><button type="button" onclick="toggleModal('transferModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button><button type="submit" class="gpack-btn px-6 py-2 rounded font-bold">نقل</button></div>
             </form>
         </div>
     </div>
 
     <div id="warehouseModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto transform transition-all scale-95 p-6">
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <div class="flex justify-between items-center pb-3 border-b mb-4">
                 <p class="text-xl font-bold text-purple-800" id="whModalTitle">إضافة مستودع</p>
                 <button onclick="toggleModal('warehouseModal')"><i class="fas fa-times text-gray-500"></i></button>
@@ -218,12 +177,9 @@
             <form id="warehouseForm" class="space-y-4">
                 <input type="hidden" id="whId">
                 <div><label class="text-sm font-bold">اسم المستودع</label><input type="text" id="whName" class="w-full border p-2 rounded" required></div>
-                <div><label class="text-sm font-bold">العنوان / الموقع</label><input type="text" id="whLoc" class="w-full border p-2 rounded"></div>
-                <div><label class="text-sm font-bold">مدير المستودع</label><input type="text" id="whMgr" class="w-full border p-2 rounded"></div>
-                <div class="pt-4 flex justify-end gap-2 border-t">
-                    <button type="button" onclick="toggleModal('warehouseModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button>
-                    <button type="submit" class="gpack-btn px-6 py-2 rounded font-bold">حفظ</button>
-                </div>
+                <div><label class="text-sm font-bold">العنوان</label><input type="text" id="whLoc" class="w-full border p-2 rounded"></div>
+                <div><label class="text-sm font-bold">المدير</label><input type="text" id="whMgr" class="w-full border p-2 rounded"></div>
+                <div class="pt-4 flex justify-end gap-2 border-t"><button type="button" onclick="toggleModal('warehouseModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button><button type="submit" class="gpack-btn px-6 py-2 rounded font-bold">حفظ</button></div>
             </form>
         </div>
     </div>
@@ -238,7 +194,7 @@
 
         window.onload = async () => {
             await fetchWarehouses();
-            await fetchProductsList(); // For dropdowns
+            await fetchProductsList();
             switchTab('stock');
         };
 
@@ -248,27 +204,30 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             document.getElementById(`tab-${tabName}-btn`).classList.add('active');
-            
             if(tabName === 'stock') fetchStock();
             if(tabName === 'warehouses') renderWarehouses();
             if(tabName === 'movements') fetchMovements();
         }
 
-        // --- Warehouses Logic ---
+        // --- Warehouses ---
         async function fetchWarehouses() {
             const { data } = await supabaseClient.from('warehouses').select('*').order('created_at');
             allWarehouses = data || [];
             
-            // Populate Dropdowns
+            // Populate Dropdowns (Move & Transfer)
             const filters = document.getElementById('warehouseFilter');
             const moveSelect = document.getElementById('mWarehouse');
+            const fromSelect = document.getElementById('tFrom');
+            const toSelect = document.getElementById('tTo');
             
             filters.innerHTML = '<option value="all">كل المستودعات</option>';
-            moveSelect.innerHTML = '';
+            moveSelect.innerHTML = ''; fromSelect.innerHTML = ''; toSelect.innerHTML = '';
             
             allWarehouses.forEach(w => {
                 filters.innerHTML += `<option value="${w.id}">${w.name}</option>`;
                 moveSelect.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                fromSelect.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                toSelect.innerHTML += `<option value="${w.id}">${w.name}</option>`;
             });
         }
 
@@ -288,23 +247,13 @@
                         <h3 class="font-bold text-gray-800 text-lg">${w.name}</h3>
                         <p class="text-gray-500 text-sm mb-1"><i class="fas fa-map-marker-alt w-4"></i> ${w.location || '-'}</p>
                         <p class="text-gray-500 text-sm"><i class="fas fa-user-tie w-4"></i> ${w.manager_name || '-'}</p>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
         // --- Stock Logic ---
         async function fetchStock() {
-            // Complex join to get Product Name, Variant Name, Warehouse Name
-            const { data, error } = await supabaseClient
-                .from('warehouse_stock')
-                .select(`
-                    *,
-                    warehouses(name),
-                    product_variants(size_name, min_stock_level, products(name))
-                `);
-            
-            if(error) console.error(error);
+            const { data } = await supabaseClient.from('warehouse_stock').select(`*, warehouses(name), product_variants(size_name, min_stock_level, products(name))`);
             allStock = data || [];
             renderStock(allStock);
         }
@@ -312,72 +261,57 @@
         function renderStock(stockData) {
             const tbody = document.getElementById('stockTableBody');
             tbody.innerHTML = '';
-            if(stockData.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">المستودعات فارغة</td></tr>'; return; }
-
+            if(stockData.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">لا يوجد مخزون</td></tr>'; return; }
             stockData.forEach(s => {
-                // Determine Status
                 const min = s.product_variants.min_stock_level || 10;
                 let status = '<span class="stock-high">متوفر</span>';
-                if(s.quantity <= 0) status = '<span class="bg-red-100 text-red-800 px-2 rounded text-xs font-bold">نفذت الكمية</span>';
-                else if(s.quantity <= min) status = `<span class="stock-low">منخفض (أقل من ${min})</span>`;
-
-                tbody.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-3 font-bold text-gray-700">${s.product_variants.products.name}</td>
-                        <td class="p-3 text-gray-600">${s.product_variants.size_name}</td>
-                        <td class="p-3 text-blue-600">${s.warehouses.name}</td>
-                        <td class="p-3 text-center font-mono font-bold text-lg">${s.quantity}</td>
-                        <td class="p-3">${status}</td>
-                    </tr>
-                `;
+                if(s.quantity <= 0) status = '<span class="text-red-600 font-bold text-xs bg-red-100 px-2 rounded">نفذت</span>';
+                else if(s.quantity <= min) status = `<span class="stock-low">منخفض</span>`;
+                tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-3 font-bold">${s.product_variants.products.name}</td><td class="p-3 text-gray-600">${s.product_variants.size_name}</td><td class="p-3 text-blue-600">${s.warehouses.name}</td><td class="p-3 text-center font-mono font-bold text-lg">${s.quantity}</td><td class="p-3">${status}</td></tr>`;
             });
         }
 
         function filterStock() {
             const term = document.getElementById('stockSearch').value.toLowerCase();
             const wh = document.getElementById('warehouseFilter').value;
-            
-            const filtered = allStock.filter(s => {
-                const matchesName = s.product_variants.products.name.toLowerCase().includes(term) || s.product_variants.size_name.toLowerCase().includes(term);
-                const matchesWh = wh === 'all' || s.warehouse_id === wh;
-                return matchesName && matchesWh;
-            });
+            const filtered = allStock.filter(s => (s.product_variants.products.name.toLowerCase().includes(term) || s.product_variants.size_name.toLowerCase().includes(term)) && (wh === 'all' || s.warehouse_id === wh));
             renderStock(filtered);
         }
 
         // --- Movements Logic ---
         async function fetchMovements() {
-            const { data } = await supabaseClient
-                .from('inventory_transactions')
-                .select(`*, product_variants(size_name, products(name)), warehouse_from:warehouses!warehouse_from(name), warehouse_to:warehouses!warehouse_to(name)`)
-                .order('created_at', {ascending: false})
-                .limit(50);
-            
+            const { data } = await supabaseClient.from('inventory_transactions').select(`*, product_variants(size_name, products(name)), warehouse_from:warehouses!warehouse_from(name), warehouse_to:warehouses!warehouse_to(name)`).order('created_at', {ascending: false}).limit(50);
             const tbody = document.getElementById('movementsTableBody');
             tbody.innerHTML = '';
-            
             if(data) data.forEach(m => {
-                let typeBadge = '';
-                if(m.transaction_type === 'supply') typeBadge = '<span class="text-green-600 font-bold">📥 توريد</span>';
-                if(m.transaction_type === 'dispense') typeBadge = '<span class="text-red-600 font-bold">📤 صرف</span>';
-                if(m.transaction_type === 'transfer') typeBadge = '<span class="text-blue-600 font-bold">🔄 نقل</span>';
-                if(m.transaction_type === 'adjust') typeBadge = '<span class="text-yellow-600 font-bold">⚖️ جرد</span>';
-
-                tbody.innerHTML += `
-                    <tr class="border-b text-xs">
-                        <td class="p-3">${new Date(m.created_at).toLocaleDateString()}</td>
-                        <td class="p-3">${typeBadge}</td>
-                        <td class="p-3 font-bold">${m.product_variants.products.name} (${m.product_variants.size_name})</td>
-                        <td class="p-3">${m.warehouse_from ? m.warehouse_from.name : '-'}</td>
-                        <td class="p-3">${m.warehouse_to ? m.warehouse_to.name : '-'}</td>
-                        <td class="p-3 font-mono font-bold text-lg">${m.quantity}</td>
-                        <td class="p-3 text-gray-500">${m.notes || ''}</td>
-                    </tr>
-                `;
+                let badge = '';
+                if(m.transaction_type === 'supply') badge = '<span class="text-green-600 font-bold">📥 توريد</span>';
+                if(m.transaction_type === 'dispense') badge = '<span class="text-red-600 font-bold">📤 صرف</span>';
+                if(m.transaction_type === 'transfer') badge = '<span class="text-blue-600 font-bold">🔄 نقل</span>';
+                tbody.innerHTML += `<tr class="border-b text-xs"><td class="p-3">${new Date(m.created_at).toLocaleDateString()}</td><td class="p-3">${badge}</td><td class="p-3 font-bold">${m.product_variants.products.name} (${m.product_variants.size_name})</td><td class="p-3">${m.warehouse_from?.name || '-'}</td><td class="p-3">${m.warehouse_to?.name || '-'}</td><td class="p-3 font-mono font-bold text-lg">${m.quantity}</td><td class="p-3 text-gray-500">${m.notes || ''}</td></tr>`;
             });
         }
 
-        // --- Transaction Processing ---
+        // --- Modals ---
+        function openMoveModal() { toggleModal('moveModal'); }
+        function openTransferModal() { toggleModal('transferModal'); }
+
+        async function fetchProductsList() {
+            const { data } = await supabaseClient.from('products').select('id, name');
+            const options = data.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            document.getElementById('mProduct').innerHTML = '<option value="">اختر..</option>' + options;
+            document.getElementById('tProduct').innerHTML = '<option value="">اختر..</option>' + options;
+        }
+
+        async function loadVariantsForMove(prodId, targetId) {
+            const sel = document.getElementById(targetId);
+            sel.innerHTML = '<option>...</option>';
+            const { data } = await supabaseClient.from('product_variants').select('*').eq('product_id', prodId);
+            sel.innerHTML = '';
+            if(data) { sel.disabled = false; data.forEach(v => sel.innerHTML += `<option value="${v.id}">${v.size_name}</option>`); }
+        }
+
+        // --- Submit: Add/Dispense ---
         document.getElementById('moveForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const type = document.querySelector('input[name="moveType"]:checked').value;
@@ -386,56 +320,55 @@
             const qty = parseInt(document.getElementById('mQty').value);
             const notes = document.getElementById('mNotes').value;
 
-            if(!whId || !varId || qty <= 0) return alert("بيانات غير صحيحة");
+            // Get Current Stock
+            const { data: stockData } = await supabaseClient.from('warehouse_stock').select('*').match({ warehouse_id: whId, variant_id: varId }).single();
+            const currentQty = stockData ? stockData.quantity : 0;
 
-            // 1. Get current stock
-            const { data: currentStock } = await supabaseClient.from('warehouse_stock').select('*').match({ warehouse_id: whId, variant_id: varId }).single();
-            const oldQty = currentStock ? currentStock.quantity : 0;
-            let newQty = oldQty;
+            if(type === 'dispense' && currentQty < qty) return alert("الرصيد غير كافي!");
 
-            // 2. Calculate New Qty
-            if(type === 'supply') newQty = oldQty + qty;
-            else if (type === 'dispense') newQty = oldQty - qty;
-            else if (type === 'adjust') newQty = qty; // In adjust, input is the FINAL quantity
-
-            // 3. Update DB
-            const { error } = await supabaseClient.from('warehouse_stock').upsert({ warehouse_id: whId, variant_id: varId, quantity: newQty });
+            const newQty = type === 'supply' ? currentQty + qty : currentQty - qty;
             
-            if(error) { alert("خطأ: " + error.message); return; }
-
-            // 4. Log Transaction
+            // Update Stock
+            await supabaseClient.from('warehouse_stock').upsert({ warehouse_id: whId, variant_id: varId, quantity: newQty });
+            
+            // Log Transaction
             await supabaseClient.from('inventory_transactions').insert([{
-                variant_id: varId,
-                warehouse_to: (type === 'supply') ? whId : null,
-                warehouse_from: (type === 'dispense') ? whId : null, // Simply logging source/dest based on logic
-                quantity: qty,
-                transaction_type: type,
-                notes: notes
+                variant_id: varId, warehouse_to: type === 'supply' ? whId : null, warehouse_from: type === 'dispense' ? whId : null, quantity: qty, transaction_type: type, notes
             }]);
 
-            toggleModal('moveModal');
-            fetchStock();
-            alert("✅ تمت العملية بنجاح");
+            toggleModal('moveModal'); fetchStock(); alert('تمت العملية ✅');
         });
 
-        // --- Helpers ---
-        async function fetchProductsList() {
-            const { data } = await supabaseClient.from('products').select('id, name');
-            const sel = document.getElementById('mProduct');
-            sel.innerHTML = '<option value="">اختر الصنف...</option>';
-            if(data) data.forEach(p => sel.innerHTML += `<option value="${p.id}">${p.name}</option>`);
-        }
+        // --- Submit: Transfer ---
+        document.getElementById('transferForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fromWh = document.getElementById('tFrom').value;
+            const toWh = document.getElementById('tTo').value;
+            const varId = document.getElementById('tVariant').value;
+            const qty = parseInt(document.getElementById('tQty').value);
+            const notes = document.getElementById('tNotes').value;
 
-        async function loadVariantsForMove(prodId) {
-            const sel = document.getElementById('mVariant');
-            sel.innerHTML = '<option>...</option>';
-            const { data } = await supabaseClient.from('product_variants').select('*').eq('product_id', prodId);
-            sel.innerHTML = '';
-            if(data) {
-                sel.disabled = false;
-                data.forEach(v => sel.innerHTML += `<option value="${v.id}">${v.size_name}</option>`);
-            }
-        }
+            if(fromWh === toWh) return alert("لا يمكن النقل لنفس المستودع");
+
+            // Check Source Stock
+            const { data: sourceStock } = await supabaseClient.from('warehouse_stock').select('*').match({ warehouse_id: fromWh, variant_id: varId }).single();
+            if(!sourceStock || sourceStock.quantity < qty) return alert("الرصيد في المستودع المصدر غير كافي!");
+
+            // Update Source (Subtract)
+            await supabaseClient.from('warehouse_stock').update({ quantity: sourceStock.quantity - qty }).match({ warehouse_id: fromWh, variant_id: varId });
+
+            // Update Dest (Add)
+            const { data: destStock } = await supabaseClient.from('warehouse_stock').select('*').match({ warehouse_id: toWh, variant_id: varId }).single();
+            const destQty = destStock ? destStock.quantity : 0;
+            await supabaseClient.from('warehouse_stock').upsert({ warehouse_id: toWh, variant_id: varId, quantity: destQty + qty });
+
+            // Log Transaction
+            await supabaseClient.from('inventory_transactions').insert([{
+                variant_id: varId, warehouse_from: fromWh, warehouse_to: toWh, quantity: qty, transaction_type: 'transfer', notes
+            }]);
+
+            toggleModal('transferModal'); fetchStock(); alert('تم النقل بنجاح 🔄');
+        });
 
         // --- Warehouse CRUD ---
         function openWarehouseModal() {
@@ -458,35 +391,20 @@
         document.getElementById('warehouseForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('whId').value;
-            const data = {
-                name: document.getElementById('whName').value,
-                location: document.getElementById('whLoc').value,
-                manager_name: document.getElementById('whMgr').value
-            };
-            
+            const data = { name: document.getElementById('whName').value, location: document.getElementById('whLoc').value, manager_name: document.getElementById('whMgr').value };
             if(id) await supabaseClient.from('warehouses').update(data).eq('id', id);
             else await supabaseClient.from('warehouses').insert([data]);
-            
-            toggleModal('warehouseModal');
-            fetchWarehouses();
-            // If in warehouse tab, re-render
-            if(document.getElementById('tab-warehouses').classList.contains('block')) renderWarehouses();
+            toggleModal('warehouseModal'); fetchWarehouses();
         });
 
         async function deleteWarehouse(id) {
-            if(confirm('هل أنت متأكد؟ سيتم مسح جميع الأرصدة المرتبطة بهذا المستودع!')) {
-                await supabaseClient.from('warehouses').delete().eq('id', id);
-                fetchWarehouses();
-                if(document.getElementById('tab-warehouses').classList.contains('block')) renderWarehouses();
-            }
+            if(confirm('هل أنت متأكد؟')) { await supabaseClient.from('warehouses').delete().eq('id', id); fetchWarehouses(); }
         }
 
         function toggleModal(id) {
             const el = document.getElementById(id);
-            el.classList.toggle('opacity-0');
-            el.classList.toggle('pointer-events-none');
-            el.querySelector('.modal-container').classList.toggle('scale-95');
-            el.querySelector('.modal-container').classList.toggle('scale-100');
+            el.classList.toggle('opacity-0'); el.classList.toggle('pointer-events-none');
+            el.querySelector('.modal-container').classList.toggle('scale-95'); el.querySelector('.modal-container').classList.toggle('scale-100');
         }
     </script>
 </body>
