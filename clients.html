@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G.PACK - بروفايل العميل الشامل</title>
+    <title>G.PACK - أرشيف العملاء</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -20,13 +20,13 @@
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         
-        /* Tabs Styling */
         .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; cursor: pointer; padding: 10px 15px; white-space: nowrap; }
         .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background-color: #f9fafb; }
         
-        /* Pantone Chip */
-        .pantone-chip { width: 40px; height: 40px; border-radius: 8px; border: 1px solid #ddd; display: inline-block; position: relative; }
-        .pantone-chip:hover::after { content: attr(title); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 2px 6px; font-size: 10px; border-radius: 4px; white-space: nowrap; }
+        /* تصميم البانتون الجديد */
+        .pantone-card { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; width: 100px; text-align: center; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .pantone-color { height: 60px; width: 100%; }
+        .pantone-info { padding: 8px; font-size: 10px; color: #374151; font-weight: bold; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -182,12 +182,12 @@
                             <div class="flex justify-between mb-4">
                                 <h3 class="font-bold">كشف الحساب</h3>
                                 <div class="flex gap-2">
-                                    <button onclick="addTransaction('invoice')" class="bg-red-50 text-red-600 px-3 py-1 rounded text-xs border border-red-200">+ فاتورة</button>
-                                    <button onclick="addTransaction('payment')" class="bg-green-50 text-green-600 px-3 py-1 rounded text-xs border border-green-200">+ دفعة</button>
+                                    <button onclick="addTransaction('invoice')" class="bg-red-50 text-red-600 px-3 py-1 rounded text-xs border border-red-200">+ فاتورة يدوية</button>
+                                    <button onclick="addTransaction('payment')" class="bg-green-50 text-green-600 px-3 py-1 rounded text-xs border border-green-200">+ دفعة يدوية</button>
                                 </div>
                             </div>
                             <table class="w-full text-right text-sm bg-white rounded shadow-sm border">
-                                <thead class="bg-gray-100"><tr><th class="p-3">التاريخ</th><th class="p-3">البيان / الوصف</th><th class="p-3">مدين (عليه)</th><th class="p-3">دائن (دفع)</th></tr></thead>
+                                <thead class="bg-gray-100"><tr><th class="p-3">التاريخ</th><th class="p-3">البيان</th><th class="p-3">مدين (عليه)</th><th class="p-3">دائن (دفع)</th></tr></thead>
                                 <tbody id="financeTable"></tbody>
                             </table>
                         </div>
@@ -214,15 +214,15 @@
                                 <div class="bg-white p-4 rounded shadow-sm">
                                     <h4 class="font-bold mb-3 border-b pb-2 flex justify-between">
                                         <span>🎨 ألوان البانتون</span>
-                                        <button onclick="addPantone()" class="text-xs bg-gray-100 px-2 rounded">+ إضافة</button>
+                                        <button onclick="addPantone()" class="text-xs bg-gray-100 px-2 rounded hover:bg-gray-200">+ إضافة</button>
                                     </h4>
-                                    <div id="pantoneContainer" class="flex flex-wrap gap-2"></div>
+                                    <div id="pantoneContainer" class="flex flex-wrap gap-3"></div>
                                 </div>
 
                                 <div class="bg-white p-4 rounded shadow-sm">
                                     <h4 class="font-bold mb-3 border-b pb-2">📂 الملفات والتصاميم</h4>
                                     <div class="flex gap-2 mb-3">
-                                        <input type="text" id="fileDesc" class="border p-1 text-xs w-1/3 rounded" placeholder="اسم الملف">
+                                        <input type="text" id="fileDesc" class="border p-1 text-xs w-1/3 rounded" placeholder="وصف الملف">
                                         <input type="file" id="fileUpload" class="border p-1 text-xs flex-1 rounded">
                                         <button onclick="uploadClientFile()" class="bg-purple-600 text-white px-3 rounded text-xs">رفع</button>
                                     </div>
@@ -263,7 +263,19 @@
             if(clients.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">لا يوجد عملاء</td></tr>'; return; }
             clients.forEach(c => {
                 const locCount = c.locations ? c.locations.length : 0;
-                tbody.innerHTML += `<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4 font-bold text-gray-800">${c.name}</td><td class="px-6 py-4 text-gray-600">${c.contact_person||'-'}</td><td class="px-6 py-4">${c.city||'-'}</td><td class="px-6 py-4 font-mono">${c.phone||'-'}</td><td class="px-6 py-4"><span class="bg-purple-100 text-purple-700 px-2 rounded-full text-xs">${locCount} موقع</span></td><td class="px-6 py-4 flex gap-2"><button onclick="openProfile('${c.id}')" class="text-gray-500 hover:text-purple-600"><i class="fas fa-folder-open"></i></button><button onclick="deleteClient('${c.id}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td></tr>`;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 border-b last:border-none">
+                        <td class="px-6 py-4 font-bold text-gray-800">${c.name}</td>
+                        <td class="px-6 py-4 text-gray-600">${c.contact_person||'-'}</td>
+                        <td class="px-6 py-4">${c.city||'-'}</td>
+                        <td class="px-6 py-4 font-mono">${c.phone||'-'}</td>
+                        <td class="px-6 py-4"><span class="bg-purple-100 text-purple-700 px-2 rounded-full text-xs">${locCount} موقع</span></td>
+                        <td class="px-6 py-4 flex gap-2">
+                            <button onclick="openProfile('${c.id}')" class="text-gray-500 hover:text-purple-600" title="الملف"><i class="fas fa-folder-open"></i></button>
+                            <button onclick="editClient('${c.id}')" class="text-blue-500 hover:text-blue-700" title="تعديل"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteClient('${c.id}')" class="text-red-500 hover:text-red-700" title="حذف"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
             });
         }
 
@@ -272,49 +284,39 @@
             renderClients(allClients.filter(c => c.name.toLowerCase().includes(term) || (c.contact_person && c.contact_person.toLowerCase().includes(term))));
         }
 
-        // --- Tabs Logic ---
+        // --- Tabs ---
         function switchTab(tabName) {
             document.querySelectorAll('.profile-tab').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             document.getElementById(`tab-${tabName}-btn`).classList.add('active');
-            
             if(tabName === 'finance') loadFinance(currentProfileId);
             if(tabName === 'products') loadClientProducts(currentProfileId);
         }
 
-        // --- Profile Data Loading ---
+        // --- Profile ---
         async function openProfile(id) {
             currentProfileId = id;
             const client = allClients.find(c => c.id === id);
             
-            // Header Info
             document.getElementById('pNameDisplay').innerText = client.name;
             document.getElementById('pPersonDisplay').innerText = client.contact_person || '';
             document.getElementById('pPhone').innerText = client.phone || '-';
             document.getElementById('pCity').innerText = client.city || '-';
 
-            // Locations
             const locDiv = document.getElementById('pLocations');
             locDiv.innerHTML = '';
             if(client.locations) client.locations.forEach(loc => locDiv.innerHTML += `<a href="${loc.url}" target="_blank" class="block bg-white border p-1 rounded text-xs text-blue-600 mb-1 truncate"><i class="fas fa-map-marker-alt text-red-500"></i> ${loc.label}</a>`);
 
-            // Load Orders Tabs
             await loadOrdersTabs(id);
-            
-            // Load Files & Pantone
             renderFilesAndPantone(client);
-
-            // Init Finance Tab
             loadFinance(id);
-
             toggleModal('profileModal');
             switchTab('finance');
         }
 
         async function loadOrdersTabs(clientId) {
             const { data: orders } = await supabaseClient.from('orders').select('*').eq('client_id', clientId).order('created_at', {ascending: false});
-            
             const quotesTbody = document.getElementById('quotesTable');
             const prodTbody = document.getElementById('productionTable');
             const compTbody = document.getElementById('completedTable');
@@ -322,7 +324,6 @@
 
             if(orders) orders.forEach(o => {
                 const row = `<tr class="border-b"><td class="p-3">#${o.order_number}</td><td class="p-3">${new Date(o.created_at).toLocaleDateString()}</td><td class="p-3 font-bold">${o.grand_total}</td><td class="p-3"><span class="bg-gray-100 px-2 rounded text-xs">${o.status}</span></td></tr>`;
-                
                 if(o.status === 'quote') quotesTbody.innerHTML += row;
                 else if (o.status === 'production') prodTbody.innerHTML += row;
                 else if (o.status === 'completed') compTbody.innerHTML += row;
@@ -330,13 +331,9 @@
         }
 
         async function loadClientProducts(clientId) {
-            // Complex query to get products ordered by client
             const { data: items } = await supabaseClient.from('order_items').select('*, orders!inner(*), product_variants(size_name, products(name), stock_quantity)').eq('orders.client_id', clientId);
-            
             const grid = document.getElementById('clientProductsGrid');
             grid.innerHTML = '';
-            
-            // Unique Products logic
             const uniqueProds = {};
             if(items) items.forEach(i => {
                 if(i.product_variants && i.product_variants.products) {
@@ -344,43 +341,23 @@
                     uniqueProds[key] = i.product_variants.stock_quantity;
                 }
             });
-
             if(Object.keys(uniqueProds).length > 0) {
                 for (const [name, stock] of Object.entries(uniqueProds)) {
-                    grid.innerHTML += `
-                        <div class="bg-white p-3 border rounded shadow-sm flex justify-between items-center">
-                            <span class="font-bold text-sm text-gray-700">${name}</span>
-                            <span class="text-xs px-2 py-1 rounded ${stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${stock > 0 ? 'متوفر ('+stock+')' : 'نفذت'}</span>
-                        </div>
-                    `;
+                    grid.innerHTML += `<div class="bg-white p-3 border rounded shadow-sm flex justify-between items-center"><span class="font-bold text-sm text-gray-700">${name}</span><span class="text-xs px-2 py-1 rounded ${stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${stock > 0 ? 'متوفر ('+stock+')' : 'نفذت'}</span></div>`;
                 }
-            } else {
-                grid.innerHTML = '<p class="text-gray-400 text-sm">لم يطلب أصناف بعد</p>';
-            }
+            } else { grid.innerHTML = '<p class="text-gray-400 text-sm">لم يطلب أصناف بعد</p>'; }
         }
 
         async function loadFinance(clientId) {
             const { data: trans } = await supabaseClient.from('client_transactions').select('*').eq('client_id', clientId).order('created_at');
             const tbody = document.getElementById('financeTable');
             tbody.innerHTML = '';
-            
-            let totalInv = 0;
-            let totalPaid = 0;
-
+            let totalInv = 0; let totalPaid = 0;
             if(trans) trans.forEach(t => {
                 const isInv = t.type === 'invoice';
                 if(isInv) totalInv += t.amount; else totalPaid += t.amount;
-                
-                tbody.innerHTML += `
-                    <tr class="border-b">
-                        <td class="p-3 text-gray-500 text-xs">${new Date(t.created_at).toLocaleDateString()}</td>
-                        <td class="p-3">${t.description}</td>
-                        <td class="p-3 font-bold text-gray-800">${isInv ? t.amount : '-'}</td>
-                        <td class="p-3 font-bold text-green-600">${!isInv ? t.amount : '-'}</td>
-                    </tr>
-                `;
+                tbody.innerHTML += `<tr class="border-b"><td class="p-3 text-gray-500 text-xs">${new Date(t.created_at).toLocaleDateString()}</td><td class="p-3">${t.description}</td><td class="p-3 font-bold text-gray-800">${isInv ? t.amount : '-'}</td><td class="p-3 font-bold text-green-600">${!isInv ? t.amount : '-'}</td></tr>`;
             });
-
             document.getElementById('pTotalInvoices').innerText = totalInv;
             document.getElementById('pTotalPaid').innerText = totalPaid;
             document.getElementById('pBalance').innerText = (totalInv - totalPaid);
@@ -388,45 +365,62 @@
 
         async function addTransaction(type) {
             const amount = prompt("أدخل المبلغ:");
-            const desc = prompt("أدخل الوصف (رقم الفاتورة/السند):");
+            const desc = prompt("أدخل الوصف:");
             if(!amount || !desc) return;
-
-            await supabaseClient.from('client_transactions').insert([{
-                client_id: currentProfileId, type, amount, description: desc
-            }]);
+            await supabaseClient.from('client_transactions').insert([{client_id: currentProfileId, type, amount, description: desc}]);
             loadFinance(currentProfileId);
         }
 
-        // --- Files & Pantone ---
+        // --- Colors & Files ---
         function renderFilesAndPantone(client) {
-            // Pantone
             const pantoneDiv = document.getElementById('pantoneContainer');
             pantoneDiv.innerHTML = '';
             const colors = client.pantone_colors || [];
-            colors.forEach(c => {
-                pantoneDiv.innerHTML += `<div class="pantone-chip" style="background-color: ${c.code}" title="${c.name}"></div>`;
+            colors.forEach((c, index) => {
+                pantoneDiv.innerHTML += `
+                    <div class="pantone-card relative group">
+                        <div class="pantone-color" style="background-color: ${c.code}"></div>
+                        <div class="pantone-info">
+                            <p>${c.code}</p>
+                            <p class="text-xs text-gray-500">${c.name}</p>
+                        </div>
+                        <button onclick="removePantone(${index})" class="absolute top-0 right-0 bg-red-500 text-white w-5 h-5 flex items-center justify-center text-xs hidden group-hover:flex">×</button>
+                    </div>`;
             });
 
-            // Files
             const filesList = document.getElementById('filesList');
             filesList.innerHTML = '';
             const files = client.files || [];
             files.forEach(f => {
-                filesList.innerHTML += `<div class="flex justify-between text-sm border-b py-1"><span>${f.label}</span> <a href="${f.url}" target="_blank" class="text-blue-500">عرض</a></div>`;
+                filesList.innerHTML += `<div class="flex justify-between text-sm border-b py-1"><span>${f.label}</span> <a href="${f.url}" target="_blank" class="text-blue-600 hover:text-blue-800">عرض</a></div>`;
             });
         }
 
         async function addPantone() {
-            const code = prompt("كود اللون (Hex) مثال: #FF0000");
-            const name = prompt("اسم اللون (مثال: أحمر غامق)");
-            if(!code) return;
+            // استخدام color input للتسهيل
+            const input = document.createElement('input');
+            input.type = 'color';
+            input.onchange = async e => {
+                const code = e.target.value;
+                const name = prompt("اسم اللون (مثال: أحمر غامق)");
+                if(!name) return;
+                
+                const client = allClients.find(c => c.id === currentProfileId);
+                const colors = client.pantone_colors || [];
+                colors.push({ code, name });
+                
+                await supabaseClient.from('clients').update({ pantone_colors: colors }).eq('id', currentProfileId);
+                client.pantone_colors = colors;
+                renderFilesAndPantone(client);
+            };
+            input.click();
+        }
 
+        async function removePantone(index) {
+            if(!confirm('حذف اللون؟')) return;
             const client = allClients.find(c => c.id === currentProfileId);
-            const colors = client.pantone_colors || [];
-            colors.push({ code, name });
-
-            await supabaseClient.from('clients').update({ pantone_colors: colors }).eq('id', currentProfileId);
-            client.pantone_colors = colors;
+            client.pantone_colors.splice(index, 1);
+            await supabaseClient.from('clients').update({ pantone_colors: client.pantone_colors }).eq('id', currentProfileId);
             renderFilesAndPantone(client);
         }
 
@@ -434,20 +428,13 @@
             const fileInput = document.getElementById('fileUpload');
             const label = document.getElementById('fileDesc').value;
             const file = fileInput.files[0];
-
             if(!file || !label) return alert("اختر ملف واكتب وصف");
 
             const fileName = `${currentProfileId}/${Date.now()}_${file.name}`;
-            
-            // 1. Upload to Storage
             const { data, error } = await supabaseClient.storage.from('client-files').upload(fileName, file);
-            
-            if(error) { alert("خطأ في الرفع: تأكد من إعداد Storage في Supabase"); return; }
+            if(error) { alert("تأكد من إنشاء Storage Bucket باسم 'client-files'"); return; }
 
-            // 2. Get URL
             const { data: urlData } = supabaseClient.storage.from('client-files').getPublicUrl(fileName);
-            
-            // 3. Save to DB
             const client = allClients.find(c => c.id === currentProfileId);
             const files = client.files || [];
             files.push({ label, url: urlData.publicUrl });
@@ -458,25 +445,45 @@
             alert("تم الرفع ✅");
         }
 
-        // --- Common ---
+        // --- CRUD ---
         function openAddModal() {
+            document.getElementById('modalTitle').innerText = 'إضافة عميل جديد';
             document.getElementById('cId').value = '';
             document.getElementById('clientForm').reset();
             tempLocations = [];
+            renderTempLocations();
             toggleModal('clientModal');
         }
         
+        async function editClient(id) {
+            const client = allClients.find(c => c.id === id);
+            document.getElementById('modalTitle').innerText = 'تعديل بيانات العميل';
+            document.getElementById('cId').value = client.id;
+            document.getElementById('cName').value = client.name;
+            document.getElementById('cPerson').value = client.contact_person || '';
+            document.getElementById('cPhone').value = client.phone || '';
+            document.getElementById('cCity').value = client.city || '';
+            tempLocations = client.locations || [];
+            renderTempLocations();
+            toggleModal('clientModal');
+        }
+
         function addLocation() {
             const label = document.getElementById('locLabel').value;
             const url = document.getElementById('locUrl').value;
             if(label) tempLocations.push({label, url});
             document.getElementById('locLabel').value = ''; document.getElementById('locUrl').value = '';
+            renderTempLocations();
+        }
+
+        function renderTempLocations() {
             const container = document.getElementById('locationsContainer');
-            container.innerHTML = tempLocations.map(l => `<span class="location-tag">${l.label}</span>`).join(' ');
+            container.innerHTML = tempLocations.map((l, i) => `<div class="location-tag"><span>${l.label}</span><button type="button" onclick="tempLocations.splice(${i}, 1); renderTempLocations();" class="text-red-500 ml-1">×</button></div>`).join('');
         }
 
         document.getElementById('clientForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const id = document.getElementById('cId').value;
             const data = {
                 name: document.getElementById('cName').value,
                 contact_person: document.getElementById('cPerson').value,
@@ -484,7 +491,8 @@
                 city: document.getElementById('cCity').value,
                 locations: tempLocations
             };
-            await supabaseClient.from('clients').insert([data]);
+            if(id) await supabaseClient.from('clients').update(data).eq('id', id);
+            else await supabaseClient.from('clients').insert([data]);
             toggleModal('clientModal');
             fetchClients();
         });
