@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G.PACK - دليل الأصناف</title>
+    <title>G.PACK - إدارة الأصناف</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -19,13 +19,15 @@
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
-        
         .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; cursor: pointer; }
         .tab-btn:hover { color: #3e206d; }
         .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background-color: #f3f4f6; }
-        
         .hidden-row { display: none; }
         .rotate-180 { transform: rotate(180deg); transition: transform 0.3s; }
+        
+        /* Toggle Switch Style */
+        .toggle-checkbox:checked { right: 0; border-color: #68D391; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #68D391; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -37,7 +39,6 @@
                 <span>G.PACK</span>
             </h1>
         </div>
-
         <div class="p-6 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20">
             <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400">
                 <i class="fas fa-user text-yellow-400"></i>
@@ -47,24 +48,19 @@
                 <p class="text-xs text-gray-300">Admin</p>
             </div>
         </div>
-
         <nav class="flex-1 overflow-y-auto py-4 space-y-1">
             <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
                 <i class="fas fa-th-large w-5"></i> الرئيسية
             </a>
-            
             <a href="products.html" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors">
                 <i class="fas fa-box w-5"></i> الأصناف
             </a>
-
             <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
                 <i class="fas fa-file-invoice-dollar w-5"></i> عروض الأسعار
             </a>
-
             <a href="production_orders.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
                 <i class="fas fa-industry w-5"></i> أوامر التشغيل
             </a>
-
             <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors">
                 <i class="fas fa-cubes w-5"></i> المستودعات
             </a>
@@ -87,7 +83,6 @@
                 <i class="fas fa-file-signature w-5"></i> الشروط العامة
             </a>
         </nav>
-
         <div class="p-4 border-t border-purple-800/50">
             <button class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2">
                 <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
@@ -99,14 +94,12 @@
         <header class="h-20 bg-white shadow-sm flex items-center justify-between px-8 z-10">
             <div class="flex items-center gap-4">
                 <h2 class="text-xl font-bold text-gray-800">إدارة الأصناف والتصنيفات</h2>
-                
                 <div class="flex bg-white border border-gray-200 rounded-lg p-1 mr-6 shadow-sm">
                     <button onclick="switchTab('products')" id="btn-products" class="tab-btn active px-6 py-2 rounded-md text-sm transition-all">الأصناف</button>
                     <button onclick="switchTab('categories')" id="btn-categories" class="tab-btn px-6 py-2 rounded-md text-sm transition-all">التصنيفات</button>
                     <button onclick="switchTab('units')" id="btn-units" class="tab-btn px-6 py-2 rounded-md text-sm transition-all">الوحدات</button>
                 </div>
             </div>
-
             <div class="flex items-center gap-6">
                 <button onclick="openActionModal()" class="gpack-btn px-4 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2">
                     <i class="fas fa-plus"></i>
@@ -116,13 +109,11 @@
         </header>
 
         <div class="flex-1 overflow-y-auto p-8">
-            
             <div id="tab-products" class="tab-content block">
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="p-4 border-b border-gray-100 bg-gray-50 flex gap-4">
                         <input type="text" id="prodSearch" placeholder="بحث عن صنف..." class="p-2 border rounded-lg text-sm w-64 focus:outline-none focus:border-purple-500">
                     </div>
-                    
                     <div class="overflow-x-auto">
                         <table class="w-full text-right">
                             <thead class="bg-white text-gray-500 text-xs uppercase border-b border-gray-200">
@@ -158,13 +149,12 @@
                     </ul>
                 </div>
             </div>
-
         </div>
     </main>
 
     <div id="productModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-4xl mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto transform transition-all scale-95" style="max-height: 90vh;">
+        <div class="modal-container bg-white w-11/12 md:max-w-5xl mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto transform transition-all scale-95" style="max-height: 90vh;">
             <div class="modal-content py-4 text-right px-6">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100 mb-4">
                     <p class="text-xl font-bold text-purple-800" id="productModalTitle">تعريف صنف جديد</p>
@@ -194,27 +184,29 @@
 
                     <div class="bg-white border border-gray-200 rounded-xl p-4">
                         <div class="flex justify-between items-center mb-3">
-                            <h4 class="text-gray-800 font-bold text-sm">المقاسات (السعر الافتراضي)</h4>
+                            <h4 class="text-gray-800 font-bold text-sm">المقاسات (الافتراضية)</h4>
                             <button type="button" onclick="addVariantRow()" class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold hover:bg-green-200 transition">+ إضافة مقاس</button>
                         </div>
                         
                         <table class="w-full text-right text-sm">
                             <thead class="bg-gray-50 text-gray-500">
                                 <tr>
-                                    <th class="p-2">اسم المقاس</th>
-                                    <th class="p-2">التكلفة (المبدئية)</th>
-                                    <th class="p-2">البيع (المبدئي)</th>
-                                    <th class="p-2">تنبيه المخزون</th>
+                                    <th class="p-2 w-1/4">اسم المقاس</th>
+                                    <th class="p-2">تكلفة التصنيع</th>
+                                    <th class="p-2">سعر البيع</th>
+                                    <th class="p-2 text-center">تنبيه المخزون؟</th>
+                                    <th class="p-2 w-20">حد الطلب</th>
                                     <th class="p-2 w-10"></th>
                                 </tr>
                             </thead>
                             <tbody id="variantsContainer"></tbody>
                         </table>
+                        <p class="text-xs text-gray-400 mt-2">* فعّل خيار "تنبيه المخزون" فقط للعملاء المرتبطين باتفاقيات تخزين.</p>
                     </div>
 
                     <div class="pt-4 flex items-center justify-end gap-3 border-t border-gray-100">
                         <button type="button" onclick="toggleModal('productModal')" class="bg-gray-100 text-gray-700 py-2 px-6 rounded-lg font-bold">إلغاء</button>
-                        <button type="submit" class="gpack-btn py-2 px-8 rounded-lg font-bold shadow-md flex items-center gap-2">
+                        <button type="submit" id="mainSaveBtn" class="gpack-btn py-2 px-8 rounded-lg font-bold shadow-md flex items-center gap-2">
                             <span>حفظ البيانات</span>
                             <i class="fas fa-check"></i>
                         </button>
@@ -231,39 +223,29 @@
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100 mb-4">
                     <div>
                         <p class="text-xl font-bold text-purple-800">إدارة شرائح الأسعار (Wholesale)</p>
-                        <p class="text-xs text-gray-500 mt-1" id="tierVariantName">للمقاس: ...</p>
+                        <p class="text-xs text-gray-500 mt-1" id="tierVariantName">...</p>
                     </div>
                     <div class="modal-close cursor-pointer" onclick="toggleModal('tiersModal')">
                         <i class="fas fa-times text-gray-500"></i>
                     </div>
                 </div>
-
                 <input type="hidden" id="currentVariantId">
-
-                <div class="bg-yellow-50 border border-yellow-100 rounded-lg p-3 mb-4 text-xs text-yellow-700">
-                    <i class="fas fa-info-circle"></i> يمكنك تحديد أسعار مختلفة بناءً على الكمية المطلوبة. مثلاً: من 1000 حبة بسعر مخفض.
-                </div>
-
                 <div class="overflow-x-auto">
                     <table class="w-full text-right text-sm">
                         <thead class="bg-purple-50 text-purple-800">
                             <tr>
-                                <th class="p-3 rounded-r-lg">من كمية</th>
-                                <th class="p-3">إلى كمية (اختياري)</th>
+                                <th class="p-3">من كمية</th>
+                                <th class="p-3">إلى كمية</th>
                                 <th class="p-3">سعر التكلفة</th>
                                 <th class="p-3">سعر البيع</th>
-                                <th class="p-3 rounded-l-lg"></th>
+                                <th class="p-3"></th>
                             </tr>
                         </thead>
-                        <tbody id="tiersContainer">
-                            </tbody>
+                        <tbody id="tiersContainer"></tbody>
                     </table>
                 </div>
-                
                 <button onclick="addTierRow()" class="mt-3 text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-bold hover:bg-purple-200 transition">+ شريحة جديدة</button>
-
                 <div class="pt-4 flex items-center justify-end gap-3 border-t border-gray-100 mt-4">
-                    <button onclick="toggleModal('tiersModal')" class="bg-gray-100 text-gray-700 py-2 px-6 rounded-lg font-bold">إغلاق</button>
                     <button onclick="saveTiers()" class="gpack-btn py-2 px-8 rounded-lg font-bold shadow-md">حفظ الشرائح</button>
                 </div>
             </div>
@@ -277,10 +259,8 @@
                 <h3 class="font-bold text-lg mb-4 text-gray-800" id="simpleModalTitle">إضافة جديد</h3>
                 <input type="hidden" id="simpleId">
                 <input type="text" id="simpleInput" class="w-full border border-gray-300 rounded-lg p-3 mb-4 focus:border-purple-500 outline-none" placeholder="الاسم...">
-                <div class="flex gap-2">
-                    <button onclick="saveSimpleItem()" class="flex-1 gpack-btn py-2 rounded-lg font-bold">حفظ</button>
-                    <button onclick="toggleModal('simpleModal')" class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg">إلغاء</button>
-                </div>
+                <button onclick="saveSimpleItem()" class="w-full gpack-btn py-2 rounded-lg font-bold">حفظ</button>
+                <button onclick="toggleModal('simpleModal')" class="w-full mt-2 text-gray-500 text-sm">إلغاء</button>
             </div>
         </div>
     </div>
@@ -292,12 +272,11 @@
 
         let currentTab = 'products';
 
-        // --- Tabs System ---
+        // --- Tabs ---
         function switchTab(tabName) {
             currentTab = tabName;
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             document.getElementById(`btn-${tabName}`).classList.add('active');
 
@@ -314,7 +293,6 @@
             }
         }
 
-        // --- Modals ---
         function openActionModal() {
             if(currentTab === 'products') {
                 document.getElementById('productModalTitle').innerText = 'تعريف صنف جديد';
@@ -332,7 +310,7 @@
             }
         }
 
-        // --- Products Logic ---
+        // --- Fetch & Display ---
         async function fetchProducts() {
             const tbody = document.getElementById('productsTableBody');
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr>';
@@ -363,15 +341,15 @@
                         <td class="px-6 py-4 text-gray-600">${p.units?.name || '-'}</td>
                         <td class="px-6 py-4 text-gray-600"><span class="bg-blue-50 text-blue-600 px-2 rounded text-xs font-bold">${count || 0} مقاسات</span></td>
                         <td class="px-6 py-4 flex gap-2 justify-end">
-                            <button onclick="editProduct('${p.id}')" class="text-blue-500 hover:text-blue-700" title="تعديل"><i class="fas fa-edit"></i></button>
-                            <button onclick="deleteParentProduct('${p.id}')" class="text-red-400 hover:text-red-600" title="حذف"><i class="fas fa-trash"></i></button>
+                            <button onclick="editProduct('${p.id}')" class="text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteParentProduct('${p.id}')" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                     <tr id="variants-${p.id}" class="hidden-row bg-gray-50">
                         <td colspan="6" class="p-4 pr-12">
                             <table class="w-full text-xs text-right bg-white rounded-lg border border-gray-200 overflow-hidden">
                                 <thead class="bg-gray-100 text-gray-600">
-                                    <tr><th class="p-2">المقاس</th><th class="p-2">التكلفة (الافتراضية)</th><th class="p-2">سعر البيع (الافتراضي)</th><th class="p-2">المخزون</th><th class="p-2">شرائح الأسعار</th></tr>
+                                    <tr><th class="p-2">المقاس</th><th class="p-2">التكلفة</th><th class="p-2">سعر البيع</th><th class="p-2">تنبيه المخزون</th><th class="p-2">الشرائح</th></tr>
                                 </thead>
                                 <tbody id="body-${p.id}"></tbody>
                             </table>
@@ -395,15 +373,16 @@
                 tbody.innerHTML = '';
                 if(variants && variants.length > 0) {
                     variants.forEach(v => {
+                        const stockStatus = v.track_stock ? `<span class="text-green-600 font-bold">مفعل (${v.min_stock_level})</span>` : '<span class="text-gray-400">غير مفعل</span>';
                         tbody.innerHTML += `
                             <tr class="border-b last:border-none">
                                 <td class="p-2 font-bold text-gray-700">${v.size_name}</td>
                                 <td class="p-2 text-gray-500">${v.cost_price} ر.س</td>
                                 <td class="p-2 text-green-600 font-bold">${v.selling_price} ر.س</td>
-                                <td class="p-2">${v.stock_quantity}</td>
+                                <td class="p-2">${stockStatus}</td>
                                 <td class="p-2">
-                                    <button onclick="openTiersModal('${v.id}', '${v.size_name}')" class="bg-yellow-50 text-yellow-700 px-2 py-1 rounded border border-yellow-200 hover:bg-yellow-100 flex items-center gap-1">
-                                        <i class="fas fa-tags"></i> الشرائح
+                                    <button onclick="openTiersModal('${v.id}', '${v.size_name}')" class="bg-purple-50 text-purple-700 px-2 py-1 rounded border border-purple-200 hover:bg-purple-100 flex items-center gap-1">
+                                        <i class="fas fa-tags"></i> شرائح الأسعار
                                     </button>
                                 </td>
                             </tr>
@@ -418,21 +397,122 @@
             }
         }
 
-        // --- Tiers Logic (الشرائح) ---
+        // --- Save Logic (Fixed) ---
+        function addVariantRow(data = null) {
+            const container = document.getElementById('variantsContainer');
+            const rowId = Date.now() + Math.random().toString(16).slice(2);
+            
+            const sizeVal = data ? data.size_name : '';
+            const costVal = data ? data.cost_price : '';
+            const sellVal = data ? data.selling_price : '';
+            const isTracked = data ? (data.track_stock ? 'checked' : '') : '';
+            const minStockVal = data ? data.min_stock_level : '10';
+            const disabledState = isTracked ? '' : 'disabled style="background-color: #f3f4f6;"';
+
+            const row = `
+                <tr id="row-${rowId}" class="border-b border-gray-50">
+                    <td class="p-2"><input type="text" name="size_name[]" value="${sizeVal}" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs" required></td>
+                    <td class="p-2"><input type="number" step="0.01" name="cost_price[]" value="${costVal}" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs"></td>
+                    <td class="p-2"><input type="number" step="0.01" name="selling_price[]" value="${sellVal}" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs" required></td>
+                    <td class="p-2 text-center">
+                        <input type="checkbox" class="stock-check" onchange="toggleMinStock(this)" ${isTracked}>
+                    </td>
+                    <td class="p-2"><input type="number" name="min_stock[]" value="${minStockVal}" class="min-stock-input w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs" ${disabledState}></td>
+                    <td class="p-2 text-center"><button type="button" onclick="document.getElementById('row-${rowId}').remove()" class="text-red-400 hover:text-red-600"><i class="fas fa-times"></i></button></td>
+                </tr>
+            `;
+            container.insertAdjacentHTML('beforeend', row);
+        }
+
+        function toggleMinStock(checkbox) {
+            const row = checkbox.closest('tr');
+            const input = row.querySelector('.min-stock-input');
+            if(checkbox.checked) {
+                input.disabled = false;
+                input.style.backgroundColor = 'white';
+            } else {
+                input.disabled = true;
+                input.style.backgroundColor = '#f3f4f6';
+            }
+        }
+
+        document.getElementById('smartProductForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('mainSaveBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            btn.disabled = true;
+
+            const pId = document.getElementById('pId').value;
+            const pName = document.getElementById('pName').value;
+            const pCat = document.getElementById('pCategorySelect').value;
+            const pUnit = document.getElementById('pUnitSelect').value;
+
+            try {
+                // 1. Save Parent
+                let prodData;
+                if (pId) {
+                    const { data } = await supabaseClient.from('products').update({ name: pName, category_id: pCat, unit_id: pUnit }).eq('id', pId).select().single();
+                    prodData = data;
+                } else {
+                    const { data } = await supabaseClient.from('products').insert([{ name: pName, category_id: pCat, unit_id: pUnit }]).select().single();
+                    prodData = data;
+                }
+
+                if(!prodData) throw new Error("فشل حفظ الصنف الرئيسي");
+
+                // 2. Save Variants
+                if (pId) await supabaseClient.from('product_variants').delete().eq('product_id', pId);
+
+                const sizes = document.getElementsByName('size_name[]');
+                const costs = document.getElementsByName('cost_price[]');
+                const sells = document.getElementsByName('selling_price[]');
+                const mins = document.getElementsByName('min_stock[]');
+                const checks = document.querySelectorAll('.stock-check');
+
+                const variants = [];
+                for(let i=0; i<sizes.length; i++) {
+                    variants.push({
+                        product_id: prodData.id,
+                        size_name: sizes[i].value,
+                        cost_price: costs[i].value || 0,
+                        selling_price: sells[i].value || 0,
+                        track_stock: checks[i].checked,
+                        min_stock_level: checks[i].checked ? (mins[i].value || 10) : null,
+                        stock_quantity: 0
+                    });
+                }
+
+                if(variants.length > 0) {
+                    const { error } = await supabaseClient.from('product_variants').insert(variants);
+                    if(error) throw error;
+                }
+
+                toggleModal('productModal');
+                fetchProducts();
+                alert("✅ تم الحفظ بنجاح");
+
+            } catch (err) {
+                alert("خطأ: " + err.message);
+                console.error(err);
+            } finally {
+                btn.innerHTML = '<span>حفظ البيانات</span><i class="fas fa-check"></i>';
+                btn.disabled = false;
+            }
+        });
+
+        // --- Pricing Tiers ---
         async function openTiersModal(variantId, variantName) {
             document.getElementById('currentVariantId').value = variantId;
             document.getElementById('tierVariantName').innerText = `للمقاس: ${variantName}`;
-            document.getElementById('tiersContainer').innerHTML = ''; // Clear old data
+            document.getElementById('tiersContainer').innerHTML = ''; 
             
-            // Fetch existing tiers
             const { data: tiers } = await supabaseClient.from('product_pricing_tiers').select('*').eq('variant_id', variantId).order('min_quantity');
             
             if(tiers && tiers.length > 0) {
                 tiers.forEach(tier => addTierRow(tier));
             } else {
-                addTierRow(); // Add empty row
+                addTierRow();
             }
-            
             toggleModal('tiersModal');
         }
 
@@ -466,143 +546,37 @@
 
             const tiersData = [];
             for(let i=0; i<mins.length; i++) {
-                if(mins[i].value && costs[i].value && sells[i].value) {
+                if(mins[i].value && sells[i].value) {
                     tiersData.push({
                         variant_id: variantId,
                         min_quantity: mins[i].value,
                         max_quantity: maxs[i].value || null,
-                        cost_price: costs[i].value,
+                        cost_price: costs[i].value || 0,
                         selling_price: sells[i].value
                     });
                 }
             }
 
-            // Replace old tiers
             await supabaseClient.from('product_pricing_tiers').delete().eq('variant_id', variantId);
-            
-            if(tiersData.length > 0) {
-                const { error } = await supabaseClient.from('product_pricing_tiers').insert(tiersData);
-                if(error) { alert('خطأ: ' + error.message); return; }
-            }
+            if(tiersData.length > 0) await supabaseClient.from('product_pricing_tiers').insert(tiersData);
 
-            alert('✅ تم حفظ الشرائح بنجاح');
+            alert('✅ تم حفظ الشرائح');
             toggleModal('tiersModal');
         }
 
-        // --- Edit Product ---
-        async function editProduct(prodId) {
-            document.getElementById('productModalTitle').innerText = 'تعديل الصنف';
-            document.getElementById('pId').value = prodId; 
-            await loadDropdowns();
-            
-            // Parent
-            const { data: prod } = await supabaseClient.from('products').select('*').eq('id', prodId).single();
-            if(prod) {
-                document.getElementById('pName').value = prod.name;
-                document.getElementById('pCategorySelect').value = prod.category_id;
-                document.getElementById('pUnitSelect').value = prod.unit_id;
-            }
-
-            // Variants
-            const { data: variants } = await supabaseClient.from('product_variants').select('*').eq('product_id', prodId);
-            document.getElementById('variantsContainer').innerHTML = '';
-            if(variants && variants.length > 0) {
-                variants.forEach(v => addVariantRow(v));
-            } else {
-                addVariantRow();
-            }
-            toggleModal('productModal');
-        }
-
-        function addVariantRow(data = null) {
-            const container = document.getElementById('variantsContainer');
-            const rowId = Date.now() + Math.random().toString(16).slice(2);
-            
-            const sizeVal = data ? data.size_name : '';
-            const costVal = data ? data.cost_price : '';
-            const sellVal = data ? data.selling_price : '';
-            const minVal = data ? data.min_stock_level : '10';
-
-            const row = `
-                <tr id="row-${rowId}" class="border-b border-gray-50">
-                    <td class="p-2"><input type="text" name="size_name[]" value="${sizeVal}" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs" required></td>
-                    <td class="p-2"><input type="number" name="cost_price[]" value="${costVal}" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs"></td>
-                    <td class="p-2"><input type="number" name="selling_price[]" value="${sellVal}" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs" required></td>
-                    <td class="p-2"><input type="number" name="min_stock[]" value="${minVal}" class="w-full border rounded px-2 py-1 focus:border-purple-500 outline-none text-xs"></td>
-                    <td class="p-2 text-center"><button type="button" onclick="document.getElementById('row-${rowId}').remove()" class="text-red-400 hover:text-red-600"><i class="fas fa-times"></i></button></td>
-                </tr>
-            `;
-            container.insertAdjacentHTML('beforeend', row);
-        }
-
-        document.getElementById('smartProductForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const pId = document.getElementById('pId').value;
-            const pName = document.getElementById('pName').value;
-            const pCat = document.getElementById('pCategorySelect').value;
-            const pUnit = document.getElementById('pUnitSelect').value;
-
-            let prodData;
-            if (pId) {
-                const { data } = await supabaseClient.from('products').update({ name: pName, category_id: pCat, unit_id: pUnit }).eq('id', pId).select().single();
-                prodData = data;
-            } else {
-                const { data } = await supabaseClient.from('products').insert([{ name: pName, category_id: pCat, unit_id: pUnit }]).select().single();
-                prodData = data;
-            }
-
-            if(!prodData) return;
-
-            if (pId) await supabaseClient.from('product_variants').delete().eq('product_id', pId);
-
-            const variants = [];
-            const sizes = document.getElementsByName('size_name[]');
-            const costs = document.getElementsByName('cost_price[]');
-            const sells = document.getElementsByName('selling_price[]');
-            const mins = document.getElementsByName('min_stock[]');
-
-            for(let i=0; i<sizes.length; i++) {
-                variants.push({
-                    product_id: prodData.id,
-                    size_name: sizes[i].value,
-                    cost_price: costs[i].value || 0,
-                    selling_price: sells[i].value || 0,
-                    min_stock_level: mins[i].value || 0,
-                    stock_quantity: 0
-                });
-            }
-
-            if(variants.length > 0) await supabaseClient.from('product_variants').insert(variants);
-
-            toggleModal('productModal');
-            fetchProducts();
-            alert("✅ تم الحفظ بنجاح");
-        });
-
-        // --- Categories/Units Logic ---
+        // --- Basic Functions ---
         async function fetchCategories() {
             const { data } = await supabaseClient.from('categories').select('*').order('created_at');
             const list = document.getElementById('categoriesList');
             list.innerHTML = '';
-            if(data) data.forEach(c => {
-                list.innerHTML += `<li class="p-3 flex justify-between bg-gray-50 mb-1 rounded items-center"><span>${c.name}</span><div class="flex gap-2"><button onclick="editSimpleItem('categories', '${c.id}', '${c.name}')" class="text-blue-500"><i class="fas fa-edit"></i></button><button onclick="deleteItem('categories', '${c.id}')" class="text-red-400"><i class="fas fa-trash"></i></button></div></li>`;
-            });
+            if(data) data.forEach(c => list.innerHTML += `<li class="p-3 flex justify-between bg-gray-50 mb-1 rounded items-center"><span>${c.name}</span><button onclick="deleteItem('categories', '${c.id}')" class="text-red-400"><i class="fas fa-trash"></i></button></li>`);
         }
 
         async function fetchUnits() {
             const { data } = await supabaseClient.from('units').select('*').order('created_at');
             const list = document.getElementById('unitsList');
             list.innerHTML = '';
-            if(data) data.forEach(u => {
-                list.innerHTML += `<li class="p-3 flex justify-between bg-gray-50 mb-1 rounded items-center"><span>${u.name}</span><div class="flex gap-2"><button onclick="editSimpleItem('units', '${u.id}', '${u.name}')" class="text-blue-500"><i class="fas fa-edit"></i></button><button onclick="deleteItem('units', '${u.id}')" class="text-red-400"><i class="fas fa-trash"></i></button></div></li>`;
-            });
-        }
-
-        function editSimpleItem(type, id, name) {
-            document.getElementById('simpleId').value = id;
-            document.getElementById('simpleInput').value = name;
-            document.getElementById('simpleModalTitle').innerText = type === 'categories' ? 'تعديل تصنيف' : 'تعديل وحدة';
-            toggleModal('simpleModal');
+            if(data) data.forEach(u => list.innerHTML += `<li class="p-3 flex justify-between bg-gray-50 mb-1 rounded items-center"><span>${u.name}</span><button onclick="deleteItem('units', '${u.id}')" class="text-red-400"><i class="fas fa-trash"></i></button></li>`);
         }
 
         async function saveSimpleItem() {
@@ -624,10 +598,27 @@
         }
 
         async function deleteParentProduct(id) {
-            if(confirm('هل أنت متأكد من حذف الصنف؟')) {
+            if(confirm('هل أنت متأكد؟ سيتم حذف جميع المقاسات المرتبطة.')) {
                 await supabaseClient.from('products').delete().eq('id', id);
                 fetchProducts();
             }
+        }
+
+        async function editProduct(prodId) {
+            document.getElementById('productModalTitle').innerText = 'تعديل الصنف';
+            document.getElementById('pId').value = prodId; 
+            await loadDropdowns();
+            const { data: prod } = await supabaseClient.from('products').select('*').eq('id', prodId).single();
+            if(prod) {
+                document.getElementById('pName').value = prod.name;
+                document.getElementById('pCategorySelect').value = prod.category_id;
+                document.getElementById('pUnitSelect').value = prod.unit_id;
+            }
+            const { data: variants } = await supabaseClient.from('product_variants').select('*').eq('product_id', prodId);
+            document.getElementById('variantsContainer').innerHTML = '';
+            if(variants && variants.length > 0) variants.forEach(v => addVariantRow(v));
+            else addVariantRow();
+            toggleModal('productModal');
         }
 
         async function loadDropdowns() {
