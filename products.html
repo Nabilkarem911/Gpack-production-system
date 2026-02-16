@@ -133,18 +133,14 @@
             <div id="tab-categories" class="tab-content hidden">
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-2xl mx-auto mt-8">
                     <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">قائمة التصنيفات</h3>
-                    <ul id="categoriesList" class="divide-y divide-gray-100 border rounded-lg">
-                        <li class="p-4 text-center text-gray-400">جاري التحميل...</li>
-                    </ul>
+                    <ul id="categoriesList" class="divide-y divide-gray-100 border rounded-lg"></ul>
                 </div>
             </div>
 
             <div id="tab-units" class="tab-content hidden">
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-2xl mx-auto mt-8">
                     <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">قائمة الوحدات</h3>
-                    <ul id="unitsList" class="divide-y divide-gray-100 border rounded-lg">
-                        <li class="p-4 text-center text-gray-400">جاري التحميل...</li>
-                    </ul>
+                    <ul id="unitsList" class="divide-y divide-gray-100 border rounded-lg"></ul>
                 </div>
             </div>
         </div>
@@ -170,15 +166,11 @@
                             </div>
                             <div>
                                 <label class="block text-gray-700 text-xs font-bold mb-1">التصنيف</label>
-                                <select id="pCategorySelect" class="w-full bg-white border border-gray-200 rounded-lg py-2 px-3 outline-none" required>
-                                    <option value="">جاري التحميل...</option>
-                                </select>
+                                <select id="pCategorySelect" class="w-full bg-white border border-gray-200 rounded-lg py-2 px-3 outline-none" required></select>
                             </div>
                             <div>
                                 <label class="block text-gray-700 text-xs font-bold mb-1">الوحدة</label>
-                                <select id="pUnitSelect" class="w-full bg-white border border-gray-200 rounded-lg py-2 px-3 outline-none" required>
-                                    <option value="">جاري التحميل...</option>
-                                </select>
+                                <select id="pUnitSelect" class="w-full bg-white border border-gray-200 rounded-lg py-2 px-3 outline-none" required></select>
                             </div>
                         </div>
                     </div>
@@ -200,7 +192,7 @@
                             </thead>
                             <tbody id="variantsContainer"></tbody>
                         </table>
-                        <p class="text-xs text-gray-400 mt-2">* فعل خيار "تنبيه المخزون" فقط للعملاء المرتبطين باتفاقيات تخزين.</p>
+                        <p class="text-xs text-gray-400 mt-2">* فعّل "تنبيه المخزون" فقط للعملاء المرتبطين باتفاقيات تخزين.</p>
                     </div>
                     <div class="pt-4 flex items-center justify-end gap-3 border-t border-gray-100">
                         <button type="button" onclick="toggleModal('productModal')" class="bg-gray-100 text-gray-700 py-2 px-6 rounded-lg font-bold">إلغاء</button>
@@ -217,7 +209,7 @@
             <div class="modal-content py-4 text-right px-6">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100 mb-4">
                     <div>
-                        <p class="text-xl font-bold text-purple-800">شرائح الأسعار (Wholesale)</p>
+                        <p class="text-xl font-bold text-purple-800">إدارة شرائح الأسعار (للكميات)</p>
                         <p class="text-xs text-gray-500 mt-1" id="tierVariantName">...</p>
                     </div>
                     <div class="modal-close cursor-pointer" onclick="toggleModal('tiersModal')">
@@ -310,6 +302,9 @@
             const tbody = document.getElementById('productsTableBody');
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr>';
             const { data: products, error } = await supabaseClient.from('products').select(`*, categories(name), units(name)`).order('created_at', { ascending: false });
+            
+            if(error) { tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500 py-4">خطأ في الاتصال: ${error.message}</td></tr>`; return; }
+
             tbody.innerHTML = '';
             if(!products || products.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-400">لا توجد أصناف، يرجى إضافة التصنيفات والوحدات أولاً.</td></tr>';
@@ -375,50 +370,63 @@
 
         document.getElementById('smartProductForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const pCat = document.getElementById('pCategorySelect').value;
-            const pUnit = document.getElementById('pUnitSelect').value;
-            
-            // تحقق من القيم الفارغة قبل الإرسال
-            if(!pCat || !pUnit) {
-                alert("🔴 من فضلك اختر التصنيف والوحدة أولاً. إذا كانت القوائم فارغة، أضفهم من التبويبات بالأعلى.");
-                return;
-            }
-
             const btn = document.getElementById('mainSaveBtn');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
             btn.disabled = true;
+            
             const pId = document.getElementById('pId').value;
             const pName = document.getElementById('pName').value;
+            const pCat = document.getElementById('pCategorySelect').value;
+            const pUnit = document.getElementById('pUnitSelect').value;
 
             try {
+                // 1. Save Parent
                 let prodData;
+                const parentPayload = { name: pName, category_id: pCat, unit_id: pUnit };
+                
                 if (pId) {
-                    const { data } = await supabaseClient.from('products').update({ name: pName, category_id: pCat, unit_id: pUnit }).eq('id', pId).select().single();
+                    const { data, error } = await supabaseClient.from('products').update(parentPayload).eq('id', pId).select().single();
+                    if(error) throw new Error("فشل تحديث الصنف الرئيسي: " + error.message);
                     prodData = data;
                 } else {
-                    const { data } = await supabaseClient.from('products').insert([{ name: pName, category_id: pCat, unit_id: pUnit }]).select().single();
+                    const { data, error } = await supabaseClient.from('products').insert([parentPayload]).select().single();
+                    if(error) throw new Error("فشل إضافة الصنف الرئيسي: " + error.message);
                     prodData = data;
                 }
-                if(!prodData) throw new Error("فشل حفظ الصنف الرئيسي");
+
+                // 2. Save Variants
                 if (pId) await supabaseClient.from('product_variants').delete().eq('product_id', pId);
+
                 const sizes = document.getElementsByName('size_name[]');
                 const costs = document.getElementsByName('cost_price[]');
                 const sells = document.getElementsByName('selling_price[]');
                 const mins = document.getElementsByName('min_stock[]');
                 const checks = document.querySelectorAll('.stock-check');
+
                 const variants = [];
                 for(let i=0; i<sizes.length; i++) {
-                    variants.push({ product_id: prodData.id, size_name: sizes[i].value, cost_price: costs[i].value || 0, selling_price: sells[i].value || 0, track_stock: checks[i].checked, min_stock_level: checks[i].checked ? (mins[i].value || 10) : null, stock_quantity: 0 });
+                    variants.push({
+                        product_id: prodData.id,
+                        size_name: sizes[i].value,
+                        cost_price: costs[i].value || 0,
+                        selling_price: sells[i].value || 0,
+                        track_stock: checks[i].checked,
+                        min_stock_level: checks[i].checked ? (mins[i].value || 10) : null,
+                        stock_quantity: 0
+                    });
                 }
+
                 if(variants.length > 0) {
                     const { error } = await supabaseClient.from('product_variants').insert(variants);
-                    if(error) throw error;
+                    if(error) throw new Error("فشل حفظ المقاسات: " + error.message);
                 }
+
                 toggleModal('productModal');
                 fetchProducts();
                 alert("✅ تم الحفظ بنجاح");
+
             } catch (err) {
-                alert("خطأ: " + err.message);
+                alert("🔴 خطأ: " + err.message);
                 console.error(err);
             } finally {
                 btn.innerHTML = '<span>حفظ البيانات</span><i class="fas fa-check"></i>';
@@ -426,6 +434,7 @@
             }
         });
 
+        // --- Tiers ---
         async function openTiersModal(variantId, variantName) {
             document.getElementById('currentVariantId').value = variantId;
             document.getElementById('tierVariantName').innerText = `للمقاس: ${variantName}`;
@@ -455,13 +464,25 @@
             const tiersData = [];
             for(let i=0; i<mins.length; i++) {
                 if(mins[i].value && sells[i].value) {
-                    tiersData.push({ variant_id: variantId, min_quantity: mins[i].value, max_quantity: maxs[i].value || null, cost_price: costs[i].value || 0, selling_price: sells[i].value });
+                    tiersData.push({ variant_id: variantId, min_quantity: mins[i].value, max_quantity: maxs[i].value || null, cost_price: costs[i].value, selling_price: sells[i].value });
                 }
             }
             await supabaseClient.from('product_pricing_tiers').delete().eq('variant_id', variantId);
             if(tiersData.length > 0) { const { error } = await supabaseClient.from('product_pricing_tiers').insert(tiersData); if(error) { alert('خطأ: ' + error.message); return; } }
             alert('✅ تم حفظ الشرائح بنجاح');
             toggleModal('tiersModal');
+        }
+
+        async function editProduct(prodId) {
+            document.getElementById('productModalTitle').innerText = 'تعديل الصنف';
+            document.getElementById('pId').value = prodId; 
+            await loadDropdowns();
+            const { data: prod } = await supabaseClient.from('products').select('*').eq('id', prodId).single();
+            if(prod) { document.getElementById('pName').value = prod.name; document.getElementById('pCategorySelect').value = prod.category_id; document.getElementById('pUnitSelect').value = prod.unit_id; }
+            const { data: variants } = await supabaseClient.from('product_variants').select('*').eq('product_id', prodId);
+            document.getElementById('variantsContainer').innerHTML = '';
+            if(variants && variants.length > 0) { variants.forEach(v => addVariantRow(v)); } else { addVariantRow(); }
+            toggleModal('productModal');
         }
 
         async function fetchCategories() {
@@ -501,18 +522,6 @@
 
         async function deleteParentProduct(id) {
             if(confirm('هل أنت متأكد من حذف الصنف؟')) { await supabaseClient.from('products').delete().eq('id', id); fetchProducts(); }
-        }
-
-        async function editProduct(prodId) {
-            document.getElementById('productModalTitle').innerText = 'تعديل الصنف';
-            document.getElementById('pId').value = prodId; 
-            await loadDropdowns();
-            const { data: prod } = await supabaseClient.from('products').select('*').eq('id', prodId).single();
-            if(prod) { document.getElementById('pName').value = prod.name; document.getElementById('pCategorySelect').value = prod.category_id; document.getElementById('pUnitSelect').value = prod.unit_id; }
-            const { data: variants } = await supabaseClient.from('product_variants').select('*').eq('product_id', prodId);
-            document.getElementById('variantsContainer').innerHTML = '';
-            if(variants && variants.length > 0) { variants.forEach(v => addVariantRow(v)); } else { addVariantRow(); }
-            toggleModal('productModal');
         }
 
         async function loadDropdowns() {
