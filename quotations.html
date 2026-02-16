@@ -24,27 +24,48 @@
         .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
         .search-item:hover { background-color: #f9f9f9; }
 
-        /* طباعة A4 */
+        /* ================= طباعة احترافية (A4) ================= */
         @media print {
             @page { size: A4; margin: 0; }
             body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            
             aside, header, #listView, #quoteControls, .no-print, .actions-col, #addClientBtn, #topBar { display: none !important; }
-            #quoteFormView { display: block !important; position: absolute; top: 0; left: 0; width: 210mm; min-height: 297mm; padding: 0; margin: 0; box-shadow: none; border: none; }
+            
+            #quoteFormView { 
+                display: block !important; 
+                position: absolute; top: 0; left: 0; 
+                width: 210mm; min-height: 297mm; 
+                padding: 0; margin: 0; 
+                box-shadow: none; border: none; 
+            }
             .print-container { padding: 10mm; }
+
             .print-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 3px solid #3e206d; padding-bottom: 15px; margin-bottom: 20px; }
             .print-table th { background-color: #3e206d !important; color: white !important; -webkit-print-color-adjust: exact; }
             .print-table tr:nth-child(even) { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
-            input, select, textarea { border: none !important; background: transparent !important; resize: none; appearance: none; padding: 0; }
-            
-            /* الشروط في الطباعة */
-            .term-row { display: flex; align-items: flex-start; margin-bottom: 8px; }
-            .term-bullet { display: inline-block; width: 8px; height: 8px; background-color: #3e206d; border-radius: 50%; margin-top: 6px; margin-left: 10px; flex-shrink: 0; }
-            .term-row input[type="checkbox"] { display: none; }
-            /* إخفاء الشروط غير المختارة */
-            .term-row:has(input[type="checkbox"]:not(:checked)) { display: none; }
-            .term-checkbox { display: none !important; }
-            .term-text { border: none !important; padding: 0 !important; font-size: 11px; width: 100%; font-weight: 500; }
 
+            /* الشروط بالنقط الملونة */
+            .term-row { display: flex; align-items: center; margin-bottom: 5px; }
+            .term-bullet { 
+                display: inline-block !important; 
+                width: 10px; height: 10px; 
+                background-color: #3e206d !important; 
+                border-radius: 50%; 
+                margin-left: 10px; 
+                flex-shrink: 0; 
+                -webkit-print-color-adjust: exact;
+            }
+            .term-row input[type="checkbox"] { display: none; }
+            .term-row:has(input[type="checkbox"]:not(:checked)) { display: none; }
+            .term-text { border: none !important; padding: 0 !important; font-size: 11px; width: 100%; font-weight: 600; color: #374151; }
+
+            /* تنسيق الإجماليات المتلاصقة */
+            .totals-table { width: 100%; border-collapse: collapse; }
+            .totals-table td { padding: 5px; }
+            .totals-label { text-align: left; font-weight: bold; color: #4b5563; padding-left: 10px; }
+            .totals-value { text-align: right; font-family: monospace; font-weight: bold; }
+
+            /* الفوتر */
             .print-footer { display: block !important; position: fixed; bottom: 0; left: 0; width: 100%; background: #3e206d !important; color: white !important; padding: 15px; -webkit-print-color-adjust: exact; }
             .bank-info { font-size: 14px; font-weight: bold; }
         }
@@ -150,8 +171,8 @@
                                 <label class="block text-sm font-bold mb-1 text-purple-900">العميل</label>
                                 <div class="flex gap-2">
                                     <select id="qClient" class="w-full border rounded p-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
-                                    <button onclick="showClientInfo()" class="bg-blue-100 text-blue-600 px-3 rounded hover:bg-blue-200" title="سجل تعاملات العميل"><i class="fas fa-history"></i></button>
-                                    <button onclick="openMiniClientModal()" class="bg-purple-100 text-purple-700 px-3 rounded hover:bg-purple-200" title="عميل جديد"><i class="fas fa-plus"></i></button>
+                                    <button type="button" onclick="showClientInfo()" class="bg-blue-100 text-blue-600 px-3 rounded hover:bg-blue-200" title="سجل تعاملات العميل"><i class="fas fa-history"></i></button>
+                                    <button type="button" onclick="openMiniClientModal()" class="bg-purple-100 text-purple-700 px-3 rounded hover:bg-purple-200" title="عميل جديد"><i class="fas fa-plus"></i></button>
                                 </div>
                             </div>
                             <div>
@@ -197,7 +218,7 @@
                     </div>
 
                     <div class="mb-6 mx-6 print:mx-0 page-break-inside-avoid">
-                        <h3 class="font-bold text-gray-800 mb-2 border-b pb-1">الشروط والأحكام:</h3>
+                        <h3 class="font-bold text-gray-800 mb-2 border-b pb-1">الشروط والأحكام والملاحظات:</h3>
                         <div id="termsList" class="space-y-1 text-sm text-gray-700"></div>
                         <textarea id="customTerms" class="w-full border rounded p-2 mt-4 text-sm bg-gray-50 no-print focus:ring-1 focus:ring-purple-500" placeholder="ملاحظات إضافية لهذا العرض فقط..."></textarea>
                         <p id="printCustomTerms" class="hidden text-sm mt-2 font-bold"></p>
@@ -205,18 +226,20 @@
 
                     <div class="flex justify-end mx-6 print:mx-0 page-break-inside-avoid">
                         <div class="w-full md:w-1/2 lg:w-1/3 border rounded-lg overflow-hidden">
-                            <div class="flex justify-between p-2 border-b bg-gray-50">
-                                <span class="text-sm">الإجمالي قبل الضريبة</span>
-                                <span class="font-bold font-mono" id="subTotal">0.00</span>
-                            </div>
-                            <div class="flex justify-between p-2 border-b bg-gray-50">
-                                <span class="text-sm">ضريبة القيمة المضافة (15%)</span>
-                                <span class="font-bold text-red-600 font-mono" id="vatTotal">0.00</span>
-                            </div>
-                            <div class="flex justify-between p-3 bg-purple-100 border-t border-purple-200">
-                                <span class="font-bold text-purple-900">الإجمالي شامل الضريبة</span>
-                                <span class="font-bold text-xl text-purple-900 font-mono" id="grandTotal">0.00</span>
-                            </div>
+                            <table class="totals-table w-full text-sm">
+                                <tr class="border-b bg-gray-50">
+                                    <td class="totals-label">الإجمالي قبل الضريبة</td>
+                                    <td class="totals-value" id="subTotal">0.00</td>
+                                </tr>
+                                <tr class="border-b bg-gray-50">
+                                    <td class="totals-label text-red-600">ضريبة القيمة المضافة (15%)</td>
+                                    <td class="totals-value text-red-600" id="vatTotal">0.00</td>
+                                </tr>
+                                <tr class="bg-purple-100">
+                                    <td class="totals-label text-purple-900 font-bold text-lg">الإجمالي شامل الضريبة</td>
+                                    <td class="totals-value text-purple-900 font-bold text-lg" id="grandTotal">0.00</td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
 
@@ -350,15 +373,15 @@
         let productMode = 'new';
         let isArchiveView = false;
 
-        window.onload = async () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('qDate').valueAsDate = new Date();
             await Promise.all([loadClients(), loadProducts(), loadTerms()]);
             fetchQuotes();
-        };
+        });
 
         // --- Data Loading ---
         async function loadClients() {
-            const { data } = await supabaseClient.from('clients').select('id, name');
+            const { data } = await supabaseClient.from('clients').select('*');
             const select = document.getElementById('qClient');
             select.innerHTML = '<option value="">اختر العميل...</option>';
             if(data) data.forEach(c => {
@@ -423,7 +446,7 @@
                     <td class="p-2 border text-center w-10 index-cell"></td>
                     <td class="p-2 border relative flex items-center gap-2">
                         <input type="text" class="w-full border-none bg-transparent p-1 text-sm prod-search outline-none" placeholder="ابحث..." oninput="searchProduct(this, '${rowId}')" onfocus="searchProduct(this, '${rowId}')" value="${data ? data.pName : ''}">
-                        <button onclick="showProductHistory('${rowId}')" class="text-gray-400 hover:text-purple-600 no-print" title="تاريخ الصنف"><i class="fas fa-eye"></i></button>
+                        <button type="button" onclick="showProductHistory('${rowId}')" class="text-gray-400 hover:text-purple-600 no-print" title="تاريخ الصنف"><i class="fas fa-eye"></i></button>
                         <div id="res-${rowId}" class="search-results shadow-lg"></div>
                     </td>
                     <td class="p-2 border"><select id="var-${rowId}" onchange="onVariantSelect(this, '${rowId}')" class="w-full border-none bg-transparent text-sm outline-none"><option value="${data ? data.variant_id : ''}">...</option></select></td>
@@ -440,11 +463,6 @@
                 calcRow(rowId);
             }
             reindexRows();
-        }
-
-        function reindexRows() {
-            let i = 1;
-            document.querySelectorAll('.index-cell').forEach(cell => cell.innerText = i++);
         }
 
         function searchProduct(input, rowId) {
@@ -504,6 +522,10 @@
             document.getElementById('grandTotal').innerText = (sub * 1.15).toFixed(2);
         }
 
+        function reindexRows() {
+            let i = 1; document.querySelectorAll('.index-cell').forEach(cell => cell.innerText = i++);
+        }
+
         // --- Terms (Editable) ---
         function renderTermsList() {
             const list = document.getElementById('termsList');
@@ -511,7 +533,6 @@
             generalTerms.forEach(t => {
                 list.innerHTML += `
                     <div class="term-row flex items-start gap-2 mb-1">
-                        <div class="term-bullet no-print" style="background:none;"></div>
                         <span class="term-bullet hidden print-only"></span>
                         <input type="checkbox" checked class="term-checkbox w-4 h-4 text-purple-600 mt-1">
                         <input type="text" class="term-text w-full text-sm border-none bg-transparent focus:ring-0 p-0" value="${t.content}">
@@ -563,39 +584,97 @@
         // --- Modals ---
         function toggleModal(id) { const el = document.getElementById(id); el.classList.toggle('opacity-0'); el.classList.toggle('pointer-events-none'); el.querySelector('.modal-container').classList.toggle('scale-95'); el.querySelector('.modal-container').classList.toggle('scale-100'); }
         function openMiniClientModal() { toggleModal('miniClientModal'); }
-        async function saveMiniClient() { /* Same as before */ }
+        async function saveMiniClient() { 
+            const name = document.getElementById('mcName').value;
+            if(!name) return alert('الاسم مطلوب');
+            const { data } = await supabaseClient.from('clients').insert([{name, contact_person: document.getElementById('mcPerson').value, phone: document.getElementById('mcPhone').value}]).select().single();
+            await loadClients(); // Reload to get new client
+            document.getElementById('qClient').value = data.id; // Select new client
+            toggleModal('miniClientModal');
+        }
         function openMiniProductModal() { toggleModal('miniProductModal'); toggleProductMode('new'); }
-        function toggleProductMode(mode) { /* Same as before */ }
-        async function saveMiniProduct() { /* Same as before */ }
+        function toggleProductMode(mode) {
+            productMode = mode;
+            document.getElementById('newProdInputs').classList.toggle('hidden', mode !== 'new');
+            document.getElementById('existProdInputs').classList.toggle('hidden', mode !== 'exist');
+            // Toggle Styles...
+        }
+        async function saveMiniProduct() {
+            const size = document.getElementById('mpSize').value;
+            const price = document.getElementById('mpPrice').value;
+            let prodId;
+            if(productMode === 'new') {
+                const { data } = await supabaseClient.from('products').insert([{name: document.getElementById('mpName').value}]).select().single();
+                prodId = data.id;
+            } else { prodId = document.getElementById('mpExistSelect').value; }
+            await supabaseClient.from('product_variants').insert([{product_id: prodId, size_name: size, selling_price: price}]);
+            await loadProducts(); // Reload
+            toggleModal('miniProductModal');
+            alert('تمت الإضافة');
+        }
         
         // --- History & Convert ---
         async function showProductHistory(rowId) {
             const cId = document.getElementById('qClient').value;
             const vId = document.getElementById(`var-${rowId}`).value;
-            if(!cId || !vId) return alert('بيانات ناقصة');
-            const { data } = await supabaseClient.from('order_items').select('*, orders!inner(status, created_at)').eq('variant_id', vId).eq('orders.client_id', cId).order('created_at', {ascending:false});
+            if(!cId || !vId) return alert('اختر العميل والصنف والمقاس أولاً');
+            const { data } = await supabaseClient.from('order_items').select('*, orders!inner(status, created_at, client_id)').eq('variant_id', vId).eq('orders.client_id', cId).order('created_at', {ascending:false});
             const tb = document.getElementById('productHistoryBody'); tb.innerHTML = '';
-            if(data.length) data.forEach(h => tb.innerHTML += `<tr><td class="p-2">${new Date(h.created_at).toLocaleDateString('ar-SA')}</td><td class="p-2">${h.quantity}</td><td class="p-2">${h.unit_price}</td><td class="p-2">${h.orders.status}</td></tr>`);
-            else tb.innerHTML = '<tr><td colspan="4" class="text-center">لا توجد بيانات</td></tr>';
+            if(data.length) data.forEach(h => tb.innerHTML += `<tr><td class="p-2">${new Date(h.orders.created_at).toLocaleDateString('ar-SA')}</td><td class="p-2">${h.quantity}</td><td class="p-2">${h.unit_price}</td><td class="p-2">${h.orders.status}</td></tr>`);
+            else tb.innerHTML = '<tr><td colspan="4" class="text-center p-2">لا يوجد تاريخ</td></tr>';
             toggleModal('productHistoryModal');
         }
 
         async function showClientInfo() {
             const cId = document.getElementById('qClient').value;
-            if(!cId) return;
+            if(!cId) return alert('اختر العميل أولاً');
             const { data } = await supabaseClient.from('order_items').select('quantity, unit_price, created_at, product_variants(size_name, products(name)), orders!inner(client_id)').eq('orders.client_id', cId).order('created_at', {ascending:false}).limit(5);
             const list = document.getElementById('infoHistoryList'); list.innerHTML = '';
             if(data.length) data.forEach(i => list.innerHTML += `<tr class="border-b"><td class="p-2">${i.product_variants.products.name}</td><td class="p-2">${i.product_variants.size_name}</td><td class="p-2">${i.quantity}</td><td class="p-2">${i.unit_price}</td><td class="p-2">${new Date(i.created_at).toLocaleDateString('ar-SA')}</td><td class="p-2">تم</td></tr>`);
-            else list.innerHTML = '<tr><td colspan="6" class="text-center p-2">جديد</td></tr>';
-            const clientData = JSON.parse(document.getElementById('qClient').options[document.getElementById('qClient').selectedIndex].dataset.info);
-            document.getElementById('infoName').innerText = clientData.name;
+            else list.innerHTML = '<tr><td colspan="6" class="text-center p-2">لا يوجد تعاملات سابقة</td></tr>';
+            const clientName = document.getElementById('qClient').options[document.getElementById('qClient').selectedIndex].text;
+            document.getElementById('infoName').innerText = clientName;
             toggleModal('clientInfoModal');
         }
 
-        // --- Save & Edit (Fixed Waiting) ---
+        async function openConvertModal(id, cId) {
+            document.getElementById('convQuoteId').value = id; document.getElementById('convClientId').value = cId;
+            const { data } = await supabaseClient.from('order_items').select('*, product_variants(size_name, products(name))').eq('order_id', id);
+            const tb = document.getElementById('convertItemsTable'); tb.innerHTML = '';
+            data.forEach(i => tb.innerHTML += `<tr><td class="p-2 text-center"><input type="checkbox" class="conv-check" value="${i.variant_id}" data-qty="${i.quantity}" data-price="${i.unit_price}"></td><td class="p-2">${i.product_variants.products.name} (${i.product_variants.size_name})</td><td class="p-2">${i.quantity}</td></tr>`);
+            toggleModal('convertModal');
+        }
+
+        async function executeConversion() {
+            const qId = document.getElementById('convQuoteId').value;
+            const cId = document.getElementById('convClientId').value;
+            const amt = document.getElementById('payAmount').value;
+            const checks = document.querySelectorAll('.conv-check:checked');
+            if(checks.length === 0) return alert("اختر صنفاً");
+            if(!amt) return alert("المبلغ مطلوب");
+            
+            await supabaseClient.from('client_transactions').insert([{client_id: cId, type: 'payment', amount: amt, description: 'دفعة مقدمة'}]);
+            
+            let sub = 0; const items = [];
+            checks.forEach(c => {
+                items.push({variant_id: c.value, quantity: c.dataset.qty, unit_price: c.dataset.price});
+                sub += (c.dataset.qty * c.dataset.price);
+            });
+            
+            const { data: ord } = await supabaseClient.from('orders').insert([{client_id: cId, status: 'production', total_amount: sub, grand_total: sub*1.15, parent_quote_id: qId}]).select().single();
+            await supabaseClient.from('order_items').insert(items.map(i => ({...i, order_id: ord.id})));
+            
+            await supabaseClient.from('orders').update({status: 'converted'}).eq('id', qId);
+            
+            alert('تم التحويل'); toggleModal('convertModal'); fetchQuotes();
+        }
+        function toggleAllItems(s) { document.querySelectorAll('.conv-check').forEach(c => c.checked = s.checked); }
+
+        // --- Save & Edit (Fixed) ---
         async function saveQuote() {
             const clientId = document.getElementById('qClient').value;
             if(!clientId) return alert('العميل مطلوب');
+            
             const items = []; let sub = 0;
             document.querySelectorAll('#itemsContainer tr').forEach(row => {
                 const vId = row.querySelector('select').value;
@@ -606,13 +685,16 @@
                     sub += (qty * price);
                 }
             });
-            const data = { client_id: clientId, status: 'quote', total_amount: sub, grand_total: sub * 1.15, snapshotted_terms: document.getElementById('quoteTerms').value };
+
+            if(items.length === 0) return alert('أضف صنف واحد');
+
+            const orderData = { client_id: clientId, status: 'quote', total_amount: sub, grand_total: sub * 1.15, snapshotted_terms: document.getElementById('quoteTerms').value || "" };
             let oid = currentQuoteId;
             if(oid) {
-                await supabaseClient.from('orders').update(data).eq('id', oid);
+                await supabaseClient.from('orders').update(orderData).eq('id', oid);
                 await supabaseClient.from('order_items').delete().eq('order_id', oid);
             } else {
-                const { data: newO } = await supabaseClient.from('orders').insert([data]).select().single();
+                const { data: newO } = await supabaseClient.from('orders').insert([orderData]).select().single();
                 oid = newO.id;
             }
             await supabaseClient.from('order_items').insert(items.map(i => ({...i, order_id: oid})));
@@ -625,7 +707,6 @@
             document.getElementById('quoteFormView').classList.remove('hidden');
             document.getElementById('createBtn').classList.add('hidden');
 
-            // Wait for data
             const [orderRes, itemsRes] = await Promise.all([
                 supabaseClient.from('orders').select('*').eq('id', id).single(),
                 supabaseClient.from('order_items').select('*, product_variants(id, size_name, products(name))').eq('order_id', id)
@@ -637,20 +718,22 @@
             document.getElementById('qClient').value = order.client_id;
             document.getElementById('qDate').value = order.created_at.split('T')[0];
             document.getElementById('pRef').innerText = '#' + order.order_number;
+            document.getElementById('printRef').innerText = '#' + order.order_number;
             
-            // Fix: Terms Loading
-            document.getElementById('itemsContainer').innerHTML = '';
-            // If saved terms exist, use them? Or re-render defaults? Usually user wants to edit what they saved.
-            // For now, re-render defaults for simplicity or load from snapshot if we implemented it fully.
-            renderTermsList(); 
+            // Fix: Load Terms (Snapshotted or Default)
+            if (order.snapshotted_terms) {
+                // If saved text exists, put it in textarea
+                document.getElementById('quoteTerms').value = order.snapshotted_terms;
+                document.getElementById('termsList').innerHTML = ''; // Hide checkboxes on edit if using simple text area strategy
+                // Or you can try to parse it back, but simple textarea is safer for edits
+            } else {
+                renderTermsList(); // Default
+            }
 
+            document.getElementById('itemsContainer').innerHTML = '';
             items.forEach(i => addItemRow({ pName: i.product_variants.products.name, quantity: i.quantity, unit_price: i.unit_price, variant_id: i.variant_id }));
             calculateTotals();
         }
-
-        async function openConvertModal(id, cId) { /* Same as before */ }
-        async function executeConversion() { /* Same as before */ }
-        function toggleAllItems(s) { document.querySelectorAll('.conv-check').forEach(c => c.checked = s.checked); }
     </script>
 </body>
 </html>
