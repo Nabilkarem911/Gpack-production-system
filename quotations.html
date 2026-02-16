@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G.PACK - نظام عروض الأسعار المتقدم</title>
+    <title>G.PACK - عروض الأسعار المتقدمة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -20,23 +20,21 @@
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         
-        /* تحسينات القوائم المنسدلة والبحث */
-        .search-dropdown { position: relative; }
-        .search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e5e7eb; max-height: 200px; overflow-y: auto; z-index: 50; display: none; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .search-item { padding: 8px 12px; cursor: pointer; transition: background 0.2s; font-size: 0.875rem; }
-        .search-item:hover { background-color: #f3f4f6; }
-        
-        /* سويتش الشروط */
+        /* Search Dropdown */
+        .search-results { position: absolute; top: 100%; right: 0; left: 0; background: white; border: 1px solid #ddd; max-height: 200px; overflow-y: auto; z-index: 50; border-radius: 0.5rem; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+        .search-item:hover { background-color: #f9f9f9; }
+
+        /* Toggle Switch */
         .toggle-checkbox:checked { right: 0; border-color: #68D391; }
         .toggle-checkbox:checked + .toggle-label { background-color: #68D391; }
         
-        /* الطباعة */
         @media print {
             aside, header, .no-print, .action-btn { display: none !important; }
-            body { background: white; }
+            body { background: white; -webkit-print-color-adjust: exact; }
             .print-container { box-shadow: none; border: none; padding: 0; width: 100%; max-width: 100%; }
-            input, textarea, select { border: none !important; background: transparent !important; resize: none; }
-            .condition-row.hidden-print { display: none !important; }
+            input, textarea, select { border: none !important; background: transparent !important; resize: none; appearance: none; }
+            .hidden-print { display: none !important; }
         }
     </style>
 </head>
@@ -68,14 +66,24 @@
             <a href="#" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors"><i class="fas fa-id-card w-5"></i> الموظفين</a>
             <a href="#" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white transition-colors"><i class="fas fa-list-alt w-5"></i> القوائم</a>
         </nav>
+        <div class="p-4 border-t border-purple-800/50">
+            <button class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
+        </div>
     </aside>
 
     <main class="flex-1 flex flex-col overflow-hidden relative">
         <header class="h-20 bg-white shadow-sm flex items-center justify-between px-8 z-10 no-print">
-            <h2 class="text-xl font-bold text-gray-800">عروض الأسعار</h2>
-            <button onclick="showCreateView()" id="createQuoteBtn" class="gpack-btn px-4 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2">
-                <i class="fas fa-plus"></i><span>عرض جديد</span>
-            </button>
+            <div class="flex items-center gap-4">
+                <h2 class="text-xl font-bold text-gray-800">عروض الأسعار</h2>
+            </div>
+            <div class="flex items-center gap-6">
+                <button onclick="showCreateView()" id="createQuoteBtn" class="gpack-btn px-4 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2">
+                    <i class="fas fa-plus"></i>
+                    <span>إنشاء عرض جديد</span>
+                </button>
+            </div>
         </header>
 
         <div class="flex-1 overflow-y-auto p-8" id="mainContainer">
@@ -90,11 +98,12 @@
                                     <th class="px-6 py-4">العميل (المنشأة)</th>
                                     <th class="px-6 py-4">التاريخ</th>
                                     <th class="px-6 py-4">الإجمالي</th>
+                                    <th class="px-6 py-4">الحالة</th>
                                     <th class="px-6 py-4">الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody id="quotesTableBody" class="divide-y divide-gray-100 text-sm bg-white">
-                                <tr><td colspan="5" class="text-center py-4 text-gray-400">جاري التحميل...</td></tr>
+                                <tr><td colspan="6" class="text-center py-4 text-gray-400">جاري التحميل...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -110,6 +119,10 @@
                     </div>
                     <div class="text-left">
                         <div class="mb-2">
+                            <label class="text-xs text-gray-500 font-bold block">رقم العرض</label>
+                            <input type="text" id="qNumber" class="bg-gray-50 border rounded px-2 py-1 text-sm w-36 text-left" placeholder="تلقائي" readonly>
+                        </div>
+                        <div>
                             <label class="text-xs text-gray-500 font-bold block">التاريخ</label>
                             <input type="date" id="qDate" class="bg-gray-50 border rounded px-2 py-1 text-sm w-36">
                         </div>
@@ -117,13 +130,11 @@
                 </div>
 
                 <div class="mb-8 bg-purple-50 p-4 rounded-xl border border-purple-100">
-                    <label class="block text-purple-800 font-bold mb-2">بيانات العميل (المنشأة)</label>
-                    <div class="flex gap-4">
-                        <div class="flex-1 search-dropdown">
-                            <input type="text" id="clientSearch" oninput="filterClients()" onfocus="showClientList()" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-purple-500 bg-white" placeholder="ابحث باسم العميل أو المنشأة..." autocomplete="off">
-                            <input type="hidden" id="selectedClientId">
-                            <div id="clientList" class="search-results shadow-lg"></div>
-                        </div>
+                    <label class="block text-purple-800 font-bold mb-2">العميل (المنشأة)</label>
+                    <div class="flex gap-4 relative">
+                        <input type="text" id="clientSearch" oninput="filterClients()" onfocus="showClientList()" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-purple-500 bg-white" placeholder="ابحث باسم المنشأة أو الشخص..." autocomplete="off">
+                        <input type="hidden" id="selectedClientId">
+                        <div id="clientList" class="search-results shadow-lg"></div>
                         <button onclick="openClientModal()" class="bg-white border border-purple-200 text-purple-600 px-3 rounded-lg hover:bg-purple-100 no-print" title="إضافة عميل جديد"><i class="fas fa-plus"></i></button>
                     </div>
                 </div>
@@ -133,7 +144,7 @@
                         <thead class="bg-gray-100 text-gray-600 text-sm">
                             <tr>
                                 <th class="p-3 w-1/3">الصنف (بحث)</th>
-                                <th class="p-3 w-1/5">المقاس</th>
+                                <th class="p-3 w-1/5">المقاس / الوحدة</th>
                                 <th class="p-3 w-20 text-center">الكمية</th>
                                 <th class="p-3 w-24 text-center">السعر</th>
                                 <th class="p-3 w-24 text-center">الإجمالي</th>
@@ -177,17 +188,34 @@
 
     <div id="clientModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto transform transition-all scale-95 p-6">
+        <div class="modal-container bg-white w-11/12 md:max-w-lg mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto transform transition-all scale-95 p-6">
             <h3 class="text-lg font-bold text-purple-800 mb-4">إضافة عميل جديد</h3>
             <div class="space-y-3">
-                <input type="text" id="newClientEntity" class="w-full border rounded p-2" placeholder="اسم المنشأة (المحل) *">
-                <input type="text" id="newClientPerson" class="w-full border rounded p-2" placeholder="اسم الشخص المسؤول">
-                <input type="tel" id="newClientPhone" class="w-full border rounded p-2" placeholder="رقم الجوال">
-                <input type="text" id="newClientCity" class="w-full border rounded p-2" placeholder="المدينة">
-                <input type="text" id="newClientMap" class="w-full border rounded p-2" placeholder="رابط الموقع (Google Maps)">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">اسم المنشأة (محل/شركة)</label>
+                    <input type="text" id="newClientEntity" class="w-full border rounded p-2 focus:border-purple-500 outline-none" placeholder="مثال: مطعم البركة">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">الشخص المسؤول</label>
+                    <input type="text" id="newClientPerson" class="w-full border rounded p-2 focus:border-purple-500 outline-none" placeholder="مثال: أ. محمد أحمد">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">رقم الجوال</label>
+                        <input type="tel" id="newClientPhone" class="w-full border rounded p-2 focus:border-purple-500 outline-none" placeholder="05xxxxxxxx">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">المدينة</label>
+                        <input type="text" id="newClientCity" class="w-full border rounded p-2 focus:border-purple-500 outline-none" placeholder="ينبع">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">رابط الموقع (Google Maps)</label>
+                    <input type="text" id="newClientMap" class="w-full border rounded p-2 focus:border-purple-500 outline-none text-left" dir="ltr" placeholder="https://maps.google.com/...">
+                </div>
                 <div class="flex justify-end gap-2 mt-4">
-                    <button onclick="toggleModal('clientModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button>
-                    <button onclick="saveNewClient()" class="gpack-btn px-4 py-2 rounded">حفظ</button>
+                    <button onclick="toggleModal('clientModal')" class="bg-gray-100 px-4 py-2 rounded font-bold">إلغاء</button>
+                    <button onclick="saveNewClient()" class="gpack-btn px-4 py-2 rounded font-bold">حفظ واختيار</button>
                 </div>
             </div>
         </div>
@@ -196,26 +224,26 @@
     <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('historyModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6">
-            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-history text-purple-600"></i> سجل تعاملات الصنف</h3>
+            <h3 class="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2"><i class="fas fa-history text-purple-600"></i> سجل تعاملات الصنف</h3>
             <p id="historyInfo" class="text-sm text-gray-500 mb-4"></p>
-            <div class="overflow-x-auto border rounded-lg">
+            <div class="overflow-x-auto border rounded-lg max-h-64 overflow-y-auto">
                 <table class="w-full text-sm text-right">
-                    <thead class="bg-gray-50"><tr><th class="p-2">التاريخ</th><th class="p-2">رقم العرض</th><th class="p-2">الكمية</th><th class="p-2">السعر</th><th class="p-2">الحالة</th></tr></thead>
+                    <thead class="bg-gray-50 sticky top-0"><tr><th class="p-2">التاريخ</th><th class="p-2">النوع</th><th class="p-2">الكمية</th><th class="p-2">السعر</th><th class="p-2">الحالة</th></tr></thead>
                     <tbody id="historyBody"></tbody>
                 </table>
             </div>
-            <button onclick="toggleModal('historyModal')" class="mt-4 w-full bg-gray-100 py-2 rounded">إغلاق</button>
+            <button onclick="toggleModal('historyModal')" class="mt-4 w-full bg-gray-100 py-2 rounded font-bold">إغلاق</button>
         </div>
     </div>
 
     <div id="uploadModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('uploadModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6">
-            <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-paperclip"></i> إرفاق تصميم</h3>
+            <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-paperclip"></i> إرفاق ملف/تصميم</h3>
             <input type="hidden" id="uploadRowId">
-            <input type="file" id="designFile" class="w-full border p-2 rounded mb-3">
-            <textarea id="designNotes" class="w-full border p-2 rounded h-20" placeholder="ملاحظات الطباعة..."></textarea>
-            <button onclick="saveDesignFile()" class="w-full gpack-btn py-2 rounded mt-3">حفظ المرفق</button>
+            <input type="file" id="designFile" class="w-full border p-2 rounded mb-3 text-sm">
+            <textarea id="designNotes" class="w-full border p-2 rounded h-20 text-sm" placeholder="ملاحظات الطباعة..."></textarea>
+            <button onclick="saveDesignFile()" class="w-full gpack-btn py-2 rounded mt-3 font-bold">حفظ المرفق</button>
         </div>
     </div>
 
@@ -228,60 +256,52 @@
         let clientsCache = [];
         let generalTermsCache = [];
 
+        // --- Init ---
         window.onload = async () => {
             document.getElementById('qDate').valueAsDate = new Date();
             await loadInitialData();
             fetchQuotes();
         };
 
-        // --- Data Loading ---
         async function loadInitialData() {
-            // 1. Clients
             const { data: cl } = await supabase.from('clients').select('*');
             clientsCache = cl || [];
             
-            // 2. Products with Variants
             const { data: pr } = await supabase.from('products').select('*, product_variants(*)');
             productsCache = pr || [];
 
-            // 3. Terms
             const { data: tr } = await supabase.from('general_terms').select('*').eq('is_active', true);
             generalTermsCache = tr || [];
         }
 
-        // --- Client Search Logic ---
+        // --- Clients ---
         function filterClients() {
             const input = document.getElementById('clientSearch').value.toLowerCase();
             const list = document.getElementById('clientList');
             list.innerHTML = '';
-            
             if(input.length < 1) { list.style.display = 'none'; return; }
-
             const filtered = clientsCache.filter(c => c.name.toLowerCase().includes(input) || (c.contact_person && c.contact_person.toLowerCase().includes(input)));
-            
             if(filtered.length > 0) {
                 list.style.display = 'block';
                 filtered.forEach(c => {
                     const item = document.createElement('div');
-                    item.className = 'search-item border-b last:border-none p-2';
-                    item.innerHTML = `<strong>${c.name}</strong> <span class="text-gray-500 text-xs">(${c.contact_person || '-'})</span>`;
+                    item.className = 'search-item';
+                    item.innerHTML = `<strong>${c.name}</strong> <span class="text-xs text-gray-500">(${c.contact_person || 'مدير'})</span>`;
                     item.onclick = () => selectClient(c);
                     list.appendChild(item);
                 });
-            } else {
-                list.style.display = 'none';
-            }
+            } else list.style.display = 'none';
         }
 
-        function selectClient(client) {
-            document.getElementById('clientSearch').value = client.name;
-            document.getElementById('selectedClientId').value = client.id;
+        function selectClient(c) {
+            document.getElementById('clientSearch').value = c.name;
+            document.getElementById('selectedClientId').value = c.id;
             document.getElementById('clientList').style.display = 'none';
         }
 
         function showClientList() { if(document.getElementById('clientSearch').value) filterClients(); }
 
-        // --- Product Search & Row Logic ---
+        // --- Items Row ---
         function addItemRow() {
             const container = document.getElementById('itemsContainer');
             const rowId = Date.now() + Math.random().toString(16).slice(2);
@@ -289,21 +309,21 @@
             const row = `
                 <tr id="row-${rowId}" class="border-b border-gray-50 hover:bg-gray-50">
                     <td class="p-2 relative">
-                        <input type="text" class="w-full border rounded p-2 text-sm product-search" placeholder="ابحث عن صنف..." oninput="searchProduct(this, '${rowId}')" onfocus="searchProduct(this, '${rowId}')">
+                        <input type="text" class="w-full border rounded p-2 text-sm product-search" placeholder="ابحث..." oninput="searchProduct(this, '${rowId}')" onfocus="searchProduct(this, '${rowId}')">
                         <div id="list-${rowId}" class="search-results shadow-lg"></div>
                     </td>
-                    <td class="p-2">
-                        <select id="var-${rowId}" onchange="onVariantSelect(this, '${rowId}')" class="w-full border rounded p-2 text-sm bg-white" disabled><option>...</option></select>
-                    </td>
-                    <td class="p-2"><input type="number" id="qty-${rowId}" oninput="calcRow('${rowId}')" value="1" min="1" class="w-full border rounded p-2 text-center"></td>
-                    <td class="p-2"><input type="number" id="price-${rowId}" oninput="calcRow('${rowId}')" value="0.00" step="0.01" class="w-full border rounded p-2 text-center"></td>
-                    <td class="p-2 text-center font-bold text-gray-700 row-total" id="total-${rowId}">0.00</td>
+                    <td class="p-2"><select id="var-${rowId}" onchange="onVariantSelect(this, '${rowId}')" class="w-full border rounded p-2 text-sm bg-white" disabled><option>...</option></select></td>
+                    <td class="p-2"><input type="number" id="qty-${rowId}" oninput="calcRow('${rowId}')" value="1" min="1" class="w-full border rounded p-2 text-center text-sm"></td>
+                    <td class="p-2"><input type="number" id="price-${rowId}" oninput="calcRow('${rowId}')" value="0.00" step="0.01" class="w-full border rounded p-2 text-center text-sm"></td>
+                    <td class="p-2 text-center font-bold text-gray-700 text-sm row-total" id="total-${rowId}">0.00</td>
                     <td class="p-2 flex justify-center gap-2 no-print">
-                        <button onclick="openUploadModal('${rowId}')" class="text-gray-400 hover:text-blue-600" title="إرفاق تصميم"><i class="fas fa-paperclip"></i></button>
-                        <button onclick="showItemHistory('${rowId}')" class="text-gray-400 hover:text-green-600" title="سجل الصنف"><i class="fas fa-history"></i></button>
+                        <button onclick="openUploadModal('${rowId}')" class="text-gray-400 hover:text-blue-600" title="تصميم"><i class="fas fa-paperclip"></i></button>
+                        <button onclick="showItemHistory('${rowId}')" class="text-gray-400 hover:text-green-600" title="سجل"><i class="fas fa-history"></i></button>
                         <button onclick="this.closest('tr').remove(); calculateTotals()" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
                     </td>
-                    <input type="hidden" id="file-${rowId}"> </tr>
+                    <input type="hidden" id="file-${rowId}">
+                    <input type="hidden" id="notes-${rowId}">
+                </tr>
             `;
             container.insertAdjacentHTML('beforeend', row);
         }
@@ -312,31 +332,26 @@
             const val = input.value.toLowerCase();
             const list = document.getElementById(`list-${rowId}`);
             list.innerHTML = '';
-            
             const filtered = productsCache.filter(p => p.name.toLowerCase().includes(val));
-            
             if(filtered.length > 0) {
                 list.style.display = 'block';
                 filtered.forEach(p => {
                     const div = document.createElement('div');
-                    div.className = 'search-item';
+                    div.className = 'search-item text-sm';
                     div.innerText = p.name;
                     div.onclick = () => selectProduct(p, input, rowId);
                     list.appendChild(div);
                 });
-            } else {
-                list.style.display = 'none';
-            }
+            } else list.style.display = 'none';
         }
 
         function selectProduct(product, input, rowId) {
             input.value = product.name;
-            input.dataset.pid = product.id; // Store ID
+            input.dataset.pid = product.id;
             document.getElementById(`list-${rowId}`).style.display = 'none';
             
-            // Fill Variants
             const varSelect = document.getElementById(`var-${rowId}`);
-            varSelect.innerHTML = '<option value="">اختر المقاس...</option>';
+            varSelect.innerHTML = '<option value="">المقاس...</option>';
             varSelect.disabled = false;
             
             if(product.product_variants) {
@@ -350,7 +365,7 @@
             const price = select.options[select.selectedIndex].getAttribute('data-price');
             document.getElementById(`price-${rowId}`).value = price;
             
-            // Check Tiers (As previously implemented)
+            // Fetch Tiers
             const variantId = select.value;
             const { data: tiers } = await supabase.from('product_pricing_tiers').select('*').eq('variant_id', variantId);
             document.getElementById(`row-${rowId}`).dataset.tiers = JSON.stringify(tiers || []);
@@ -372,6 +387,9 @@
                     priceInput.value = price;
                     priceInput.style.color = "green";
                     priceInput.style.fontWeight = "bold";
+                } else {
+                    priceInput.style.color = "black";
+                    priceInput.style.fontWeight = "normal";
                 }
             }
             document.getElementById(`total-${rowId}`).innerText = (qty * price).toFixed(2);
@@ -386,17 +404,41 @@
             document.getElementById('grandTotal').innerText = (sub * 1.15).toFixed(2) + ' ر.س';
         }
 
-        // --- Features Logic ---
+        // --- History Logic ---
+        async function showItemHistory(rowId) {
+            const clientId = document.getElementById('selectedClientId').value;
+            const varSelect = document.getElementById(`var-${rowId}`);
+            
+            if(!clientId || !varSelect.value) { alert("يجب اختيار العميل والمقاس أولاً"); return; }
+
+            const { data: hist } = await supabase.from('order_items')
+                .select('*, orders!inner(client_id, order_number, created_at, status)')
+                .eq('variant_id', varSelect.value)
+                .eq('orders.client_id', clientId);
+
+            const body = document.getElementById('historyBody');
+            body.innerHTML = '';
+            if(hist && hist.length > 0) {
+                hist.forEach(h => {
+                    body.innerHTML += `<tr><td class="p-2">${new Date(h.orders.created_at).toLocaleDateString()}</td><td class="p-2">${h.orders.status}</td><td class="p-2">${h.quantity}</td><td class="p-2">${h.unit_price}</td><td class="p-2"></td></tr>`;
+                });
+            } else {
+                body.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">لا يوجد سجل سابق لهذا الصنف مع هذا العميل</td></tr>';
+            }
+            toggleModal('historyModal');
+        }
+
+        // --- Terms Logic ---
         function renderTerms() {
             const container = document.getElementById('termsContainer');
             container.innerHTML = '';
-            generalTermsCache.forEach((term, index) => {
+            generalTermsCache.forEach(term => {
                 container.innerHTML += `
                     <div class="condition-row flex items-center justify-between bg-gray-50 p-2 rounded mb-1">
                         <span class="flex-1">• ${term.content}</span>
                         <div class="no-print">
                             <label class="inline-flex relative items-center cursor-pointer">
-                                <input type="checkbox" checked class="sr-only toggle-checkbox" onchange="toggleTerm(this)">
+                                <input type="checkbox" checked class="sr-only toggle-checkbox" onchange="this.closest('.condition-row').classList.toggle('hidden-print', !this.checked)">
                                 <div class="w-9 h-5 bg-gray-200 rounded-full toggle-label transition-colors"></div>
                             </label>
                         </div>
@@ -405,101 +447,54 @@
             });
         }
 
-        function toggleTerm(checkbox) {
-            const row = checkbox.closest('.condition-row');
-            if(checkbox.checked) row.classList.remove('hidden-print');
-            else row.classList.add('hidden-print');
-        }
-
-        async function showItemHistory(rowId) {
-            const clientId = document.getElementById('selectedClientId').value;
-            const varSelect = document.getElementById(`var-${rowId}`);
-            const variantId = varSelect.value;
-
-            if(!clientId || !variantId) { alert("يجب اختيار العميل والصنف والمقاس أولاً"); return; }
-
-            // Fetch History
-            const { data: history } = await supabase
-                .from('order_items')
-                .select('*, orders(order_number, created_at, status)')
-                .eq('variant_id', variantId)
-                // We need to filter by client in JS or join properly. For simplicity, filtering here:
-                .not('orders', 'is', null);
-
-            const clientHistory = history.filter(h => h.orders.client_id === clientId); // Filter by client
-
-            const body = document.getElementById('historyBody');
-            body.innerHTML = '';
-            if(clientHistory.length > 0) {
-                clientHistory.forEach(h => {
-                    body.innerHTML += `<tr><td class="p-2">${new Date(h.created_at).toLocaleDateString('ar-SA')}</td><td class="p-2">#${h.orders.order_number}</td><td class="p-2">${h.quantity}</td><td class="p-2">${h.unit_price}</td><td class="p-2">${h.orders.status}</td></tr>`;
-                });
-            } else {
-                body.innerHTML = '<tr><td colspan="5" class="text-center p-4">لا توجد تعاملات سابقة لهذا الصنف مع هذا العميل</td></tr>';
-            }
-            toggleModal('historyModal');
-        }
-
         // --- Save Client ---
         async function saveNewClient() {
             const name = document.getElementById('newClientEntity').value;
             const contact = document.getElementById('newClientPerson').value;
             const phone = document.getElementById('newClientPhone').value;
-            const city = document.getElementById('newClientCity').value;
             const map = document.getElementById('newClientMap').value;
 
             if(!name) return alert("اسم المنشأة مطلوب");
 
-            const locations = map ? [{ label: 'الرئيسي', url: map }] : [];
-
-            const { data, error } = await supabase.from('clients').insert([{
-                name, contact_person: contact, phone, city, locations
-            }]).select().single();
+            const locations = map ? [{ label: 'Main', url: map }] : [];
+            const { data, error } = await supabase.from('clients').insert([{ name, contact_person: contact, phone, locations }]).select().single();
 
             if(!error) {
                 clientsCache.push(data);
                 selectClient(data);
                 toggleModal('clientModal');
-                alert("تم إضافة العميل واختياره");
-            } else {
-                alert("خطأ: " + error.message);
-            }
+                alert("تم إضافة العميل");
+            } else alert(error.message);
         }
 
-        // --- File Upload ---
-        let currentRowIdForUpload = null;
-        function openUploadModal(rowId) {
-            currentRowIdForUpload = rowId;
-            toggleModal('uploadModal');
-        }
-
+        // --- Upload ---
+        let uploadRowId = null;
+        function openUploadModal(rid) { uploadRowId = rid; toggleModal('uploadModal'); }
         async function saveDesignFile() {
-            const fileInput = document.getElementById('designFile');
-            const file = fileInput.files[0];
+            const file = document.getElementById('designFile').files[0];
+            const notes = document.getElementById('designNotes').value;
             if(!file) return alert("اختر ملفاً");
-
+            
             const fileName = `${Date.now()}_${file.name}`;
-            const { data, error } = await supabase.storage.from('designs').upload(fileName, file);
-
-            if(error) {
-                alert("فشل الرفع: تأكد من إنشاء Bucket باسم 'designs' في Supabase");
-            } else {
-                // Get Public URL
-                const { data: urlData } = supabase.storage.from('designs').getPublicUrl(fileName);
-                document.getElementById(`file-${currentRowIdForUpload}`).value = urlData.publicUrl;
-                alert("تم إرفاق التصميم بنجاح ✅");
+            const { data, error } = await supabase.storage.from('designs').upload(fileName, file); // Ensure 'designs' bucket exists
+            
+            if(!error) {
+                const { data: url } = supabase.storage.from('designs').getPublicUrl(fileName);
+                document.getElementById(`file-${uploadRowId}`).value = url.publicUrl;
+                document.getElementById(`notes-${uploadRowId}`).value = notes;
+                alert("تم الرفع ✅");
                 toggleModal('uploadModal');
-            }
+            } else alert("فشل الرفع. تأكد من إنشاء Bucket باسم 'designs' في Supabase");
         }
 
-        // --- Main Logic ---
+        // --- Core ---
         function showCreateView() {
             document.getElementById('quotesListView').classList.add('hidden');
             document.getElementById('quoteFormView').classList.remove('hidden');
             document.getElementById('createQuoteBtn').classList.add('hidden');
-            renderTerms();
             document.getElementById('itemsContainer').innerHTML = '';
             addItemRow();
+            renderTerms();
         }
 
         function closeForm() {
@@ -508,18 +503,9 @@
             document.getElementById('createQuoteBtn').classList.remove('hidden');
         }
 
-        async function fetchQuotes() {
-            const { data } = await supabase.from('orders').select('*, clients(name)').eq('status', 'quote').order('created_at', { ascending: false });
-            const tbody = document.getElementById('quotesTableBody');
-            tbody.innerHTML = '';
-            if(data) data.forEach(o => {
-                tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="px-6 py-4">#${o.order_number}</td><td class="px-6 py-4">${o.clients?.name}</td><td class="px-6 py-4">${new Date(o.created_at).toLocaleDateString('ar-SA')}</td><td class="px-6 py-4 font-bold">${o.grand_total}</td><td class="px-6 py-4"><button class="text-blue-600"><i class="fas fa-print"></i></button></td></tr>`;
-            });
-        }
-
         async function saveQuote() {
             const clientId = document.getElementById('selectedClientId').value;
-            if(!clientId) return alert("اختر عميلاً");
+            if(!clientId) return alert("اختر العميل");
 
             const items = [];
             let sub = 0;
@@ -529,30 +515,31 @@
                 const qty = document.getElementById(`qty-${rowId}`).value;
                 const price = document.getElementById(`price-${rowId}`).value;
                 const file = document.getElementById(`file-${rowId}`).value;
-                
+                const notes = document.getElementById(`notes-${rowId}`).value;
+
                 if(variantId) {
-                    items.push({ variant_id: variantId, quantity: qty, unit_price: price, design_url: file });
+                    items.push({ variant_id: variantId, quantity: qty, unit_price: price, design_url: file, design_notes: notes });
                     sub += (qty * price);
                 }
             });
 
             if(items.length === 0) return alert("أضف صنفاً واحداً على الأقل");
 
-            // Save Order
             const { data: order, error } = await supabase.from('orders').insert([{
-                client_id: clientId, status: 'quote', total_amount: sub, grand_total: sub * 1.15,
-                custom_terms: document.getElementById('customTerms').value
+                client_id: clientId,
+                status: 'quote',
+                total_amount: sub,
+                grand_total: sub * 1.15,
+                created_at: new Date()
             }]).select().single();
 
             if(!error) {
-                const orderItems = items.map(i => ({ ...i, order_id: order.id }));
-                await supabase.from('order_items').insert(orderItems);
-                alert("✅ تم حفظ العرض!");
+                const itemsData = items.map(i => ({ ...i, order_id: order.id }));
+                await supabase.from('order_items').insert(itemsData);
+                alert("✅ تم الحفظ");
                 closeForm();
                 fetchQuotes();
-            } else {
-                alert(error.message);
-            }
+            } else alert(error.message);
         }
 
         function toggleModal(id) {
