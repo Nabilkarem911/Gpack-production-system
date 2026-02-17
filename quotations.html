@@ -13,6 +13,8 @@
         body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; }
         .gpack-purple { background-color: #3e206d; }
         .gpack-yellow { color: #fccf4d; }
+        .gpack-btn { background-color: #3e206d; color: white; }
+        .gpack-btn:hover { background-color: #4e2880; }
         .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
         
@@ -23,7 +25,9 @@
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
 
-        /* Print CSS - Forcing Colors */
+        /* ================================================================
+           FIXED (Bug #4): Print CSS - Forcing exact HEX #3d1f6b for thead
+           ================================================================ */
         @media print {
             @page { size: A4; margin: 0; }
             body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -32,17 +36,33 @@
             .print-container { padding: 10mm; }
             
             /* إجبار الهيدر على اللون البنفسجي */
-            .print-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 3px solid #3e206d; padding-bottom: 15px; margin-bottom: 20px; }
+            .print-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 3px solid #3d1f6b; padding-bottom: 15px; margin-bottom: 20px; }
             
-            /* إجبار خلفية الجدول */
-            thead, th { 
-                background-color: #3e206d !important; 
-                color: white !important; 
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact;
+            /* FIXED (Bug #4): Force exact #3d1f6b for all thead and th elements in print */
+            thead,
+            thead tr,
+            thead th,
+            .print-table thead,
+            .print-table thead tr,
+            .print-table thead th {
+                background-color: #3d1f6b !important;
+                background: #3d1f6b !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* FIXED (Bug #4): Redundant explicit overrides for the table header cells */
+            table thead tr th {
+                background-color: #3d1f6b !important;
+                background: #3d1f6b !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                border: 1px solid #3d1f6b !important;
             }
             
-            .print-table th { padding: 8px; font-size: 12px; border: 1px solid #3e206d; }
+            .print-table th { padding: 8px; font-size: 12px; border: 1px solid #3d1f6b; }
             .print-table td { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
             .print-table tr:nth-child(even) { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
             input, select, textarea { border: none !important; background: transparent !important; resize: none; appearance: none; padding: 0; }
@@ -51,9 +71,10 @@
             .term-row { display: flex; align-items: flex-start; margin-bottom: 5px; }
             .term-bullet { 
                 display: inline-block !important; width: 8px; height: 8px; 
-                background-color: #3e206d !important; border-radius: 50%; 
+                background-color: #3d1f6b !important; border-radius: 50%; 
                 margin-left: 10px; margin-top: 6px; flex-shrink: 0; 
-                -webkit-print-color-adjust: exact; 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important;
             }
             .term-row input { display: none; }
             .term-row:has(input:not(:checked)) { display: none; }
@@ -66,7 +87,7 @@
             .totals-label { text-align: right; font-weight: bold; color: #4b5563; width: 60%; }
             .totals-value { text-align: left; font-family: monospace; font-weight: bold; direction: ltr; width: 40%; }
 
-            .print-footer { display: block !important; position: fixed; bottom: 0; left: 0; width: 100%; background: #3e206d !important; color: white !important; padding: 10px; -webkit-print-color-adjust: exact; }
+            .print-footer { display: block !important; position: fixed; bottom: 0; left: 0; width: 100%; background: #3d1f6b !important; color: white !important; padding: 10px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
@@ -122,7 +143,14 @@
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <table class="w-full text-right">
                         <thead class="bg-gray-50 text-gray-500 text-xs uppercase border-b border-gray-200">
-                            <tr><th>رقم العرض</th><th>العميل</th><th>التاريخ</th><th>الإجمالي</th><th>الحالة</th><th>الإجراءات</th></tr>
+                            <tr>
+                                <th class="px-4 py-3">رقم العرض</th>
+                                <th class="px-4 py-3">العميل</th>
+                                <th class="px-4 py-3">التاريخ</th>
+                                <th class="px-4 py-3">الإجمالي</th>
+                                <th class="px-4 py-3">الحالة</th>
+                                <th class="px-4 py-3 actions-col">الإجراءات</th>
+                            </tr>
                         </thead>
                         <tbody id="quotesTableBody" class="divide-y divide-gray-100 text-sm bg-white"></tbody>
                     </table>
@@ -176,17 +204,18 @@
                     </div>
 
                     <div class="mb-6 mx-6 print:mx-0">
+                        <!-- FIXED (Bug #4): Added inline style with #3d1f6b directly on thead for print compatibility -->
                         <table class="w-full text-right border-collapse print-table">
-                            <thead style="background-color: #3e206d !important; color: white !important; -webkit-print-color-adjust: exact;">
+                            <thead style="background-color: #3d1f6b; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
                                 <tr>
-                                    <th class="p-3 border w-10 text-center" style="background-color: #3e206d !important; color: white !important;">#</th>
-                                    <th class="p-3 border w-1/3" style="background-color: #3e206d !important; color: white !important;">البيان / الصنف</th>
-                                    <th class="p-3 border w-1/6" style="background-color: #3e206d !important; color: white !important;">المقاس</th>
-                                    <th class="p-3 border w-20 text-center" style="background-color: #3e206d !important; color: white !important;">الوحدة</th>
-                                    <th class="p-3 border w-20 text-center" style="background-color: #3e206d !important; color: white !important;">الكمية</th>
-                                    <th class="p-3 border w-24 text-center" style="background-color: #3e206d !important; color: white !important;">السعر</th>
-                                    <th class="p-3 border w-24 text-center" style="background-color: #3e206d !important; color: white !important;">الإجمالي</th>
-                                    <th class="p-3 border w-10 no-print bg-white border-none"></th>
+                                    <th class="p-3 border w-10 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">#</th>
+                                    <th class="p-3 border w-1/3" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">البيان / الصنف</th>
+                                    <th class="p-3 border w-1/6" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">المقاس</th>
+                                    <th class="p-3 border w-20 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">الوحدة</th>
+                                    <th class="p-3 border w-20 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">الكمية</th>
+                                    <th class="p-3 border w-24 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">السعر</th>
+                                    <th class="p-3 border w-24 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">الإجمالي</th>
+                                    <th class="p-3 border w-10 no-print" style="background: white; border: none;"></th>
                                 </tr>
                             </thead>
                             <tbody id="itemsContainer" class="text-sm"></tbody>
@@ -206,10 +235,10 @@
 
                     <div class="totals-container flex justify-end mx-6 print:mx-0 page-break-inside-avoid">
                         <div class="w-full md:w-1/2 lg:w-1/3 border rounded-lg overflow-hidden">
-                            <table class="totals-table">
-                                <tr class="border-b bg-gray-50"><td class="totals-label">الإجمالي قبل الضريبة</td><td class="totals-value" id="subTotal">0.00</td></tr>
-                                <tr class="border-b bg-gray-50"><td class="totals-label text-red-600">ضريبة القيمة المضافة (15%)</td><td class="totals-value text-red-600" id="vatTotal">0.00</td></tr>
-                                <tr class="bg-purple-100"><td class="totals-label text-purple-900 text-lg">الإجمالي شامل الضريبة</td><td class="totals-value text-purple-900 text-lg" id="grandTotal">0.00</td></tr>
+                            <table class="totals-table w-full">
+                                <tr class="border-b bg-gray-50"><td class="totals-label p-2 text-right font-bold">الإجمالي قبل الضريبة</td><td class="totals-value p-2 text-left font-mono font-bold" id="subTotal">0.00</td></tr>
+                                <tr class="border-b bg-gray-50"><td class="totals-label p-2 text-right font-bold text-red-600">ضريبة القيمة المضافة (15%)</td><td class="totals-value p-2 text-left font-mono font-bold text-red-600" id="vatTotal">0.00</td></tr>
+                                <tr class="bg-purple-100"><td class="totals-label p-2 text-right font-bold text-purple-900 text-lg">الإجمالي شامل الضريبة</td><td class="totals-value p-2 text-left font-mono font-bold text-purple-900 text-lg" id="grandTotal">0.00</td></tr>
                             </table>
                         </div>
                     </div>
@@ -240,6 +269,7 @@
         </div>
     </main>
 
+    <!-- Client Info Modal -->
     <div id="clientInfoModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('clientInfoModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-3xl mx-auto rounded-2xl shadow-lg z-50 p-6">
@@ -263,18 +293,23 @@
         </div>
     </div>
 
+    <!-- Product History Modal -->
     <div id="productHistoryModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('productHistoryModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6">
             <h3 class="font-bold text-lg mb-2 text-purple-800" id="histProdName">...</h3>
             <p class="text-sm text-gray-500 mb-4" id="histClientName">...</p>
             <div class="overflow-x-auto border rounded-lg">
-                <table class="w-full text-right text-sm"><thead class="bg-gray-100 text-gray-700"><tr><th class="p-2">التاريخ</th><th class="p-2">الكمية</th><th class="p-2">السعر</th><th class="p-2">الحالة</th></tr></thead><tbody id="productHistoryBody" class="bg-white"></tbody></table>
+                <table class="w-full text-right text-sm">
+                    <thead class="bg-gray-100 text-gray-700"><tr><th class="p-2">التاريخ</th><th class="p-2">الكمية</th><th class="p-2">السعر</th><th class="p-2">الحالة</th></tr></thead>
+                    <tbody id="productHistoryBody" class="bg-white"></tbody>
+                </table>
             </div>
             <div class="mt-4 pt-2 border-t text-right"><button onclick="toggleModal('productHistoryModal')" class="bg-gray-100 px-4 py-1 rounded text-sm">إغلاق</button></div>
         </div>
     </div>
 
+    <!-- Mini Client Modal -->
     <div id="miniClientModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
@@ -286,6 +321,7 @@
         </div>
     </div>
     
+    <!-- Mini Product Modal -->
     <div id="miniProductModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
@@ -297,19 +333,61 @@
             <div id="newProdInputs"><input type="text" id="mpName" class="w-full border p-2 rounded mb-2" placeholder="اسم الصنف"></div>
             <div id="existProdInputs" class="hidden"><select id="mpExistSelect" class="w-full border p-2 rounded mb-2 bg-white"></select></div>
             <input type="text" id="mpSize" class="w-full border p-2 rounded mb-2" placeholder="المقاس">
-            <input type="number" id="mpPrice" class="w-full border p-2 rounded mb-4" placeholder="السعر">
-            <div class="flex justify-end gap-2"><button onclick="toggleModal('miniProductModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button><button onclick="saveMiniProduct()" class="gpack-btn px-4 py-2 rounded">حفظ</button></div>
+            <input type="number" id="mpPrice" class="w-full border p-2 rounded mb-2" placeholder="السعر">
+            <input type="text" id="mpUnit" class="w-full border p-2 rounded mb-4" placeholder="الوحدة (مثال: حبة، كرتون)">
+            <div class="flex justify-end gap-2"><button onclick="toggleModal('miniProductModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button><button onclick="saveMiniProduct()" class="gpack-btn px-4 py-2 rounded font-bold">حفظ</button></div>
         </div>
     </div>
 
+    <!-- Convert to Production Modal -->
     <div id="convertModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
-            <div class="flex justify-between items-center mb-4 border-b pb-2"><h3 class="font-bold text-lg text-purple-800">تحويل لإنتاج</h3><button onclick="toggleModal('convertModal')"><i class="fas fa-times text-gray-500"></i></button></div>
-            <input type="hidden" id="convQuoteId"><input type="hidden" id="convClientId">
-            <div class="bg-green-50 p-4 rounded-lg mb-4 border border-green-100"><div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-bold mb-1">المبلغ المدفوع</label><input type="number" id="payAmount" class="w-full border rounded p-2 text-center font-bold" placeholder="0.00"></div><div><label class="block text-xs font-bold mb-1">طريقة الدفع</label><select id="payMethod" class="w-full border rounded p-2 bg-white"><option value="bank">تحويل بنكي</option><option value="cash">كاش</option><option value="network">شبكة</option></select></div></div></div>
-            <div class="mb-4"><h4 class="font-bold text-gray-800 text-sm mb-2">حدد الأصناف:</h4><div class="border rounded-lg overflow-hidden max-h-40 overflow-y-auto"><table class="w-full text-right text-sm"><thead class="bg-gray-100"><tr><th class="p-2 w-10 text-center"><input type="checkbox" onchange="toggleAllItems(this)"></th><th class="p-2">الصنف</th><th class="p-2 w-20">الكمية</th></tr></thead><tbody id="convertItemsTable"></tbody></table></div></div>
-            <div class="flex justify-end gap-2 pt-4 border-t"><button onclick="toggleModal('convertModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button><button onclick="executeConversion()" class="gpack-btn px-6 py-2 rounded font-bold shadow">تأكيد وتحويل</button></div>
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="font-bold text-lg text-purple-800">تحويل لإنتاج</h3>
+                <button onclick="toggleModal('convertModal')"><i class="fas fa-times text-gray-500"></i></button>
+            </div>
+            <input type="hidden" id="convQuoteId">
+            <input type="hidden" id="convClientId">
+            <div class="bg-green-50 p-4 rounded-lg mb-4 border border-green-100">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold mb-1">المبلغ المدفوع</label>
+                        <input type="number" id="payAmount" class="w-full border rounded p-2 text-center font-bold" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">طريقة الدفع</label>
+                        <select id="payMethod" class="w-full border rounded p-2 bg-white">
+                            <option value="bank">تحويل بنكي</option>
+                            <option value="cash">كاش</option>
+                            <option value="network">شبكة</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-4">
+                <h4 class="font-bold text-gray-800 text-sm mb-2">حدد الأصناف:</h4>
+                <!-- FIXED (Bug #1): Loading state added so user knows items are being fetched -->
+                <div id="convertLoadingMsg" class="text-center text-sm text-gray-400 py-4 hidden"><i class="fas fa-spinner fa-spin mr-2"></i> جاري تحميل الأصناف...</div>
+                <div class="border rounded-lg overflow-hidden max-h-48 overflow-y-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-2 w-10 text-center"><input type="checkbox" onchange="toggleAllItems(this)" id="selectAllConvert"></th>
+                                <th class="p-2">الصنف</th>
+                                <th class="p-2">المقاس</th>
+                                <th class="p-2 w-20">الكمية</th>
+                            </tr>
+                        </thead>
+                        <!-- FIXED (Bug #1): tbody correctly receives rows from openConvertModal -->
+                        <tbody id="convertItemsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-4 border-t">
+                <button onclick="toggleModal('convertModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button>
+                <button onclick="executeConversion()" class="gpack-btn px-6 py-2 rounded font-bold shadow">تأكيد وتحويل</button>
+            </div>
         </div>
     </div>
 
@@ -333,30 +411,63 @@
             fetchQuotes();
         };
 
+        // ================================================================
         // Data Loading
+        // ================================================================
         async function loadClients() {
-            const { data } = await supabaseClient.from('clients').select('*');
-            const select = document.getElementById('qClient');
-            select.innerHTML = '<option value="">اختر العميل...</option>';
-            if(data) data.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id; opt.text = c.name; opt.dataset.json = JSON.stringify(c);
-                select.add(opt);
-            });
+            try {
+                const { data, error } = await supabaseClient.from('clients').select('*');
+                if (error) throw error;
+                const select = document.getElementById('qClient');
+                select.innerHTML = '<option value="">اختر العميل...</option>';
+                if (data) data.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.text = c.name;
+                    opt.dataset.json = JSON.stringify(c);
+                    select.add(opt);
+                });
+            } catch (e) {
+                // FIXED (Bug #5): Graceful error handling with user alert
+                console.error('loadClients error:', e);
+                alert('خطأ في تحميل العملاء: ' + (e.message || e));
+            }
         }
 
         async function loadProducts() {
-            // FIXED: Fetch Unit
-            const { data } = await supabaseClient.from('products').select('id, name, product_variants(id, size_name, selling_price, unit)');
-            productsList = data || [];
-            const existSel = document.getElementById('mpExistSelect');
-            existSel.innerHTML = '<option value="">اختر الصنف...</option>';
-            productsList.forEach(p => existSel.innerHTML += `<option value="${p.id}">${p.name}</option>`);
+            try {
+                // FIXED: Fetch Unit column from product_variants
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('id, name, product_variants(id, size_name, selling_price, unit)');
+                if (error) throw error;
+                productsList = data || [];
+
+                // Refresh the existing product dropdown in mini product modal
+                const existSel = document.getElementById('mpExistSelect');
+                existSel.innerHTML = '<option value="">اختر الصنف...</option>';
+                productsList.forEach(p => {
+                    existSel.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                });
+            } catch (e) {
+                // FIXED (Bug #5): Graceful error handling
+                console.error('loadProducts error:', e);
+                alert('خطأ في تحميل الأصناف: ' + (e.message || e));
+            }
         }
 
         async function loadTerms() {
-            const { data } = await supabaseClient.from('general_terms').select('*').eq('is_active', true);
-            generalTerms = data || [];
+            try {
+                const { data, error } = await supabaseClient
+                    .from('general_terms')
+                    .select('*')
+                    .eq('is_active', true);
+                if (error) throw error;
+                generalTerms = data || [];
+            } catch (e) {
+                // FIXED (Bug #5): Graceful error handling
+                console.error('loadTerms error:', e);
+            }
         }
 
         async function fetchQuotes() {
@@ -364,40 +475,54 @@
             const tbody = document.getElementById('quotesTableBody');
             tbody.innerHTML = '';
             
-            const statusFilter = isArchiveView ? ORDER_STATUS.ARCHIVED : ORDER_STATUS.QUOTE;
-            const { data: orders } = await supabaseClient
-                .from('orders')
-                .select('*, clients(name)')
-                .eq('status', statusFilter)
-                .order('created_at', { ascending: false });
+            try {
+                const statusFilter = isArchiveView ? ORDER_STATUS.ARCHIVED : ORDER_STATUS.QUOTE;
+                const { data: orders, error } = await supabaseClient
+                    .from('orders')
+                    .select('*, clients(name)')
+                    .eq('status', statusFilter)
+                    .order('created_at', { ascending: false });
 
-            if(orders && orders.length > 0) {
-                orders.forEach(o => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-gray-50 border-b";
-                    
-                    let btns = isArchiveView 
-                        ? `<button onclick="restoreQuote('${o.id}')" class="text-green-600 hover:bg-green-100 p-2 rounded"><i class="fas fa-undo"></i></button>
-                           <button onclick="deleteQuotePermanent('${o.id}')" class="text-red-600 hover:bg-red-100 p-2 rounded"><i class="fas fa-times"></i></button>`
-                        : `<button onclick="editQuote('${o.id}')" class="text-blue-600 hover:bg-blue-100 p-2 rounded"><i class="fas fa-edit"></i></button>
-                           <button onclick="openConvertModal('${o.id}', '${o.client_id}')" class="text-green-600 hover:bg-green-100 p-2 rounded"><i class="fas fa-money-bill-wave"></i></button>
-                           <button onclick="archiveQuote('${o.id}')" class="text-orange-500 hover:bg-orange-100 p-2 rounded"><i class="fas fa-archive"></i></button>`;
+                if (error) throw error;
 
-                    tr.innerHTML = `
-                        <td class="px-4 py-3 font-bold">#${o.order_number}</td>
-                        <td class="px-4 py-3">${o.clients?.name || '-'}</td>
-                        <td class="px-4 py-3">${new Date(o.created_at).toLocaleDateString('en-GB')}</td>
-                        <td class="px-4 py-3 font-bold text-purple-700">${o.grand_total}</td>
-                        <td class="px-4 py-3"><span class="bg-gray-100 px-2 rounded text-xs">${isArchiveView ? 'أرشيف' : 'مسودة'}</span></td>
-                        <td class="px-4 py-3 flex gap-2">${btns}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } else { tbody.innerHTML = '<tr><td colspan="6" class="text-center p-6 text-gray-400">لا توجد بيانات</td></tr>'; }
+                if (orders && orders.length > 0) {
+                    orders.forEach(o => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-gray-50 border-b";
+                        
+                        let btns = isArchiveView 
+                            ? `<button onclick="restoreQuote('${o.id}')" class="text-green-600 hover:bg-green-100 p-2 rounded" title="استرجاع"><i class="fas fa-undo"></i></button>
+                               <button onclick="deleteQuotePermanent('${o.id}')" class="text-red-600 hover:bg-red-100 p-2 rounded" title="حذف نهائي"><i class="fas fa-times"></i></button>`
+                            : `<button onclick="editQuote('${o.id}')" class="text-blue-600 hover:bg-blue-100 p-2 rounded" title="تعديل"><i class="fas fa-edit"></i></button>
+                               <button onclick="openConvertModal('${o.id}', '${o.client_id}')" class="text-green-600 hover:bg-green-100 p-2 rounded" title="تحويل لإنتاج"><i class="fas fa-money-bill-wave"></i></button>
+                               <button onclick="archiveQuote('${o.id}')" class="text-orange-500 hover:bg-orange-100 p-2 rounded" title="أرشفة"><i class="fas fa-archive"></i></button>`;
+
+                        tr.innerHTML = `
+                            <td class="px-4 py-3 font-bold">#${o.order_number}</td>
+                            <td class="px-4 py-3">${o.clients?.name || '-'}</td>
+                            <td class="px-4 py-3">${new Date(o.created_at).toLocaleDateString('en-GB')}</td>
+                            <td class="px-4 py-3 font-bold text-purple-700">${o.grand_total || '0.00'}</td>
+                            <td class="px-4 py-3"><span class="bg-gray-100 px-2 rounded text-xs">${isArchiveView ? 'أرشيف' : 'مسودة'}</span></td>
+                            <td class="px-4 py-3 flex gap-2 actions-col">${btns}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center p-6 text-gray-400">لا توجد بيانات</td></tr>';
+                }
+            } catch (e) {
+                // FIXED (Bug #5): Graceful error handling
+                console.error('fetchQuotes error:', e);
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-6 text-red-400">خطأ في تحميل البيانات</td></tr>';
+                alert('خطأ في تحميل عروض الأسعار: ' + (e.message || e));
+            }
+
             document.getElementById('loadingIndicator').classList.add('hidden');
         }
 
+        // ================================================================
         // Items Logic
+        // ================================================================
         function addItemRow(data = null) {
             const container = document.getElementById('itemsContainer');
             const rowId = 'row-' + Date.now() + Math.random().toString(36).substr(2, 5);
@@ -406,14 +531,13 @@
             tr.id = rowId;
             tr.className = "border-b hover:bg-gray-50";
             
-            // FIXED: Unit input logic & X button
             tr.innerHTML = `
                 <td class="p-2 border text-center w-10 index-cell"></td>
                 <td class="p-2 border relative">
                     <input type="text" class="w-full border-none bg-transparent p-1 text-sm prod-search outline-none" placeholder="ابحث..." oninput="searchProduct(this, '${rowId}')" onfocus="searchProduct(this, '${rowId}')">
                     <div class="absolute left-2 top-2 flex gap-1 no-print">
-                        <button type="button" class="text-gray-400 hover:text-purple-600" onclick="showProductHistory('${rowId}')"><i class="fas fa-eye"></i></button>
-                        <button type="button" class="text-gray-300 hover:text-red-500 text-xs" onclick="clearSearch('${rowId}')"><i class="fas fa-times"></i></button>
+                        <button type="button" class="text-gray-400 hover:text-purple-600" onclick="showProductHistory('${rowId}')" title="تاريخ المنتج"><i class="fas fa-eye"></i></button>
+                        <button type="button" class="text-gray-300 hover:text-red-500 text-xs" onclick="clearSearch('${rowId}')" title="مسح"><i class="fas fa-times"></i></button>
                     </div>
                     <div id="res-${rowId}" class="search-results shadow-lg hidden"></div>
                 </td>
@@ -426,13 +550,14 @@
             `;
             container.appendChild(tr);
 
-            if(data) {
+            if (data) {
                 tr.querySelector('.prod-search').value = data.pName;
                 const prod = productsList.find(p => p.name === data.pName);
-                if(prod) fillVariants(tr.querySelector('.var-select'), prod, data.variant_id);
+                if (prod) fillVariants(tr.querySelector('.var-select'), prod, data.variant_id);
                 tr.querySelector('.qty-input').value = data.quantity;
                 tr.querySelector('.price-input').value = data.unit_price;
-                if(data.unit) tr.querySelector('.unit-input').value = data.unit;
+                // FIXED: Load saved unit value
+                if (data.unit) tr.querySelector('.unit-input').value = data.unit;
                 calcRow(rowId);
             }
             reindexRows();
@@ -441,10 +566,15 @@
         function clearSearch(rowId) {
             const row = document.getElementById(rowId);
             row.querySelector('.prod-search').value = '';
-            document.getElementById(`res-${rowId}`).classList.add('hidden');
+            const resList = document.getElementById(`res-${rowId}`);
+            resList.style.display = 'none';
+            resList.classList.add('hidden');
         }
 
-        function reindexRows() { let i = 1; document.querySelectorAll('.index-cell').forEach(c => c.innerText = i++); }
+        function reindexRows() {
+            let i = 1;
+            document.querySelectorAll('.index-cell').forEach(c => c.innerText = i++);
+        }
 
         function searchProduct(input, rowId) {
             const val = input.value.toLowerCase();
@@ -453,7 +583,7 @@
             
             const filtered = val ? productsList.filter(p => p.name.toLowerCase().includes(val)) : productsList;
             
-            if(filtered.length > 0) {
+            if (filtered.length > 0) {
                 list.style.display = 'block';
                 list.classList.remove('hidden');
                 filtered.forEach(p => {
@@ -463,28 +593,43 @@
                     div.onclick = () => { 
                         input.value = p.name; 
                         list.style.display = 'none'; 
+                        list.classList.add('hidden');
                         fillVariants(document.getElementById(`var-${rowId}`), p); 
                     };
                     list.appendChild(div);
                 });
-            } else { list.style.display = 'none'; }
-            document.addEventListener('click', (e) => { if (!input.contains(e.target)) list.style.display = 'none'; }, {once:true});
+            } else {
+                list.style.display = 'none';
+                list.classList.add('hidden');
+            }
+
+            // Close dropdown when clicking outside
+            const closeHandler = (e) => {
+                if (!input.contains(e.target) && !list.contains(e.target)) {
+                    list.style.display = 'none';
+                    document.removeEventListener('click', closeHandler);
+                }
+            };
+            document.addEventListener('click', closeHandler, { once: false });
         }
 
         function fillVariants(select, product, selectedId = null) {
             select.innerHTML = '<option value="">اختر...</option>';
-            product.product_variants.forEach(v => {
-                const opt = new Option(v.size_name, v.id);
-                opt.dataset.price = v.selling_price;
-                opt.dataset.unit = v.unit || 'حبة'; // Default to حبة if missing
-                if(selectedId == v.id) opt.selected = true;
-                select.add(opt);
-            });
+            if (product.product_variants) {
+                product.product_variants.forEach(v => {
+                    const opt = new Option(v.size_name, v.id);
+                    opt.dataset.price = v.selling_price || 0;
+                    opt.dataset.unit = v.unit || 'حبة'; // FIXED: Default to حبة if missing
+                    if (selectedId == v.id) opt.selected = true;
+                    select.add(opt);
+                });
+            }
         }
 
         function onVariantSelect(select, rowId) {
-            const price = select.options[select.selectedIndex].dataset.price || 0;
-            const unit = select.options[select.selectedIndex].dataset.unit || 'حبة';
+            const selectedOpt = select.options[select.selectedIndex];
+            const price = selectedOpt.dataset.price || 0;
+            const unit = selectedOpt.dataset.unit || 'حبة';
             document.getElementById(`price-${rowId}`).value = price;
             const row = document.getElementById(rowId);
             if (row) row.querySelector('.unit-input').value = unit;
@@ -506,169 +651,641 @@
             document.getElementById('grandTotal').innerText = (sub * 1.15).toFixed(2);
         }
 
+        // ================================================================
         // Terms
+        // ================================================================
         function renderTermsList() {
             const list = document.getElementById('termsList');
             list.innerHTML = '';
             generalTerms.forEach(t => {
                 list.innerHTML += `
                     <div class="term-row flex items-start gap-2 mb-1">
-                        <span class="term-bullet hidden print-only"></span>
-                        <input type="checkbox" checked class="term-checkbox w-4 h-4 text-purple-600 mt-1 no-print">
+                        <span class="term-bullet hidden print-only w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style="background-color: #3d1f6b; display:none;"></span>
+                        <input type="checkbox" checked class="term-checkbox w-4 h-4 text-purple-600 mt-1 no-print flex-shrink-0">
                         <div class="term-text">${t.content}</div>
                     </div>`;
             });
         }
 
-        // Save
+        // ================================================================
+        // Save Quote
+        // ================================================================
         async function saveQuote() {
             const clientId = document.getElementById('qClient').value;
-            if(!clientId) return alert("اختر العميل");
+            if (!clientId) return alert("اختر العميل");
 
             const items = [];
             let sub = 0;
             document.querySelectorAll('#itemsContainer tr').forEach(row => {
-                const vId = row.querySelector('.var-select').value;
-                const qty = Number(row.querySelector('.qty-input').value);
-                const price = Number(row.querySelector('.price-input').value);
-                const unit = row.querySelector('.unit-input').value;
-                if(vId && qty > 0) {
+                const varSelect = row.querySelector('.var-select');
+                const qtyInput = row.querySelector('.qty-input');
+                const priceInput = row.querySelector('.price-input');
+                const unitInput = row.querySelector('.unit-input');
+
+                if (!varSelect || !qtyInput || !priceInput) return;
+
+                const vId = varSelect.value;
+                const qty = Number(qtyInput.value);
+                const price = Number(priceInput.value);
+                const unit = unitInput ? unitInput.value : 'حبة';
+
+                if (vId && qty > 0) {
                     items.push({ variant_id: vId, quantity: qty, unit_price: price, unit: unit });
                     sub += qty * price;
                 }
             });
 
-            if(!items.length) return alert("أضف صنف واحد");
+            if (!items.length) return alert("أضف صنف واحد على الأقل");
 
             const data = {
                 client_id: clientId,
                 status: ORDER_STATUS.QUOTE,
                 total_amount: sub,
-                grand_total: sub * 1.15,
+                grand_total: parseFloat((sub * 1.15).toFixed(2)),
                 snapshotted_terms: document.getElementById('customTerms').value
             };
 
             try {
                 let oid = currentQuoteId;
-                if(oid) {
-                    await supabaseClient.from('orders').update(data).eq('id', oid);
-                    await supabaseClient.from('order_items').delete().eq('order_id', oid);
+                if (oid) {
+                    const { error: updateErr } = await supabaseClient.from('orders').update(data).eq('id', oid);
+                    if (updateErr) throw updateErr;
+                    const { error: delErr } = await supabaseClient.from('order_items').delete().eq('order_id', oid);
+                    if (delErr) throw delErr;
                 } else {
-                    const { data: newO } = await supabaseClient.from('orders').insert([data]).select().single();
+                    const { data: newO, error: insertErr } = await supabaseClient.from('orders').insert([data]).select().single();
+                    if (insertErr) throw insertErr;
                     oid = newO.id;
                 }
-                const itemsWithId = items.map(i => ({...i, order_id: oid}));
-                await supabaseClient.from('order_items').insert(itemsWithId);
-                alert("تم الحفظ");
+                const itemsWithId = items.map(i => ({ ...i, order_id: oid }));
+                const { error: itemsErr } = await supabaseClient.from('order_items').insert(itemsWithId);
+                if (itemsErr) throw itemsErr;
+                alert("تم الحفظ بنجاح");
                 closeForm();
                 fetchQuotes();
-            } catch(e) { console.error(e); alert("خطأ في الحفظ"); }
+            } catch (e) {
+                // FIXED (Bug #5): Graceful error handling
+                console.error('saveQuote error:', e);
+                alert("خطأ في الحفظ: " + (e.message || e));
+            }
         }
 
+        // ================================================================
+        // Edit Quote
+        // ================================================================
         async function editQuote(id) {
             currentQuoteId = id;
             document.getElementById('listView').classList.add('hidden');
             document.getElementById('quoteFormView').classList.remove('hidden');
             document.getElementById('createBtn').classList.add('hidden');
 
-            const [orderRes, itemsRes] = await Promise.all([
-                supabaseClient.from('orders').select('*').eq('id', id).single(),
-                supabaseClient.from('order_items').select('*, product_variants(id, size_name, products(name))').eq('order_id', id)
-            ]);
+            try {
+                const [orderRes, itemsRes] = await Promise.all([
+                    supabaseClient.from('orders').select('*').eq('id', id).single(),
+                    supabaseClient.from('order_items')
+                        .select('*, product_variants(id, size_name, products(name))')
+                        .eq('order_id', id)
+                ]);
 
-            const order = orderRes.data;
-            document.getElementById('qClient').value = order.client_id;
-            document.getElementById('qDate').value = order.created_at.split('T')[0];
-            document.getElementById('pRef').innerText = '#' + order.order_number;
-            document.getElementById('customTerms').value = order.snapshotted_terms || "";
-            renderTermsList();
+                if (orderRes.error) throw orderRes.error;
+                if (itemsRes.error) throw itemsRes.error;
 
-            document.getElementById('itemsContainer').innerHTML = '';
-            itemsRes.data.forEach(i => {
-                if(i.product_variants && i.product_variants.products) {
-                    addItemRow({
-                        pName: i.product_variants.products.name,
-                        variant_id: i.variant_id,
-                        quantity: i.quantity,
-                        unit_price: i.unit_price,
-                        unit: i.unit // FIXED: Load saved unit
+                const order = orderRes.data;
+                document.getElementById('qClient').value = order.client_id;
+                document.getElementById('qDate').value = order.created_at.split('T')[0];
+                document.getElementById('pRef').innerText = '#' + order.order_number;
+                document.getElementById('customTerms').value = order.snapshotted_terms || "";
+                renderTermsList();
+
+                document.getElementById('itemsContainer').innerHTML = '';
+                itemsRes.data.forEach(i => {
+                    if (i.product_variants && i.product_variants.products) {
+                        addItemRow({
+                            pName: i.product_variants.products.name,
+                            variant_id: i.variant_id,
+                            quantity: i.quantity,
+                            unit_price: i.unit_price,
+                            unit: i.unit // FIXED: Load saved unit from order_items
+                        });
+                    }
+                });
+                calculateTotals();
+            } catch (e) {
+                // FIXED (Bug #5): Graceful error handling
+                console.error('editQuote error:', e);
+                alert('خطأ في تحميل بيانات العرض: ' + (e.message || e));
+            }
+        }
+
+        // ================================================================
+        // FIXED (Bug #1): openConvertModal - Now correctly fetches and renders items
+        // ================================================================
+        async function openConvertModal(orderId, clientId) {
+            document.getElementById('convQuoteId').value = orderId;
+            document.getElementById('convClientId').value = clientId;
+            document.getElementById('payAmount').value = '';
+
+            const tbody = document.getElementById('convertItemsTable');
+            const loadingMsg = document.getElementById('convertLoadingMsg');
+            tbody.innerHTML = '';
+            loadingMsg.classList.remove('hidden');
+
+            // Open modal first so user sees the loading state
+            toggleModal('convertModal');
+
+            try {
+                // FIXED (Bug #1): Fetch order_items with full variant & product info
+                const { data: items, error } = await supabaseClient
+                    .from('order_items')
+                    .select('id, quantity, unit_price, unit, variant_id, product_variants(id, size_name, products(id, name))')
+                    .eq('order_id', orderId);
+
+                if (error) throw error;
+
+                loadingMsg.classList.add('hidden');
+
+                if (items && items.length > 0) {
+                    items.forEach(item => {
+                        // FIXED (Bug #1): Safely access nested product name and size
+                        const productName = item.product_variants?.products?.name || 'غير معروف';
+                        const sizeName = item.product_variants?.size_name || '-';
+                        const qty = item.quantity || 0;
+                        const itemId = item.id;
+
+                        const tr = document.createElement('tr');
+                        tr.className = 'border-b hover:bg-gray-50';
+                        tr.innerHTML = `
+                            <td class="p-2 text-center">
+                                <input type="checkbox" checked class="conv-check w-4 h-4 text-purple-600" data-item-id="${itemId}" data-variant-id="${item.variant_id}">
+                            </td>
+                            <td class="p-2 font-medium">${productName}</td>
+                            <td class="p-2 text-gray-600">${sizeName}</td>
+                            <td class="p-2 text-center">
+                                <input type="number" value="${qty}" min="1" class="w-16 border rounded p-1 text-center text-sm conv-qty" data-item-id="${itemId}">
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
                     });
+                } else {
+                    // FIXED (Bug #1): Show a clear "no items" message in the tbody
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-gray-400">لا توجد أصناف في هذا العرض</td></tr>';
+                }
+
+                // Reset select-all checkbox
+                document.getElementById('selectAllConvert').checked = true;
+
+            } catch (e) {
+                // FIXED (Bug #5): Graceful error handling
+                loadingMsg.classList.add('hidden');
+                console.error('openConvertModal fetch error:', e);
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-red-400">خطأ في تحميل الأصناف</td></tr>';
+                alert('خطأ في تحميل أصناف العرض: ' + (e.message || e));
+            }
+        }
+
+        function toggleAllItems(checkbox) {
+            // FIXED (Bug #1): Uses correct class selector .conv-check
+            document.querySelectorAll('.conv-check').forEach(c => c.checked = checkbox.checked);
+        }
+
+        // ================================================================
+        // FIXED (Bug #2): showClientInfo - Rewritten to avoid !inner join issues
+        // ================================================================
+        async function showClientInfo() {
+            const cId = document.getElementById('qClient').value;
+            if (!cId) return alert('اختر العميل أولاً');
+            
+            const sel = document.getElementById('qClient');
+            const opt = sel.options[sel.selectedIndex];
+            let clientData = {};
+            try {
+                clientData = JSON.parse(opt.dataset.json);
+            } catch (e) {
+                clientData = { name: opt.text };
+            }
+
+            document.getElementById('infoName').innerText = clientData.name || '-';
+            document.getElementById('infoContact').innerText = clientData.contact_person || '-';
+            document.getElementById('infoPhone').innerText = clientData.phone || '-';
+            document.getElementById('infoCity').innerText = clientData.city || 'غير محدد';
+
+            const tbody = document.getElementById('infoHistoryList');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-2 text-gray-400"><i class="fas fa-spinner fa-spin mr-1"></i> جاري التحميل...</td></tr>';
+            toggleModal('clientInfoModal');
+
+            try {
+                // FIXED (Bug #2): Two-step approach - first get order IDs for this client,
+                // then fetch order_items for those orders. Avoids !inner join FK issues.
+                const { data: clientOrders, error: ordersError } = await supabaseClient
+                    .from('orders')
+                    .select('id')
+                    .eq('client_id', cId)
+                    .order('created_at', { ascending: false });
+
+                if (ordersError) throw ordersError;
+
+                tbody.innerHTML = '';
+
+                if (!clientOrders || clientOrders.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-3 text-gray-400">لا يوجد تعاملات سابقة</td></tr>';
+                    return;
+                }
+
+                const orderIds = clientOrders.map(o => o.id);
+
+                // FIXED (Bug #2): Fetch items using order_id in list - cleaner than !inner
+                const { data: items, error: itemsError } = await supabaseClient
+                    .from('order_items')
+                    .select('quantity, unit_price, created_at, product_variants(size_name, products(name))')
+                    .in('order_id', orderIds)
+                    .order('created_at', { ascending: false })
+                    .limit(10); // FIXED (Bug #2): Last 10 records across all orders
+
+                if (itemsError) throw itemsError;
+
+                if (items && items.length > 0) {
+                    items.forEach(i => {
+                        const productName = i.product_variants?.products?.name || '-';
+                        const sizeName = i.product_variants?.size_name || '-';
+                        const dateStr = i.created_at ? new Date(i.created_at).toLocaleDateString('ar-SA') : '-';
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-2 border-b">${productName}</td>
+                                <td class="p-2 border-b">${sizeName}</td>
+                                <td class="p-2 border-b text-center">${i.quantity}</td>
+                                <td class="p-2 border-b text-center font-mono">${i.unit_price}</td>
+                                <td class="p-2 border-b text-center">${dateStr}</td>
+                            </tr>`;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-3 text-gray-400">لا يوجد تعاملات سابقة</td></tr>';
+                }
+
+            } catch (e) {
+                // FIXED (Bug #5): Graceful error handling
+                console.error('showClientInfo error:', e);
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-3 text-red-400">خطأ في تحميل البيانات</td></tr>';
+                alert('خطأ في تحميل سجل العميل: ' + (e.message || e));
+            }
+        }
+
+        // ================================================================
+        // FIXED (Bug #2): showProductHistory - Rewritten for reliable data fetch
+        // ================================================================
+        async function showProductHistory(rowId) {
+            const cId = document.getElementById('qClient').value;
+            const varSelect = document.getElementById(`var-${rowId}`);
+            const vId = varSelect ? varSelect.value : null;
+
+            if (!cId) return alert('اختر العميل أولاً');
+            if (!vId) return alert('اختر المقاس أولاً');
+
+            // Update modal header with product/variant name
+            const variantName = varSelect.options[varSelect.selectedIndex]?.text || '-';
+            const rowEl = document.getElementById(rowId);
+            const productName = rowEl ? rowEl.querySelector('.prod-search').value : '-';
+
+            document.getElementById('histProdName').innerText = productName + ' - ' + variantName;
+            document.getElementById('histClientName').innerText = 'سجل التعاملات مع العميل المحدد';
+
+            const tb = document.getElementById('productHistoryBody');
+            tb.innerHTML = '<tr><td colspan="4" class="text-center p-2 text-gray-400"><i class="fas fa-spinner fa-spin"></i></td></tr>';
+            toggleModal('productHistoryModal');
+
+            try {
+                // FIXED (Bug #2): Two-step approach - first get orders for client, then filter items
+                const { data: clientOrders, error: ordersError } = await supabaseClient
+                    .from('orders')
+                    .select('id, status')
+                    .eq('client_id', cId);
+
+                if (ordersError) throw ordersError;
+
+                tb.innerHTML = '';
+
+                if (!clientOrders || clientOrders.length === 0) {
+                    tb.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-gray-400">لا يوجد سجل</td></tr>';
+                    return;
+                }
+
+                const orderIds = clientOrders.map(o => o.id);
+                // Create a map for quick status lookup
+                const orderStatusMap = {};
+                clientOrders.forEach(o => { orderStatusMap[o.id] = o.status; });
+
+                // FIXED (Bug #2): Fetch items by variant_id AND order_id in list
+                const { data: items, error: itemsError } = await supabaseClient
+                    .from('order_items')
+                    .select('quantity, unit_price, created_at, order_id')
+                    .eq('variant_id', vId)
+                    .in('order_id', orderIds)
+                    .order('created_at', { ascending: false });
+
+                if (itemsError) throw itemsError;
+
+                if (items && items.length > 0) {
+                    items.forEach(h => {
+                        const statusLabel = STATUS_AR[orderStatusMap[h.order_id]] || '-';
+                        const dateStr = h.created_at ? new Date(h.created_at).toLocaleDateString('ar-SA') : '-';
+                        tb.innerHTML += `
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-2 border-b">${dateStr}</td>
+                                <td class="p-2 border-b text-center">${h.quantity}</td>
+                                <td class="p-2 border-b text-center font-mono">${h.unit_price}</td>
+                                <td class="p-2 border-b"><span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${statusLabel}</span></td>
+                            </tr>`;
+                    });
+                } else {
+                    tb.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-gray-400">لا يوجد سجل لهذا المنتج</td></tr>';
+                }
+
+            } catch (e) {
+                // FIXED (Bug #5): Graceful error handling
+                console.error('showProductHistory error:', e);
+                tb.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-red-400">خطأ في التحميل</td></tr>';
+                alert('خطأ في تحميل سجل المنتج: ' + (e.message || e));
+            }
+        }
+
+        // ================================================================
+        // FIXED (Bug #3): saveMiniProduct - Inserts to DB, refreshes productsList & UI
+        // ================================================================
+        async function saveMiniProduct() {
+            const size = document.getElementById('mpSize').value.trim();
+            const price = parseFloat(document.getElementById('mpPrice').value) || 0;
+            const unit = document.getElementById('mpUnit').value.trim() || 'حبة';
+
+            if (!size) return alert('أدخل المقاس');
+
+            try {
+                let productId = null;
+
+                if (productMode === 'new') {
+                    // FIXED (Bug #3): Create new product first
+                    const name = document.getElementById('mpName').value.trim();
+                    if (!name) return alert('أدخل اسم الصنف');
+
+                    const { data: newProduct, error: prodError } = await supabaseClient
+                        .from('products')
+                        .insert([{ name: name }])
+                        .select()
+                        .single();
+
+                    if (prodError) throw prodError;
+                    productId = newProduct.id;
+
+                } else {
+                    // FIXED (Bug #3): Use existing product
+                    const existSel = document.getElementById('mpExistSelect');
+                    productId = existSel.value;
+                    if (!productId) return alert('اختر الصنف');
+                }
+
+                // FIXED (Bug #3): Insert variant into product_variants
+                const { data: newVariant, error: varError } = await supabaseClient
+                    .from('product_variants')
+                    .insert([{
+                        product_id: productId,
+                        size_name: size,
+                        selling_price: price,
+                        unit: unit
+                    }])
+                    .select()
+                    .single();
+
+                if (varError) throw varError;
+
+                alert('تم الحفظ بنجاح');
+                toggleModal('miniProductModal');
+
+                // FIXED (Bug #3): Reload products from DB to refresh productsList global array
+                await loadProducts();
+
+                // FIXED (Bug #3): Clear form fields
+                document.getElementById('mpName').value = '';
+                document.getElementById('mpSize').value = '';
+                document.getElementById('mpPrice').value = '';
+                document.getElementById('mpUnit').value = '';
+
+            } catch (e) {
+                // FIXED (Bug #5): Graceful error handling
+                console.error('saveMiniProduct error:', e);
+                alert('خطأ في حفظ الصنف: ' + (e.message || e));
+            }
+        }
+
+        // ================================================================
+        // Mini Client Save
+        // ================================================================
+        async function saveMiniClient() {
+            const name = document.getElementById('mcName').value.trim();
+            if (!name) return alert('أدخل اسم المنشأة');
+
+            const person = document.getElementById('mcPerson').value.trim();
+            const phone = document.getElementById('mcPhone').value.trim();
+
+            try {
+                const { data: newClient, error } = await supabaseClient
+                    .from('clients')
+                    .insert([{ name: name, contact_person: person, phone: phone }])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                // Add to dropdown immediately
+                const select = document.getElementById('qClient');
+                const opt = document.createElement('option');
+                opt.value = newClient.id;
+                opt.text = newClient.name;
+                opt.dataset.json = JSON.stringify(newClient);
+                select.add(opt);
+                select.value = newClient.id;
+
+                alert('تم إضافة العميل');
+                toggleModal('miniClientModal');
+                document.getElementById('mcName').value = '';
+                document.getElementById('mcPerson').value = '';
+                document.getElementById('mcPhone').value = '';
+
+            } catch (e) {
+                // FIXED (Bug #5): Graceful error handling
+                console.error('saveMiniClient error:', e);
+                alert('خطأ في حفظ العميل: ' + (e.message || e));
+            }
+        }
+
+        // ================================================================
+        // Execute Conversion
+        // ================================================================
+        async function executeConversion() {
+            const orderId = document.getElementById('convQuoteId').value;
+            const clientId = document.getElementById('convClientId').value;
+            const payAmount = parseFloat(document.getElementById('payAmount').value) || 0;
+            const payMethod = document.getElementById('payMethod').value;
+
+            // Collect checked items with their quantities
+            const checkedItems = [];
+            document.querySelectorAll('.conv-check:checked').forEach(checkbox => {
+                const itemId = checkbox.dataset.itemId;
+                const variantId = checkbox.dataset.variantId;
+                const qtyInput = document.querySelector(`.conv-qty[data-item-id="${itemId}"]`);
+                const qty = qtyInput ? Number(qtyInput.value) : 0;
+                if (qty > 0) {
+                    checkedItems.push({ item_id: itemId, variant_id: variantId, quantity: qty });
                 }
             });
+
+            if (!checkedItems.length) return alert('اختر صنفاً واحداً على الأقل');
+
+            try {
+                // Update order status to production
+                const { error: statusError } = await supabaseClient
+                    .from('orders')
+                    .update({ status: ORDER_STATUS.PRODUCTION, paid_amount: payAmount, payment_method: payMethod })
+                    .eq('id', orderId);
+
+                if (statusError) throw statusError;
+
+                alert('تم التحويل لأوامر التشغيل بنجاح');
+                toggleModal('convertModal');
+                fetchQuotes();
+
+            } catch (e) {
+                // FIXED (Bug #5): Graceful error handling
+                console.error('executeConversion error:', e);
+                alert('خطأ في التحويل: ' + (e.message || e));
+            }
+        }
+
+        // ================================================================
+        // Utility Functions
+        // ================================================================
+        async function archiveQuote(id) {
+            if (confirm('هل تريد أرشفة هذا العرض؟')) {
+                try {
+                    const { error } = await supabaseClient.from('orders').update({ status: ORDER_STATUS.ARCHIVED }).eq('id', id);
+                    if (error) throw error;
+                    fetchQuotes();
+                } catch (e) {
+                    alert('خطأ في الأرشفة: ' + (e.message || e));
+                }
+            }
+        }
+
+        async function restoreQuote(id) {
+            if (confirm('هل تريد استرجاع هذا العرض من الأرشيف؟')) {
+                try {
+                    const { error } = await supabaseClient.from('orders').update({ status: ORDER_STATUS.QUOTE }).eq('id', id);
+                    if (error) throw error;
+                    fetchQuotes();
+                } catch (e) {
+                    alert('خطأ في الاسترجاع: ' + (e.message || e));
+                }
+            }
+        }
+
+        async function deleteQuotePermanent(id) {
+            if (confirm('حذف نهائي؟ لا يمكن التراجع عن هذا الإجراء!')) {
+                try {
+                    const { error: delItems } = await supabaseClient.from('order_items').delete().eq('order_id', id);
+                    if (delItems) throw delItems;
+                    const { error: delOrder } = await supabaseClient.from('orders').delete().eq('id', id);
+                    if (delOrder) throw delOrder;
+                    fetchQuotes();
+                } catch (e) {
+                    alert('خطأ في الحذف: ' + (e.message || e));
+                }
+            }
+        }
+
+        function toggleArchiveView() {
+            isArchiveView = !isArchiveView;
+            const btn = document.getElementById('archiveBtn');
+            btn.innerHTML = isArchiveView
+                ? '<i class="fas fa-arrow-right"></i> <span>العودة</span>'
+                : '<i class="fas fa-trash-restore"></i> <span>الأرشيف</span>';
+            fetchQuotes();
+        }
+
+        function openCreateView() {
+            currentQuoteId = null;
+            document.getElementById('listView').classList.add('hidden');
+            document.getElementById('quoteFormView').classList.remove('hidden');
+            document.getElementById('createBtn').classList.add('hidden');
+            document.getElementById('itemsContainer').innerHTML = '';
+            document.getElementById('qClient').value = '';
+            document.getElementById('customTerms').value = '';
+            document.getElementById('pRef').innerText = 'NEW';
+            renderTermsList();
+            addItemRow();
             calculateTotals();
         }
 
-        // Utils
-        async function archiveQuote(id) { if(confirm('أرشفة؟')) { await supabaseClient.from('orders').update({status: ORDER_STATUS.ARCHIVED}).eq('id', id); fetchQuotes(); } }
-        async function restoreQuote(id) { if(confirm('استرجاع؟')) { await supabaseClient.from('orders').update({status: ORDER_STATUS.QUOTE}).eq('id', id); fetchQuotes(); } }
-        async function deleteQuotePermanent(id) { if(confirm('حذف نهائي؟')) { await supabaseClient.from('order_items').delete().eq('order_id', id); await supabaseClient.from('orders').delete().eq('id', id); fetchQuotes(); } }
-        function toggleArchiveView() { isArchiveView = !isArchiveView; document.getElementById('archiveBtn').innerHTML = isArchiveView ? 'العودة' : 'الأرشيف'; fetchQuotes(); }
-        function openCreateView() { currentQuoteId = null; document.getElementById('listView').classList.add('hidden'); document.getElementById('quoteFormView').classList.remove('hidden'); document.getElementById('createBtn').classList.add('hidden'); document.getElementById('itemsContainer').innerHTML=''; document.getElementById('qClient').value=''; renderTermsList(); addItemRow(); calculateTotals(); }
-        function closeForm() { document.getElementById('listView').classList.remove('hidden'); document.getElementById('quoteFormView').classList.add('hidden'); document.getElementById('createBtn').classList.remove('hidden'); }
+        function closeForm() {
+            document.getElementById('listView').classList.remove('hidden');
+            document.getElementById('quoteFormView').classList.add('hidden');
+            document.getElementById('createBtn').classList.remove('hidden');
+            currentQuoteId = null;
+        }
+
         function preparePrint() {
             const sel = document.getElementById('qClient');
-            if(sel.selectedIndex >= 0) document.getElementById('printClientName').innerText = sel.options[sel.selectedIndex].text;
+            if (sel.selectedIndex >= 0 && sel.value) {
+                document.getElementById('printClientName').innerText = sel.options[sel.selectedIndex].text;
+            }
             document.getElementById('pDate').innerText = document.getElementById('qDate').value;
             const custom = document.getElementById('customTerms').value;
             const pCustom = document.getElementById('printCustomTerms');
-            if(custom) { pCustom.innerText = "ملاحظات: " + custom; pCustom.classList.remove('hidden'); } else { pCustom.classList.add('hidden'); }
+            if (custom) {
+                pCustom.innerText = "ملاحظات: " + custom;
+                pCustom.classList.remove('hidden');
+            } else {
+                pCustom.classList.add('hidden');
+            }
             window.print();
         }
 
-        // --- History Logic Fixed (Simple Query) ---
-        async function showClientInfo() {
-            const cId = document.getElementById('qClient').value;
-            if(!cId) return alert('اختر العميل');
-            
-            const opt = document.getElementById('qClient').options[document.getElementById('qClient').selectedIndex];
-            const clientData = JSON.parse(opt.dataset.json);
-            document.getElementById('infoName').innerText = clientData.name;
-            document.getElementById('infoContact').innerText = clientData.contact_person || '-';
-            document.getElementById('infoPhone').innerText = clientData.phone || '-';
-            document.getElementById('infoCity').innerText = clientData.city || 'ينبع';
-
-            // FIXED: Removed !inner join to avoid RLS/FK issues
-            // Fetch order items for orders belonging to this client
-            const { data: items } = await supabaseClient.from('order_items')
-                .select('quantity, unit_price, created_at, product_variants(size_name, products(name)), orders!inner(id, client_id)')
-                .eq('orders.client_id', cId)
-                .order('created_at', {ascending: false}).limit(5);
-
-            const tbody = document.getElementById('infoHistoryList'); tbody.innerHTML = '';
-            if(items && items.length) {
-                items.forEach(i => tbody.innerHTML += `<tr><td class="p-2 border">${i.product_variants.products.name}</td><td class="p-2 border">${i.product_variants.size_name}</td><td class="p-2 border">${i.quantity}</td><td class="p-2 border">${i.unit_price}</td><td class="p-2 border">${new Date(i.created_at).toLocaleDateString('ar-SA')}</td></tr>`);
-            } else tbody.innerHTML = '<tr><td colspan="5" class="text-center p-2">لا يوجد تعاملات</td></tr>';
-            toggleModal('clientInfoModal');
+        function toggleModal(id) {
+            const el = document.getElementById(id);
+            el.classList.toggle('opacity-0');
+            el.classList.toggle('pointer-events-none');
+            const container = el.querySelector('.modal-container');
+            if (container) {
+                container.classList.toggle('scale-95');
+                container.classList.toggle('scale-100');
+            }
         }
 
-        async function showProductHistory(rowId) {
-            const cId = document.getElementById('qClient').value;
-            const vId = document.getElementById(`var-${rowId}`).value;
-            if(!cId || !vId) return alert('اختر العميل والمقاس');
-            
-            // FIXED: Removed !inner
-            const { data: items } = await supabaseClient.from('order_items')
-                .select('quantity, unit_price, created_at, orders!inner(status, client_id)')
-                .eq('variant_id', vId)
-                .eq('orders.client_id', cId)
-                .order('created_at', {ascending: false});
-
-            const tb = document.getElementById('productHistoryBody'); tb.innerHTML = '';
-            if(items && items.length) {
-                items.forEach(h => tb.innerHTML += `<tr><td class="p-2">${new Date(h.created_at).toLocaleDateString('ar-SA')}</td><td class="p-2">${h.quantity}</td><td class="p-2">${h.unit_price}</td><td class="p-2">${STATUS_AR[h.orders.status] || h.orders.status}</td></tr>`);
-            } else tb.innerHTML = '<tr><td colspan="4" class="text-center p-2">لا يوجد</td></tr>';
-            toggleModal('productHistoryModal');
+        function openMiniClientModal() {
+            toggleModal('miniClientModal');
         }
 
-        function openConvertModal(id, cId) { document.getElementById('convQuoteId').value = id; document.getElementById('convClientId').value = cId; /* Load items logic same as before */ toggleModal('convertModal'); }
-        function toggleAllItems(s) { document.querySelectorAll('.conv-check').forEach(c => c.checked = s.checked); }
-        function toggleModal(id) { const el = document.getElementById(id); el.classList.toggle('opacity-0'); el.classList.toggle('pointer-events-none'); el.querySelector('.modal-container').classList.toggle('scale-95'); el.querySelector('.modal-container').classList.toggle('scale-100'); }
-        function openMiniClientModal() { toggleModal('miniClientModal'); }
-        async function saveMiniClient() { /* Same */ }
-        function openMiniProductModal() { toggleModal('miniProductModal'); toggleProductMode('new'); }
-        function toggleProductMode(mode) { /* Same */ }
-        async function saveMiniProduct() { /* Same */ }
-        async function executeConversion() { /* Same */ }
+        function openMiniProductModal() {
+            toggleModal('miniProductModal');
+            toggleProductMode('new');
+        }
+
+        // FIXED (Bug #3): toggleProductMode properly shows/hides inputs and styles buttons
+        function toggleProductMode(mode) {
+            productMode = mode;
+            const newInputs = document.getElementById('newProdInputs');
+            const existInputs = document.getElementById('existProdInputs');
+            const btnNew = document.getElementById('btnNewProd');
+            const btnExist = document.getElementById('btnExistProd');
+
+            if (mode === 'new') {
+                newInputs.classList.remove('hidden');
+                existInputs.classList.add('hidden');
+                btnNew.className = 'flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800';
+                btnExist.className = 'flex-1 py-1 rounded text-sm text-gray-500';
+            } else {
+                newInputs.classList.add('hidden');
+                existInputs.classList.remove('hidden');
+                btnNew.className = 'flex-1 py-1 rounded text-sm text-gray-500';
+                btnExist.className = 'flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800';
+            }
+        }
     </script>
 </body>
 </html>
