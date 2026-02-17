@@ -17,76 +17,45 @@
         .gpack-btn:hover { background-color: #4e2880; }
         .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
-        
         .search-results { position: absolute; background: white; border: 1px solid #ddd; max-height: 150px; overflow-y: auto; width: 100%; z-index: 50; top: 100%; display: none; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
         .search-item:hover { background-color: #f9f9f9; }
-
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
-
-        /* ================================================================
-           FIXED (Bug #4): Print CSS - Forcing exact HEX #3d1f6b for thead
-           ================================================================ */
         @media print {
             @page { size: A4; margin: 0; }
             body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             aside, header, #listView, #quoteControls, .no-print, .actions-col, #addClientBtn, #topBar { display: none !important; }
             #quoteFormView { display: block !important; position: absolute; top: 0; left: 0; width: 210mm; min-height: 297mm; padding: 0; margin: 0; box-shadow: none; border: none; }
             .print-container { padding: 10mm; }
-            
-            /* إجبار الهيدر على اللون البنفسجي */
             .print-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 3px solid #3d1f6b; padding-bottom: 15px; margin-bottom: 20px; }
-            
-            /* FIXED (Bug #4): Force exact #3d1f6b for all thead and th elements in print */
-            thead,
-            thead tr,
-            thead th,
-            .print-table thead,
-            .print-table thead tr,
-            .print-table thead th {
-                background-color: #3d1f6b !important;
-                background: #3d1f6b !important;
-                color: white !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
+            thead, thead tr, thead th, .print-table thead, .print-table thead tr, .print-table thead th {
+                background-color: #3d1f6b !important; background: #3d1f6b !important; color: white !important;
+                -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
             }
-
-            /* FIXED (Bug #4): Redundant explicit overrides for the table header cells */
             table thead tr th {
-                background-color: #3d1f6b !important;
-                background: #3d1f6b !important;
-                color: #ffffff !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                border: 1px solid #3d1f6b !important;
+                background-color: #3d1f6b !important; background: #3d1f6b !important; color: #ffffff !important;
+                -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; border: 1px solid #3d1f6b !important;
             }
-            
             .print-table th { padding: 8px; font-size: 12px; border: 1px solid #3d1f6b; }
             .print-table td { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
             .print-table tr:nth-child(even) { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
             input, select, textarea { border: none !important; background: transparent !important; resize: none; appearance: none; padding: 0; }
-            
-            /* الشروط */
             .term-row { display: flex; align-items: flex-start; margin-bottom: 5px; }
-            .term-bullet { 
-                display: inline-block !important; width: 8px; height: 8px; 
-                background-color: #3d1f6b !important; border-radius: 50%; 
-                margin-left: 10px; margin-top: 6px; flex-shrink: 0; 
-                -webkit-print-color-adjust: exact !important; 
-                print-color-adjust: exact !important;
+            .term-bullet {
+                display: inline-block !important; width: 8px; height: 8px;
+                background-color: #3d1f6b !important; border-radius: 50%;
+                margin-left: 10px; margin-top: 6px; flex-shrink: 0;
+                -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
             }
             .term-row input { display: none; }
             .term-row:has(input:not(:checked)) { display: none; }
             .term-text { font-size: 11px; width: 100%; font-weight: 600; color: #374151; }
-
-            /* الإجماليات */
             .totals-container { display: flex; justify-content: flex-end; width: 100%; margin-top: 20px; }
             .totals-table { width: 50%; border-collapse: collapse; margin-right: auto; }
             .totals-table td { padding: 8px; border-bottom: 1px solid #eee; }
             .totals-label { text-align: right; font-weight: bold; color: #4b5563; width: 60%; }
             .totals-value { text-align: left; font-family: monospace; font-weight: bold; direction: ltr; width: 40%; }
-
             .print-footer { display: block !important; position: fixed; bottom: 0; left: 0; width: 100%; background: #3d1f6b !important; color: white !important; padding: 10px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
@@ -159,7 +128,7 @@
 
             <div id="quoteFormView" class="hidden bg-white rounded-2xl shadow-lg border border-gray-100 p-0 max-w-5xl mx-auto print:p-0 print:border-none print:shadow-none">
                 <div class="print-container p-10">
-                    
+
                     <div class="hidden print-header">
                         <div class="flex items-center gap-4 w-2/3">
                             <img src="https://i.postimg.cc/GHsRS3C1/logo.png" alt="G.PACK" style="height: 100px; width: auto;">
@@ -204,20 +173,19 @@
                     </div>
 
                     <div class="mb-6 mx-6 print:mx-0">
-                        <!-- FIXED (Bug #4): Added inline style with #3d1f6b directly on thead for print compatibility -->
                         <table class="w-full text-right border-collapse print-table">
-                           <thead style="background-color: #3e206d !important; color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
-    <tr>
-        <th class="p-3 border w-10 text-center" style="background-color: #3e206d !important; color: white !important;">#</th>
-        <th class="p-3 border w-1/3" style="background-color: #3e206d !important; color: white !important;">البيان / الصنف</th>
-        <th class="p-3 border w-1/6" style="background-color: #3e206d !important; color: white !important;">المقاس</th>
-        <th class="p-3 border w-20 text-center" style="background-color: #3e206d !important; color: white !important;">الوحدة</th>
-        <th class="p-3 border w-20 text-center" style="background-color: #3e206d !important; color: white !important;">الكمية</th>
-        <th class="p-3 border w-24 text-center" style="background-color: #3e206d !important; color: white !important;">السعر</th>
-        <th class="p-3 border w-24 text-center" style="background-color: #3e206d !important; color: white !important;">الإجمالي</th>
-        <th class="p-3 border w-10 no-print bg-white border-none"></th>
-    </tr>
-</thead>
+                            <thead style="background-color: #3d1f6b; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                                <tr>
+                                    <th class="p-3 border w-10 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">#</th>
+                                    <th class="p-3 border w-1/3" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">البيان / الصنف</th>
+                                    <th class="p-3 border w-1/6" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">المقاس</th>
+                                    <th class="p-3 border w-20 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">الوحدة</th>
+                                    <th class="p-3 border w-20 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">الكمية</th>
+                                    <th class="p-3 border w-24 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">السعر</th>
+                                    <th class="p-3 border w-24 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">الإجمالي</th>
+                                    <th class="p-3 border w-10 no-print" style="background: white; border: none;"></th>
+                                </tr>
+                            </thead>
                             <tbody id="itemsContainer" class="text-sm"></tbody>
                         </table>
                         <div class="flex gap-2 mt-2 no-print">
@@ -229,7 +197,7 @@
                     <div class="mb-6 mx-6 print:mx-0 page-break-inside-avoid">
                         <h3 class="font-bold text-gray-800 mb-2 border-b pb-1">الشروط والأحكام والملاحظات:</h3>
                         <div id="termsList" class="space-y-1 text-sm text-gray-700"></div>
-                        <textarea id="customTerms" class="w-full border rounded p-2 mt-4 text-sm bg-gray-50 no-print focus:ring-1 focus:ring-purple-500" placeholder="ملاحظات إضافية لهذا العرض فقط..."></textarea>
+                        <textarea id="customTerms" class="w-full border rounded p-2 mt-4 text-sm bg-gray-50 no-print focus:ring-1 focus:ring-purple-500" rows="3" placeholder="ملاحظات إضافية لهذا العرض فقط..."></textarea>
                         <p id="printCustomTerms" class="hidden text-sm mt-2 font-bold border-t pt-2"></p>
                     </div>
 
@@ -269,7 +237,7 @@
         </div>
     </main>
 
-    <!-- Client Info Modal -->
+    <!-- ===== Client Info Modal — FIX #1: يعرض ملخص الطلبات ===== -->
     <div id="clientInfoModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('clientInfoModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-3xl mx-auto rounded-2xl shadow-lg z-50 p-6">
@@ -282,10 +250,17 @@
                 <div><span class="text-gray-500 block">المدينة:</span> <span id="infoCity" class="font-bold">-</span></div>
                 <div><span class="text-gray-500 block">الرصيد (عليه):</span> <span class="font-bold text-red-600">0.00 ر.س</span></div>
             </div>
-            <h4 class="font-bold text-xs text-gray-500 mb-2">آخر التعاملات:</h4>
+            <h4 class="font-bold text-xs text-gray-500 mb-2">آخر الطلبات / الفواتير (آخر 10):</h4>
             <div class="overflow-x-auto max-h-60 overflow-y-auto border rounded-lg">
                 <table class="w-full text-right text-sm">
-                    <thead class="bg-purple-50 text-purple-900 sticky top-0"><tr><th class="p-2">الصنف</th><th class="p-2">المقاس</th><th class="p-2">الكمية</th><th class="p-2">السعر</th><th class="p-2">التاريخ</th></tr></thead>
+                    <thead class="bg-purple-50 text-purple-900 sticky top-0">
+                        <tr>
+                            <th class="p-2">رقم الطلب</th>
+                            <th class="p-2">التاريخ</th>
+                            <th class="p-2">الإجمالي شامل الضريبة</th>
+                            <th class="p-2">الحالة</th>
+                        </tr>
+                    </thead>
                     <tbody id="infoHistoryList" class="bg-white text-gray-700 divide-y"></tbody>
                 </table>
             </div>
@@ -320,7 +295,7 @@
             <div class="flex justify-end gap-2"><button onclick="toggleModal('miniClientModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button><button onclick="saveMiniClient()" class="gpack-btn px-4 py-2 rounded">حفظ</button></div>
         </div>
     </div>
-    
+
     <!-- Mini Product Modal -->
     <div id="miniProductModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
@@ -367,7 +342,6 @@
             </div>
             <div class="mb-4">
                 <h4 class="font-bold text-gray-800 text-sm mb-2">حدد الأصناف:</h4>
-                <!-- FIXED (Bug #1): Loading state added so user knows items are being fetched -->
                 <div id="convertLoadingMsg" class="text-center text-sm text-gray-400 py-4 hidden"><i class="fas fa-spinner fa-spin mr-2"></i> جاري تحميل الأصناف...</div>
                 <div class="border rounded-lg overflow-hidden max-h-48 overflow-y-auto">
                     <table class="w-full text-right text-sm">
@@ -379,7 +353,6 @@
                                 <th class="p-2 w-20">الكمية</th>
                             </tr>
                         </thead>
-                        <!-- FIXED (Bug #1): tbody correctly receives rows from openConvertModal -->
                         <tbody id="convertItemsTable"></tbody>
                     </table>
                 </div>
@@ -396,7 +369,20 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const STATUS_AR = { 'quote': 'عرض سعر', 'production': 'قيد التشغيل', 'converted': 'تم التحويل', 'archived': 'مؤرشف' };
+        // ===== FIX #2: الترجمة الصحيحة للحالات =====
+        const STATUS_AR = {
+            'quote':      'عرض سعر',
+            'production': 'قيد التشغيل',
+            'converted':  'تم التشغيل',
+            'archived':   'مؤرشف'
+        };
+        const STATUS_COLOR = {
+            'quote':      'bg-blue-100 text-blue-700',
+            'production': 'bg-yellow-100 text-yellow-800',
+            'converted':  'bg-green-100 text-green-800',
+            'archived':   'bg-gray-100 text-gray-600'
+        };
+
         const ORDER_STATUS = { QUOTE: 'quote', ARCHIVED: 'archived', PRODUCTION: 'production', CONVERTED: 'converted' };
 
         let productsList = [];
@@ -428,29 +414,25 @@
                     select.add(opt);
                 });
             } catch (e) {
-                // FIXED (Bug #5): Graceful error handling with user alert
                 console.error('loadClients error:', e);
                 alert('خطأ في تحميل العملاء: ' + (e.message || e));
             }
         }
 
+        // ===== FIX #4: تحميل حقل unit من product_variants =====
         async function loadProducts() {
             try {
-                // FIXED: Fetch Unit column from product_variants
                 const { data, error } = await supabaseClient
                     .from('products')
                     .select('id, name, product_variants(id, size_name, selling_price, unit)');
                 if (error) throw error;
                 productsList = data || [];
-
-                // Refresh the existing product dropdown in mini product modal
                 const existSel = document.getElementById('mpExistSelect');
                 existSel.innerHTML = '<option value="">اختر الصنف...</option>';
                 productsList.forEach(p => {
                     existSel.innerHTML += `<option value="${p.id}">${p.name}</option>`;
                 });
             } catch (e) {
-                // FIXED (Bug #5): Graceful error handling
                 console.error('loadProducts error:', e);
                 alert('خطأ في تحميل الأصناف: ' + (e.message || e));
             }
@@ -459,13 +441,10 @@
         async function loadTerms() {
             try {
                 const { data, error } = await supabaseClient
-                    .from('general_terms')
-                    .select('*')
-                    .eq('is_active', true);
+                    .from('general_terms').select('*').eq('is_active', true);
                 if (error) throw error;
                 generalTerms = data || [];
             } catch (e) {
-                // FIXED (Bug #5): Graceful error handling
                 console.error('loadTerms error:', e);
             }
         }
@@ -474,7 +453,6 @@
             document.getElementById('loadingIndicator').classList.remove('hidden');
             const tbody = document.getElementById('quotesTableBody');
             tbody.innerHTML = '';
-            
             try {
                 const statusFilter = isArchiveView ? ORDER_STATUS.ARCHIVED : ORDER_STATUS.QUOTE;
                 const { data: orders, error } = await supabaseClient
@@ -482,41 +460,36 @@
                     .select('*, clients(name)')
                     .eq('status', statusFilter)
                     .order('created_at', { ascending: false });
-
                 if (error) throw error;
-
                 if (orders && orders.length > 0) {
                     orders.forEach(o => {
                         const tr = document.createElement('tr');
                         tr.className = "hover:bg-gray-50 border-b";
-                        
-                        let btns = isArchiveView 
+                        const statusLabel = STATUS_AR[o.status] || o.status || '-';
+                        const statusColor = STATUS_COLOR[o.status] || 'bg-gray-100 text-gray-600';
+                        let btns = isArchiveView
                             ? `<button onclick="restoreQuote('${o.id}')" class="text-green-600 hover:bg-green-100 p-2 rounded" title="استرجاع"><i class="fas fa-undo"></i></button>
                                <button onclick="deleteQuotePermanent('${o.id}')" class="text-red-600 hover:bg-red-100 p-2 rounded" title="حذف نهائي"><i class="fas fa-times"></i></button>`
                             : `<button onclick="editQuote('${o.id}')" class="text-blue-600 hover:bg-blue-100 p-2 rounded" title="تعديل"><i class="fas fa-edit"></i></button>
                                <button onclick="openConvertModal('${o.id}', '${o.client_id}')" class="text-green-600 hover:bg-green-100 p-2 rounded" title="تحويل لإنتاج"><i class="fas fa-money-bill-wave"></i></button>
                                <button onclick="archiveQuote('${o.id}')" class="text-orange-500 hover:bg-orange-100 p-2 rounded" title="أرشفة"><i class="fas fa-archive"></i></button>`;
-
                         tr.innerHTML = `
                             <td class="px-4 py-3 font-bold">#${o.order_number}</td>
                             <td class="px-4 py-3">${o.clients?.name || '-'}</td>
                             <td class="px-4 py-3">${new Date(o.created_at).toLocaleDateString('en-GB')}</td>
                             <td class="px-4 py-3 font-bold text-purple-700">${o.grand_total || '0.00'}</td>
-                            <td class="px-4 py-3"><span class="bg-gray-100 px-2 rounded text-xs">${isArchiveView ? 'أرشيف' : 'مسودة'}</span></td>
-                            <td class="px-4 py-3 flex gap-2 actions-col">${btns}</td>
-                        `;
+                            <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs font-bold ${statusColor}">${isArchiveView ? 'مؤرشف' : statusLabel}</span></td>
+                            <td class="px-4 py-3 flex gap-2 actions-col">${btns}</td>`;
                         tbody.appendChild(tr);
                     });
                 } else {
                     tbody.innerHTML = '<tr><td colspan="6" class="text-center p-6 text-gray-400">لا توجد بيانات</td></tr>';
                 }
             } catch (e) {
-                // FIXED (Bug #5): Graceful error handling
                 console.error('fetchQuotes error:', e);
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center p-6 text-red-400">خطأ في تحميل البيانات</td></tr>';
                 alert('خطأ في تحميل عروض الأسعار: ' + (e.message || e));
             }
-
             document.getElementById('loadingIndicator').classList.add('hidden');
         }
 
@@ -526,11 +499,9 @@
         function addItemRow(data = null) {
             const container = document.getElementById('itemsContainer');
             const rowId = 'row-' + Date.now() + Math.random().toString(36).substr(2, 5);
-            
             const tr = document.createElement('tr');
             tr.id = rowId;
             tr.className = "border-b hover:bg-gray-50";
-            
             tr.innerHTML = `
                 <td class="p-2 border text-center w-10 index-cell"></td>
                 <td class="p-2 border relative">
@@ -542,12 +513,11 @@
                     <div id="res-${rowId}" class="search-results shadow-lg hidden"></div>
                 </td>
                 <td class="p-2 border"><select id="var-${rowId}" onchange="onVariantSelect(this, '${rowId}')" class="w-full border-none bg-transparent text-sm outline-none var-select"><option value="">...</option></select></td>
-                <td class="p-2 border"><input type="text" class="w-full text-center bg-transparent border-none text-sm unit-input" placeholder="-" value="-"></td>
+                <td class="p-2 border"><input type="text" class="w-full text-center bg-transparent border-none text-sm unit-input" placeholder="حبة" value="حبة"></td>
                 <td class="p-2 border"><input type="number" id="qty-${rowId}" oninput="calcRow('${rowId}')" value="1" min="1" class="w-full border-none bg-transparent text-center font-bold outline-none qty-input"></td>
                 <td class="p-2 border"><input type="number" id="price-${rowId}" oninput="calcRow('${rowId}')" value="0" class="w-full border-none bg-transparent text-center outline-none price-input"></td>
                 <td class="p-2 border text-center font-bold text-gray-700 row-total" id="total-${rowId}">0.00</td>
-                <td class="p-2 border text-center no-print"><button onclick="this.closest('tr').remove(); reindexRows(); calculateTotals()" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></td>
-            `;
+                <td class="p-2 border text-center no-print"><button onclick="this.closest('tr').remove(); reindexRows(); calculateTotals()" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></td>`;
             container.appendChild(tr);
 
             if (data) {
@@ -556,8 +526,8 @@
                 if (prod) fillVariants(tr.querySelector('.var-select'), prod, data.variant_id);
                 tr.querySelector('.qty-input').value = data.quantity;
                 tr.querySelector('.price-input').value = data.unit_price;
-                // FIXED: Load saved unit value
-                if (data.unit) tr.querySelector('.unit-input').value = data.unit;
+                // ===== FIX #4: تحميل الوحدة المحفوظة =====
+                tr.querySelector('.unit-input').value = data.unit || 'حبة';
                 calcRow(rowId);
             }
             reindexRows();
@@ -580,9 +550,7 @@
             const val = input.value.toLowerCase();
             const list = document.getElementById(`res-${rowId}`);
             list.innerHTML = '';
-            
             const filtered = val ? productsList.filter(p => p.name.toLowerCase().includes(val)) : productsList;
-            
             if (filtered.length > 0) {
                 list.style.display = 'block';
                 list.classList.remove('hidden');
@@ -590,11 +558,11 @@
                     const div = document.createElement('div');
                     div.className = 'search-item p-2 hover:bg-gray-100 cursor-pointer text-sm';
                     div.innerText = p.name;
-                    div.onclick = () => { 
-                        input.value = p.name; 
-                        list.style.display = 'none'; 
+                    div.onclick = () => {
+                        input.value = p.name;
+                        list.style.display = 'none';
                         list.classList.add('hidden');
-                        fillVariants(document.getElementById(`var-${rowId}`), p); 
+                        fillVariants(document.getElementById(`var-${rowId}`), p);
                     };
                     list.appendChild(div);
                 });
@@ -602,8 +570,6 @@
                 list.style.display = 'none';
                 list.classList.add('hidden');
             }
-
-            // Close dropdown when clicking outside
             const closeHandler = (e) => {
                 if (!input.contains(e.target) && !list.contains(e.target)) {
                     list.style.display = 'none';
@@ -613,23 +579,33 @@
             document.addEventListener('click', closeHandler, { once: false });
         }
 
+        // ===== FIX #4: ربط data-unit بكل option من product_variants =====
         function fillVariants(select, product, selectedId = null) {
             select.innerHTML = '<option value="">اختر...</option>';
             if (product.product_variants) {
                 product.product_variants.forEach(v => {
                     const opt = new Option(v.size_name, v.id);
                     opt.dataset.price = v.selling_price || 0;
-                    opt.dataset.unit = v.unit || 'حبة'; // FIXED: Default to حبة if missing
+                    opt.dataset.unit = v.unit || 'حبة'; // FIX #4
                     if (selectedId == v.id) opt.selected = true;
                     select.add(opt);
                 });
             }
+            // إذا كان هناك مقاس محدد مسبقاً، اعبئ الوحدة فوراً
+            if (selectedId) {
+                const sel = select.options[select.selectedIndex];
+                if (sel && sel.dataset.unit) {
+                    const row = select.closest('tr');
+                    if (row) row.querySelector('.unit-input').value = sel.dataset.unit;
+                }
+            }
         }
 
+        // ===== FIX #4: قراءة data-unit وتعبئة حقل الوحدة =====
         function onVariantSelect(select, rowId) {
             const selectedOpt = select.options[select.selectedIndex];
             const price = selectedOpt.dataset.price || 0;
-            const unit = selectedOpt.dataset.unit || 'حبة';
+            const unit = selectedOpt.dataset.unit || 'حبة'; // FIX #4
             document.getElementById(`price-${rowId}`).value = price;
             const row = document.getElementById(rowId);
             if (row) row.querySelector('.unit-input').value = unit;
@@ -668,7 +644,7 @@
         }
 
         // ================================================================
-        // Save Quote
+        // Save Quote — FIX #3: حفظ snapshotted_terms دائماً
         // ================================================================
         async function saveQuote() {
             const clientId = document.getElementById('qClient').value;
@@ -681,14 +657,11 @@
                 const qtyInput = row.querySelector('.qty-input');
                 const priceInput = row.querySelector('.price-input');
                 const unitInput = row.querySelector('.unit-input');
-
                 if (!varSelect || !qtyInput || !priceInput) return;
-
                 const vId = varSelect.value;
                 const qty = Number(qtyInput.value);
                 const price = Number(priceInput.value);
-                const unit = unitInput ? unitInput.value : 'حبة';
-
+                const unit = unitInput ? (unitInput.value.trim() || 'حبة') : 'حبة';
                 if (vId && qty > 0) {
                     items.push({ variant_id: vId, quantity: qty, unit_price: price, unit: unit });
                     sub += qty * price;
@@ -697,12 +670,15 @@
 
             if (!items.length) return alert("أضف صنف واحد على الأقل");
 
+            // ===== FIX #3: قراءة الملاحظات وحفظها في snapshotted_terms =====
+            const snapshottedTerms = document.getElementById('customTerms').value;
+
             const data = {
                 client_id: clientId,
                 status: ORDER_STATUS.QUOTE,
                 total_amount: sub,
                 grand_total: parseFloat((sub * 1.15).toFixed(2)),
-                snapshotted_terms: document.getElementById('customTerms').value
+                snapshotted_terms: snapshottedTerms
             };
 
             try {
@@ -724,14 +700,13 @@
                 closeForm();
                 fetchQuotes();
             } catch (e) {
-                // FIXED (Bug #5): Graceful error handling
                 console.error('saveQuote error:', e);
                 alert("خطأ في الحفظ: " + (e.message || e));
             }
         }
 
         // ================================================================
-        // Edit Quote
+        // Edit Quote — FIX #3: تحميل snapshotted_terms في textarea
         // ================================================================
         async function editQuote(id) {
             currentQuoteId = id;
@@ -743,10 +718,9 @@
                 const [orderRes, itemsRes] = await Promise.all([
                     supabaseClient.from('orders').select('*').eq('id', id).single(),
                     supabaseClient.from('order_items')
-                        .select('*, product_variants(id, size_name, products(name))')
+                        .select('*, product_variants(id, size_name, unit, products(name))')
                         .eq('order_id', id)
                 ]);
-
                 if (orderRes.error) throw orderRes.error;
                 if (itemsRes.error) throw itemsRes.error;
 
@@ -754,7 +728,8 @@
                 document.getElementById('qClient').value = order.client_id;
                 document.getElementById('qDate').value = order.created_at.split('T')[0];
                 document.getElementById('pRef').innerText = '#' + order.order_number;
-                document.getElementById('customTerms').value = order.snapshotted_terms || "";
+                // ===== FIX #3: تحميل الملاحظات المحفوظة =====
+                document.getElementById('customTerms').value = order.snapshotted_terms || '';
                 renderTermsList();
 
                 document.getElementById('itemsContainer').innerHTML = '';
@@ -765,77 +740,57 @@
                             variant_id: i.variant_id,
                             quantity: i.quantity,
                             unit_price: i.unit_price,
-                            unit: i.unit // FIXED: Load saved unit from order_items
+                            // ===== FIX #4: ثلاث مستويات fallback للوحدة =====
+                            unit: i.unit || i.product_variants.unit || 'حبة'
                         });
                     }
                 });
                 calculateTotals();
             } catch (e) {
-                // FIXED (Bug #5): Graceful error handling
                 console.error('editQuote error:', e);
                 alert('خطأ في تحميل بيانات العرض: ' + (e.message || e));
             }
         }
 
         // ================================================================
-        // FIXED (Bug #1): openConvertModal - Now correctly fetches and renders items
+        // openConvertModal
         // ================================================================
         async function openConvertModal(orderId, clientId) {
             document.getElementById('convQuoteId').value = orderId;
             document.getElementById('convClientId').value = clientId;
             document.getElementById('payAmount').value = '';
-
             const tbody = document.getElementById('convertItemsTable');
             const loadingMsg = document.getElementById('convertLoadingMsg');
             tbody.innerHTML = '';
             loadingMsg.classList.remove('hidden');
-
-            // Open modal first so user sees the loading state
             toggleModal('convertModal');
-
             try {
-                // FIXED (Bug #1): Fetch order_items with full variant & product info
                 const { data: items, error } = await supabaseClient
                     .from('order_items')
                     .select('id, quantity, unit_price, unit, variant_id, product_variants(id, size_name, products(id, name))')
                     .eq('order_id', orderId);
-
                 if (error) throw error;
-
                 loadingMsg.classList.add('hidden');
-
                 if (items && items.length > 0) {
                     items.forEach(item => {
-                        // FIXED (Bug #1): Safely access nested product name and size
                         const productName = item.product_variants?.products?.name || 'غير معروف';
                         const sizeName = item.product_variants?.size_name || '-';
                         const qty = item.quantity || 0;
                         const itemId = item.id;
-
                         const tr = document.createElement('tr');
                         tr.className = 'border-b hover:bg-gray-50';
                         tr.innerHTML = `
-                            <td class="p-2 text-center">
-                                <input type="checkbox" checked class="conv-check w-4 h-4 text-purple-600" data-item-id="${itemId}" data-variant-id="${item.variant_id}">
-                            </td>
+                            <td class="p-2 text-center"><input type="checkbox" checked class="conv-check w-4 h-4 text-purple-600" data-item-id="${itemId}" data-variant-id="${item.variant_id}"></td>
                             <td class="p-2 font-medium">${productName}</td>
                             <td class="p-2 text-gray-600">${sizeName}</td>
-                            <td class="p-2 text-center">
-                                <input type="number" value="${qty}" min="1" class="w-16 border rounded p-1 text-center text-sm conv-qty" data-item-id="${itemId}">
-                            </td>
-                        `;
+                            <td class="p-2 text-center"><input type="number" value="${qty}" min="1" class="w-16 border rounded p-1 text-center text-sm conv-qty" data-item-id="${itemId}"></td>`;
                         tbody.appendChild(tr);
                     });
                 } else {
-                    // FIXED (Bug #1): Show a clear "no items" message in the tbody
                     tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-gray-400">لا توجد أصناف في هذا العرض</td></tr>';
                 }
-
-                // Reset select-all checkbox
                 document.getElementById('selectAllConvert').checked = true;
-
             } catch (e) {
-                // FIXED (Bug #5): Graceful error handling
                 loadingMsg.classList.add('hidden');
                 console.error('openConvertModal fetch error:', e);
                 tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-red-400">خطأ في تحميل الأصناف</td></tr>';
@@ -844,25 +799,20 @@
         }
 
         function toggleAllItems(checkbox) {
-            // FIXED (Bug #1): Uses correct class selector .conv-check
             document.querySelectorAll('.conv-check').forEach(c => c.checked = checkbox.checked);
         }
 
         // ================================================================
-        // FIXED (Bug #2): showClientInfo - Rewritten to avoid !inner join issues
+        // FIX #1: showClientInfo — يعرض ملخص الطلبات (أرقام + تاريخ + إجمالي + حالة)
         // ================================================================
         async function showClientInfo() {
             const cId = document.getElementById('qClient').value;
             if (!cId) return alert('اختر العميل أولاً');
-            
+
             const sel = document.getElementById('qClient');
             const opt = sel.options[sel.selectedIndex];
             let clientData = {};
-            try {
-                clientData = JSON.parse(opt.dataset.json);
-            } catch (e) {
-                clientData = { name: opt.text };
-            }
+            try { clientData = JSON.parse(opt.dataset.json); } catch (e) { clientData = { name: opt.text }; }
 
             document.getElementById('infoName').innerText = clientData.name || '-';
             document.getElementById('infoContact').innerText = clientData.contact_person || '-';
@@ -870,77 +820,56 @@
             document.getElementById('infoCity').innerText = clientData.city || 'غير محدد';
 
             const tbody = document.getElementById('infoHistoryList');
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-2 text-gray-400"><i class="fas fa-spinner fa-spin mr-1"></i> جاري التحميل...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center p-2 text-gray-400"><i class="fas fa-spinner fa-spin mr-1"></i> جاري التحميل...</td></tr>';
             toggleModal('clientInfoModal');
 
             try {
-                // FIXED (Bug #2): Two-step approach - first get order IDs for this client,
-                // then fetch order_items for those orders. Avoids !inner join FK issues.
-                const { data: clientOrders, error: ordersError } = await supabaseClient
+                // ===== FIX #1: استعلام مباشر على جدول orders لهذا العميل =====
+                const { data: orders, error } = await supabaseClient
                     .from('orders')
-                    .select('id')
+                    .select('id, order_number, created_at, grand_total, status')
                     .eq('client_id', cId)
-                    .order('created_at', { ascending: false });
+                    .order('created_at', { ascending: false })
+                    .limit(10);
 
-                if (ordersError) throw ordersError;
-
+                if (error) throw error;
                 tbody.innerHTML = '';
 
-                if (!clientOrders || clientOrders.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-3 text-gray-400">لا يوجد تعاملات سابقة</td></tr>';
-                    return;
-                }
-
-                const orderIds = clientOrders.map(o => o.id);
-
-                // FIXED (Bug #2): Fetch items using order_id in list - cleaner than !inner
-                const { data: items, error: itemsError } = await supabaseClient
-                    .from('order_items')
-                    .select('quantity, unit_price, created_at, product_variants(size_name, products(name))')
-                    .in('order_id', orderIds)
-                    .order('created_at', { ascending: false })
-                    .limit(10); // FIXED (Bug #2): Last 10 records across all orders
-
-                if (itemsError) throw itemsError;
-
-                if (items && items.length > 0) {
-                    items.forEach(i => {
-                        const productName = i.product_variants?.products?.name || '-';
-                        const sizeName = i.product_variants?.size_name || '-';
-                        const dateStr = i.created_at ? new Date(i.created_at).toLocaleDateString('ar-SA') : '-';
+                if (orders && orders.length > 0) {
+                    orders.forEach(o => {
+                        // ===== FIX #2: استخدام STATUS_AR للحالات =====
+                        const statusLabel = STATUS_AR[o.status] || o.status || '-';
+                        const statusColor = STATUS_COLOR[o.status] || 'bg-gray-100 text-gray-600';
+                        const dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString('ar-SA') : '-';
+                        const total = o.grand_total ? parseFloat(o.grand_total).toFixed(2) + ' ر.س' : '0.00 ر.س';
                         tbody.innerHTML += `
                             <tr class="hover:bg-gray-50">
-                                <td class="p-2 border-b">${productName}</td>
-                                <td class="p-2 border-b">${sizeName}</td>
-                                <td class="p-2 border-b text-center">${i.quantity}</td>
-                                <td class="p-2 border-b text-center font-mono">${i.unit_price}</td>
-                                <td class="p-2 border-b text-center">${dateStr}</td>
+                                <td class="p-2 border-b font-bold text-purple-700">#${o.order_number || '-'}</td>
+                                <td class="p-2 border-b">${dateStr}</td>
+                                <td class="p-2 border-b font-mono font-bold">${total}</td>
+                                <td class="p-2 border-b"><span class="px-2 py-0.5 rounded text-xs font-bold ${statusColor}">${statusLabel}</span></td>
                             </tr>`;
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-3 text-gray-400">لا يوجد تعاملات سابقة</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-gray-400">لا يوجد طلبات سابقة لهذا العميل</td></tr>';
                 }
-
             } catch (e) {
-                // FIXED (Bug #5): Graceful error handling
                 console.error('showClientInfo error:', e);
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-3 text-red-400">خطأ في تحميل البيانات</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-red-400">خطأ في تحميل البيانات</td></tr>';
                 alert('خطأ في تحميل سجل العميل: ' + (e.message || e));
             }
         }
 
         // ================================================================
-        // FIXED (Bug #2): showProductHistory - Rewritten for reliable data fetch
+        // showProductHistory
         // ================================================================
         async function showProductHistory(rowId) {
             const cId = document.getElementById('qClient').value;
             const varSelect = document.getElementById(`var-${rowId}`);
             const vId = varSelect ? varSelect.value : null;
-
             if (!cId) return alert('اختر العميل أولاً');
             if (!vId) return alert('اختر المقاس أولاً');
 
-            // Update modal header with product/variant name
             const variantName = varSelect.options[varSelect.selectedIndex]?.text || '-';
             const rowEl = document.getElementById(rowId);
             const productName = rowEl ? rowEl.querySelector('.prod-search').value : '-';
@@ -953,54 +882,44 @@
             toggleModal('productHistoryModal');
 
             try {
-                // FIXED (Bug #2): Two-step approach - first get orders for client, then filter items
                 const { data: clientOrders, error: ordersError } = await supabaseClient
-                    .from('orders')
-                    .select('id, status')
-                    .eq('client_id', cId);
-
+                    .from('orders').select('id, status').eq('client_id', cId);
                 if (ordersError) throw ordersError;
-
                 tb.innerHTML = '';
-
                 if (!clientOrders || clientOrders.length === 0) {
                     tb.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-gray-400">لا يوجد سجل</td></tr>';
                     return;
                 }
-
                 const orderIds = clientOrders.map(o => o.id);
-                // Create a map for quick status lookup
                 const orderStatusMap = {};
                 clientOrders.forEach(o => { orderStatusMap[o.id] = o.status; });
 
-                // FIXED (Bug #2): Fetch items by variant_id AND order_id in list
                 const { data: items, error: itemsError } = await supabaseClient
                     .from('order_items')
                     .select('quantity, unit_price, created_at, order_id')
                     .eq('variant_id', vId)
                     .in('order_id', orderIds)
                     .order('created_at', { ascending: false });
-
                 if (itemsError) throw itemsError;
 
                 if (items && items.length > 0) {
                     items.forEach(h => {
+                        // ===== FIX #2: ترجمة الحالة =====
                         const statusLabel = STATUS_AR[orderStatusMap[h.order_id]] || '-';
+                        const statusColor = STATUS_COLOR[orderStatusMap[h.order_id]] || 'bg-gray-100 text-gray-600';
                         const dateStr = h.created_at ? new Date(h.created_at).toLocaleDateString('ar-SA') : '-';
                         tb.innerHTML += `
                             <tr class="hover:bg-gray-50">
                                 <td class="p-2 border-b">${dateStr}</td>
                                 <td class="p-2 border-b text-center">${h.quantity}</td>
                                 <td class="p-2 border-b text-center font-mono">${h.unit_price}</td>
-                                <td class="p-2 border-b"><span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${statusLabel}</span></td>
+                                <td class="p-2 border-b"><span class="px-2 py-0.5 rounded text-xs font-bold ${statusColor}">${statusLabel}</span></td>
                             </tr>`;
                     });
                 } else {
                     tb.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-gray-400">لا يوجد سجل لهذا المنتج</td></tr>';
                 }
-
             } catch (e) {
-                // FIXED (Bug #5): Graceful error handling
                 console.error('showProductHistory error:', e);
                 tb.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-red-400">خطأ في التحميل</td></tr>';
                 alert('خطأ في تحميل سجل المنتج: ' + (e.message || e));
@@ -1008,92 +927,55 @@
         }
 
         // ================================================================
-        // FIXED (Bug #3): saveMiniProduct - Inserts to DB, refreshes productsList & UI
+        // saveMiniProduct
         // ================================================================
         async function saveMiniProduct() {
             const size = document.getElementById('mpSize').value.trim();
             const price = parseFloat(document.getElementById('mpPrice').value) || 0;
             const unit = document.getElementById('mpUnit').value.trim() || 'حبة';
-
             if (!size) return alert('أدخل المقاس');
-
             try {
                 let productId = null;
-
                 if (productMode === 'new') {
-                    // FIXED (Bug #3): Create new product first
                     const name = document.getElementById('mpName').value.trim();
                     if (!name) return alert('أدخل اسم الصنف');
-
                     const { data: newProduct, error: prodError } = await supabaseClient
-                        .from('products')
-                        .insert([{ name: name }])
-                        .select()
-                        .single();
-
+                        .from('products').insert([{ name }]).select().single();
                     if (prodError) throw prodError;
                     productId = newProduct.id;
-
                 } else {
-                    // FIXED (Bug #3): Use existing product
-                    const existSel = document.getElementById('mpExistSelect');
-                    productId = existSel.value;
+                    productId = document.getElementById('mpExistSelect').value;
                     if (!productId) return alert('اختر الصنف');
                 }
-
-                // FIXED (Bug #3): Insert variant into product_variants
-                const { data: newVariant, error: varError } = await supabaseClient
+                const { error: varError } = await supabaseClient
                     .from('product_variants')
-                    .insert([{
-                        product_id: productId,
-                        size_name: size,
-                        selling_price: price,
-                        unit: unit
-                    }])
-                    .select()
-                    .single();
-
+                    .insert([{ product_id: productId, size_name: size, selling_price: price, unit }]);
                 if (varError) throw varError;
-
                 alert('تم الحفظ بنجاح');
                 toggleModal('miniProductModal');
-
-                // FIXED (Bug #3): Reload products from DB to refresh productsList global array
                 await loadProducts();
-
-                // FIXED (Bug #3): Clear form fields
                 document.getElementById('mpName').value = '';
                 document.getElementById('mpSize').value = '';
                 document.getElementById('mpPrice').value = '';
                 document.getElementById('mpUnit').value = '';
-
             } catch (e) {
-                // FIXED (Bug #5): Graceful error handling
                 console.error('saveMiniProduct error:', e);
                 alert('خطأ في حفظ الصنف: ' + (e.message || e));
             }
         }
 
         // ================================================================
-        // Mini Client Save
+        // saveMiniClient
         // ================================================================
         async function saveMiniClient() {
             const name = document.getElementById('mcName').value.trim();
             if (!name) return alert('أدخل اسم المنشأة');
-
             const person = document.getElementById('mcPerson').value.trim();
             const phone = document.getElementById('mcPhone').value.trim();
-
             try {
                 const { data: newClient, error } = await supabaseClient
-                    .from('clients')
-                    .insert([{ name: name, contact_person: person, phone: phone }])
-                    .select()
-                    .single();
-
+                    .from('clients').insert([{ name, contact_person: person, phone }]).select().single();
                 if (error) throw error;
-
-                // Add to dropdown immediately
                 const select = document.getElementById('qClient');
                 const opt = document.createElement('option');
                 opt.value = newClient.id;
@@ -1101,58 +983,43 @@
                 opt.dataset.json = JSON.stringify(newClient);
                 select.add(opt);
                 select.value = newClient.id;
-
                 alert('تم إضافة العميل');
                 toggleModal('miniClientModal');
                 document.getElementById('mcName').value = '';
                 document.getElementById('mcPerson').value = '';
                 document.getElementById('mcPhone').value = '';
-
             } catch (e) {
-                // FIXED (Bug #5): Graceful error handling
                 console.error('saveMiniClient error:', e);
                 alert('خطأ في حفظ العميل: ' + (e.message || e));
             }
         }
 
         // ================================================================
-        // Execute Conversion
+        // executeConversion
         // ================================================================
         async function executeConversion() {
             const orderId = document.getElementById('convQuoteId').value;
-            const clientId = document.getElementById('convClientId').value;
             const payAmount = parseFloat(document.getElementById('payAmount').value) || 0;
             const payMethod = document.getElementById('payMethod').value;
-
-            // Collect checked items with their quantities
             const checkedItems = [];
             document.querySelectorAll('.conv-check:checked').forEach(checkbox => {
                 const itemId = checkbox.dataset.itemId;
                 const variantId = checkbox.dataset.variantId;
                 const qtyInput = document.querySelector(`.conv-qty[data-item-id="${itemId}"]`);
                 const qty = qtyInput ? Number(qtyInput.value) : 0;
-                if (qty > 0) {
-                    checkedItems.push({ item_id: itemId, variant_id: variantId, quantity: qty });
-                }
+                if (qty > 0) checkedItems.push({ item_id: itemId, variant_id: variantId, quantity: qty });
             });
-
             if (!checkedItems.length) return alert('اختر صنفاً واحداً على الأقل');
-
             try {
-                // Update order status to production
-                const { error: statusError } = await supabaseClient
+                const { error } = await supabaseClient
                     .from('orders')
                     .update({ status: ORDER_STATUS.PRODUCTION, paid_amount: payAmount, payment_method: payMethod })
                     .eq('id', orderId);
-
-                if (statusError) throw statusError;
-
+                if (error) throw error;
                 alert('تم التحويل لأوامر التشغيل بنجاح');
                 toggleModal('convertModal');
                 fetchQuotes();
-
             } catch (e) {
-                // FIXED (Bug #5): Graceful error handling
                 console.error('executeConversion error:', e);
                 alert('خطأ في التحويل: ' + (e.message || e));
             }
@@ -1162,47 +1029,37 @@
         // Utility Functions
         // ================================================================
         async function archiveQuote(id) {
-            if (confirm('هل تريد أرشفة هذا العرض؟')) {
-                try {
-                    const { error } = await supabaseClient.from('orders').update({ status: ORDER_STATUS.ARCHIVED }).eq('id', id);
-                    if (error) throw error;
-                    fetchQuotes();
-                } catch (e) {
-                    alert('خطأ في الأرشفة: ' + (e.message || e));
-                }
-            }
+            if (!confirm('هل تريد أرشفة هذا العرض؟')) return;
+            try {
+                const { error } = await supabaseClient.from('orders').update({ status: ORDER_STATUS.ARCHIVED }).eq('id', id);
+                if (error) throw error;
+                fetchQuotes();
+            } catch (e) { alert('خطأ في الأرشفة: ' + (e.message || e)); }
         }
 
         async function restoreQuote(id) {
-            if (confirm('هل تريد استرجاع هذا العرض من الأرشيف؟')) {
-                try {
-                    const { error } = await supabaseClient.from('orders').update({ status: ORDER_STATUS.QUOTE }).eq('id', id);
-                    if (error) throw error;
-                    fetchQuotes();
-                } catch (e) {
-                    alert('خطأ في الاسترجاع: ' + (e.message || e));
-                }
-            }
+            if (!confirm('هل تريد استرجاع هذا العرض؟')) return;
+            try {
+                const { error } = await supabaseClient.from('orders').update({ status: ORDER_STATUS.QUOTE }).eq('id', id);
+                if (error) throw error;
+                fetchQuotes();
+            } catch (e) { alert('خطأ في الاسترجاع: ' + (e.message || e)); }
         }
 
         async function deleteQuotePermanent(id) {
-            if (confirm('حذف نهائي؟ لا يمكن التراجع عن هذا الإجراء!')) {
-                try {
-                    const { error: delItems } = await supabaseClient.from('order_items').delete().eq('order_id', id);
-                    if (delItems) throw delItems;
-                    const { error: delOrder } = await supabaseClient.from('orders').delete().eq('id', id);
-                    if (delOrder) throw delOrder;
-                    fetchQuotes();
-                } catch (e) {
-                    alert('خطأ في الحذف: ' + (e.message || e));
-                }
-            }
+            if (!confirm('حذف نهائي؟ لا يمكن التراجع!')) return;
+            try {
+                const { error: e1 } = await supabaseClient.from('order_items').delete().eq('order_id', id);
+                if (e1) throw e1;
+                const { error: e2 } = await supabaseClient.from('orders').delete().eq('id', id);
+                if (e2) throw e2;
+                fetchQuotes();
+            } catch (e) { alert('خطأ في الحذف: ' + (e.message || e)); }
         }
 
         function toggleArchiveView() {
             isArchiveView = !isArchiveView;
-            const btn = document.getElementById('archiveBtn');
-            btn.innerHTML = isArchiveView
+            document.getElementById('archiveBtn').innerHTML = isArchiveView
                 ? '<i class="fas fa-arrow-right"></i> <span>العودة</span>'
                 : '<i class="fas fa-trash-restore"></i> <span>الأرشيف</span>';
             fetchQuotes();
@@ -1215,7 +1072,7 @@
             document.getElementById('createBtn').classList.add('hidden');
             document.getElementById('itemsContainer').innerHTML = '';
             document.getElementById('qClient').value = '';
-            document.getElementById('customTerms').value = '';
+            document.getElementById('customTerms').value = ''; // FIX #3
             document.getElementById('pRef').innerText = 'NEW';
             renderTermsList();
             addItemRow();
@@ -1231,18 +1088,13 @@
 
         function preparePrint() {
             const sel = document.getElementById('qClient');
-            if (sel.selectedIndex >= 0 && sel.value) {
+            if (sel.selectedIndex >= 0 && sel.value)
                 document.getElementById('printClientName').innerText = sel.options[sel.selectedIndex].text;
-            }
             document.getElementById('pDate').innerText = document.getElementById('qDate').value;
             const custom = document.getElementById('customTerms').value;
             const pCustom = document.getElementById('printCustomTerms');
-            if (custom) {
-                pCustom.innerText = "ملاحظات: " + custom;
-                pCustom.classList.remove('hidden');
-            } else {
-                pCustom.classList.add('hidden');
-            }
+            if (custom) { pCustom.innerText = "ملاحظات: " + custom; pCustom.classList.remove('hidden'); }
+            else pCustom.classList.add('hidden');
             window.print();
         }
 
@@ -1250,41 +1102,24 @@
             const el = document.getElementById(id);
             el.classList.toggle('opacity-0');
             el.classList.toggle('pointer-events-none');
-            const container = el.querySelector('.modal-container');
-            if (container) {
-                container.classList.toggle('scale-95');
-                container.classList.toggle('scale-100');
-            }
+            const c = el.querySelector('.modal-container');
+            if (c) { c.classList.toggle('scale-95'); c.classList.toggle('scale-100'); }
         }
 
-        function openMiniClientModal() {
-            toggleModal('miniClientModal');
-        }
+        function openMiniClientModal() { toggleModal('miniClientModal'); }
+        function openMiniProductModal() { toggleModal('miniProductModal'); toggleProductMode('new'); }
 
-        function openMiniProductModal() {
-            toggleModal('miniProductModal');
-            toggleProductMode('new');
-        }
-
-        // FIXED (Bug #3): toggleProductMode properly shows/hides inputs and styles buttons
         function toggleProductMode(mode) {
             productMode = mode;
-            const newInputs = document.getElementById('newProdInputs');
-            const existInputs = document.getElementById('existProdInputs');
-            const btnNew = document.getElementById('btnNewProd');
-            const btnExist = document.getElementById('btnExistProd');
-
-            if (mode === 'new') {
-                newInputs.classList.remove('hidden');
-                existInputs.classList.add('hidden');
-                btnNew.className = 'flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800';
-                btnExist.className = 'flex-1 py-1 rounded text-sm text-gray-500';
-            } else {
-                newInputs.classList.add('hidden');
-                existInputs.classList.remove('hidden');
-                btnNew.className = 'flex-1 py-1 rounded text-sm text-gray-500';
-                btnExist.className = 'flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800';
-            }
+            const isNew = mode === 'new';
+            document.getElementById('newProdInputs').classList.toggle('hidden', !isNew);
+            document.getElementById('existProdInputs').classList.toggle('hidden', isNew);
+            document.getElementById('btnNewProd').className = isNew
+                ? 'flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800'
+                : 'flex-1 py-1 rounded text-sm text-gray-500';
+            document.getElementById('btnExistProd').className = !isNew
+                ? 'flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800'
+                : 'flex-1 py-1 rounded text-sm text-gray-500';
         }
     </script>
 </body>
