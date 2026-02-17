@@ -650,25 +650,36 @@
         }
 
         // FIX: onVariantSelect Logic Priority: Variant Unit > Parent Unit > Empty
-        function onVariantSelect(select, rowId) {
-            const selectedOpt = select.options[select.selectedIndex];
-            const price = selectedOpt.dataset.price || 0;
-            
-            // 1. Check Variant Unit
-            let unit = (selectedOpt.dataset.unit !== undefined && selectedOpt.dataset.unit !== '') 
-                       ? selectedOpt.dataset.unit 
-                       : '';
-            
-            // 2. If Variant Unit is empty, Check Parent Default Unit
-            if (unit === '') {
-                unit = select.dataset.defaultUnit || '';
-            }
+       // استبدل دالة fillVariants القديمة بهذه:
+// استبدل دالة onVariantSelect القديمة بهذه:
+function onVariantSelect(select, rowId) {
+    const selectedOpt = select.options[select.selectedIndex];
+    
+    // إذا لم يتم اختيار شيء، لا تفعل شيئاً
+    if (!selectedOpt || !selectedOpt.value) return;
 
-            document.getElementById(`price-${rowId}`).value = price;
-            const row = document.getElementById(rowId);
-            if (row) row.querySelector('.unit-input').value = unit;
-            calcRow(rowId);
-        }
+    const price = selectedOpt.dataset.price || 0;
+    
+    // 1. نحاول أخذ وحدة المقاس الخاصة
+    let targetUnit = selectedOpt.dataset.variantUnit;
+
+    // 2. إذا كانت وحدة المقاس فارغة، نأخذ وحدة الأب المحفوظة
+    if (!targetUnit || targetUnit === '' || targetUnit === 'null') {
+        targetUnit = select.dataset.parentUnit;
+    }
+
+    // تحديث السعر
+    document.getElementById(`price-${rowId}`).value = price;
+    
+    // تحديث الوحدة فقط إذا وجدنا قيمة (سواء من المقاس أو الأب)
+    // هذا الشرط يمنع تحولها لـ "حبة" أو فراغ بالخطأ
+    if (targetUnit) {
+        const row = document.getElementById(rowId);
+        if (row) row.querySelector('.unit-input').value = targetUnit;
+    }
+
+    calcRow(rowId);
+}
 
         function calcRow(rowId) {
             const qty = Number(document.getElementById(`qty-${rowId}`).value) || 0;
