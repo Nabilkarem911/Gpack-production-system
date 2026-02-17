@@ -197,7 +197,6 @@
                     <div class="mb-6 mx-6 print:mx-0 page-break-inside-avoid">
                         <h3 class="font-bold text-gray-800 mb-2 border-b pb-1">الشروط والأحكام والملاحظات:</h3>
                         <div id="termsList" class="space-y-1 text-sm text-gray-700"></div>
-                        <!-- FIX #4: textarea لحفظ snapshotted_terms -->
                         <textarea id="customTerms" class="w-full border rounded p-2 mt-4 text-sm bg-gray-50 no-print focus:ring-1 focus:ring-purple-500" rows="3" placeholder="ملاحظات إضافية لهذا العرض فقط..."></textarea>
                         <p id="printCustomTerms" class="hidden text-sm mt-2 font-bold border-t pt-2"></p>
                     </div>
@@ -238,7 +237,6 @@
         </div>
     </main>
 
-    <!-- ===== Client Info Modal ===== -->
     <div id="clientInfoModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('clientInfoModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-3xl mx-auto rounded-2xl shadow-lg z-50 p-6">
@@ -251,7 +249,6 @@
                 <div><span class="text-gray-500 block">المدينة:</span> <span id="infoCity" class="font-bold">-</span></div>
                 <div><span class="text-gray-500 block">الرصيد (عليه):</span> <span class="font-bold text-red-600">0.00 ر.س</span></div>
             </div>
-            <!-- FIX #2: رفع الحد إلى 50 وجعل رقم الطلب قابل للنقر -->
             <h4 class="font-bold text-xs text-gray-500 mb-2">آخر الطلبات / الفواتير (آخر 50):</h4>
             <div class="overflow-x-auto max-h-72 overflow-y-auto border rounded-lg">
                 <table class="w-full text-right text-sm">
@@ -270,7 +267,6 @@
         </div>
     </div>
 
-    <!-- ===== FIX #2: Order Items Drill-down Modal ===== -->
     <div id="orderItemsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[60] no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('orderItemsModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-[60] p-6 transform transition-all scale-95">
@@ -304,7 +300,6 @@
         </div>
     </div>
 
-    <!-- Product History Modal -->
     <div id="productHistoryModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('productHistoryModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6">
@@ -320,7 +315,6 @@
         </div>
     </div>
 
-    <!-- Mini Client Modal -->
     <div id="miniClientModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
@@ -332,7 +326,6 @@
         </div>
     </div>
 
-    <!-- Mini Product Modal -->
     <div id="miniProductModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
@@ -350,7 +343,6 @@
         </div>
     </div>
 
-    <!-- Convert to Production Modal -->
     <div id="convertModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
@@ -405,9 +397,6 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // ================================================================
-        // FIX #3: Status mapping — exact workflow names, no 'converted' key
-        // ================================================================
         const STATUS_AR = {
             'quote':      'عرض سعر',
             'production': 'قيد التشغيل',
@@ -424,7 +413,7 @@
         const ORDER_STATUS = {
             QUOTE:      'quote',
             ARCHIVED:   'archived',
-            PRODUCTION: 'production',  // FIX #3: convert sends to 'production'
+            PRODUCTION: 'production',
             COMPLETED:  'completed'
         };
 
@@ -440,9 +429,6 @@
             fetchQuotes();
         };
 
-        // ================================================================
-        // Data Loading
-        // ================================================================
         async function loadClients() {
             try {
                 const { data, error } = await supabaseClient.from('clients').select('*');
@@ -463,15 +449,19 @@
         }
 
         // ================================================================
-        // FIX #1: loadProducts — fetch unit, no hardcoded default
+        // CORE FIX: Load 'unit' from products table to serve as a Default
         // ================================================================
         async function loadProducts() {
             try {
+                // IMPORTANT: Added 'unit' to the query. If it fails, check your DB schema.
                 const { data, error } = await supabaseClient
                     .from('products')
-                    .select('id, name, product_variants(id, size_name, selling_price, unit)');
+                    .select('id, name, unit, product_variants(id, size_name, selling_price, unit)');
+                
                 if (error) throw error;
                 productsList = data || [];
+                
+                // Populate the existing products dropdown in the mini-modal
                 const existSel = document.getElementById('mpExistSelect');
                 existSel.innerHTML = '<option value="">اختر الصنف...</option>';
                 productsList.forEach(p => {
@@ -479,7 +469,12 @@
                 });
             } catch (e) {
                 console.error('loadProducts error:', e);
-                alert('خطأ في تحميل الأصناف: ' + (e.message || e));
+                // If the error is about column 'unit' not existing, warn the user
+                if (e.message && e.message.includes('unit')) {
+                    alert('تنبيه: يبدو أن عمود "unit" غير موجود في جدول "products". لن تعمل ميزة الوحدة الافتراضية بشكل صحيح.');
+                } else {
+                    alert('خطأ في تحميل الأصناف: ' + (e.message || e));
+                }
             }
         }
 
@@ -510,7 +505,6 @@
                     orders.forEach(o => {
                         const tr = document.createElement('tr');
                         tr.className = "hover:bg-gray-50 border-b";
-                        // FIX #3: use updated STATUS_AR
                         const statusLabel = STATUS_AR[o.status] || o.status || '-';
                         const statusColor = STATUS_COLOR[o.status] || 'bg-gray-100 text-gray-600';
                         let btns = isArchiveView
@@ -534,7 +528,6 @@
             } catch (e) {
                 console.error('fetchQuotes error:', e);
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center p-6 text-red-400">خطأ في تحميل البيانات</td></tr>';
-                alert('خطأ في تحميل عروض الأسعار: ' + (e.message || e));
             }
             document.getElementById('loadingIndicator').classList.add('hidden');
         }
@@ -569,10 +562,12 @@
             if (data) {
                 tr.querySelector('.prod-search').value = data.pName;
                 const prod = productsList.find(p => p.name === data.pName);
-                if (prod) fillVariants(tr.querySelector('.var-select'), prod, data.variant_id);
+                if (prod) {
+                    // Pass the Parent Product's Unit here!
+                    fillVariants(tr.querySelector('.var-select'), prod, prod.unit, data.variant_id);
+                }
                 tr.querySelector('.qty-input').value = data.quantity;
                 tr.querySelector('.price-input').value = data.unit_price;
-                // FIX #1: Use exactly what's stored, empty string if null/undefined
                 tr.querySelector('.unit-input').value = (data.unit !== null && data.unit !== undefined) ? data.unit : '';
                 calcRow(rowId);
             }
@@ -592,6 +587,7 @@
             document.querySelectorAll('.index-cell').forEach(c => c.innerText = i++);
         }
 
+        // FIX: Search now passes the Parent Unit
         function searchProduct(input, rowId) {
             const val = input.value.toLowerCase();
             const list = document.getElementById(`res-${rowId}`);
@@ -608,7 +604,8 @@
                         input.value = p.name;
                         list.style.display = 'none';
                         list.classList.add('hidden');
-                        fillVariants(document.getElementById(`var-${rowId}`), p);
+                        // PASS PARENT UNIT (p.unit)
+                        fillVariants(document.getElementById(`var-${rowId}`), p, p.unit);
                     };
                     list.appendChild(div);
                 });
@@ -625,39 +622,48 @@
             document.addEventListener('click', closeHandler, { once: false });
         }
 
-        // ================================================================
-        // FIX #1: fillVariants — attach unit exactly from DB, no default fallback
-        // ================================================================
-        function fillVariants(select, product, selectedId = null) {
+        // FIX: fillVariants accepts parentDefaultUnit and stores it
+        function fillVariants(select, product, parentDefaultUnit = '', selectedId = null) {
             select.innerHTML = '<option value="">اختر...</option>';
+            
+            // Store parent unit on the select element for later use
+            select.dataset.defaultUnit = parentDefaultUnit || '';
+
             if (product.product_variants) {
                 product.product_variants.forEach(v => {
                     const opt = new Option(v.size_name, v.id);
                     opt.dataset.price = v.selling_price || 0;
-                    // FIX #1: store the exact DB value; null becomes empty string
-                    opt.dataset.unit = (v.unit !== null && v.unit !== undefined) ? v.unit : '';
+                    // Variant Unit (might be null)
+                    opt.dataset.unit = (v.unit !== null && v.unit !== undefined) ? v.unit : ''; 
                     if (selectedId == v.id) opt.selected = true;
                     select.add(opt);
                 });
             }
-            // If a variant is pre-selected (e.g. during editQuote), populate unit immediately
-            if (selectedId) {
-                const sel = select.options[select.selectedIndex];
-                if (sel) {
-                    const row = select.closest('tr');
-                    if (row) row.querySelector('.unit-input').value = sel.dataset.unit || '';
-                }
+
+            // Immediately set unit for new selection (default to parent if variant is null)
+            // But only if we are NOT editing an existing row (data is passed via selectedId)
+            // If selectedId is present, we trust the value in unit-input set by addItemRow
+            if (!selectedId) {
+                const row = select.closest('tr');
+                if (row) row.querySelector('.unit-input').value = parentDefaultUnit || '';
             }
         }
 
-        // ================================================================
-        // FIX #1: onVariantSelect — read exact unit from data-unit, no default
-        // ================================================================
+        // FIX: onVariantSelect Logic Priority: Variant Unit > Parent Unit > Empty
         function onVariantSelect(select, rowId) {
             const selectedOpt = select.options[select.selectedIndex];
             const price = selectedOpt.dataset.price || 0;
-            // FIX #1: exact value from DB, empty string if absent
-            const unit = (selectedOpt.dataset.unit !== undefined) ? selectedOpt.dataset.unit : '';
+            
+            // 1. Check Variant Unit
+            let unit = (selectedOpt.dataset.unit !== undefined && selectedOpt.dataset.unit !== '') 
+                       ? selectedOpt.dataset.unit 
+                       : '';
+            
+            // 2. If Variant Unit is empty, Check Parent Default Unit
+            if (unit === '') {
+                unit = select.dataset.defaultUnit || '';
+            }
+
             document.getElementById(`price-${rowId}`).value = price;
             const row = document.getElementById(rowId);
             if (row) row.querySelector('.unit-input').value = unit;
@@ -679,9 +685,6 @@
             document.getElementById('grandTotal').innerText = (sub * 1.15).toFixed(2);
         }
 
-        // ================================================================
-        // Terms
-        // ================================================================
         function renderTermsList() {
             const list = document.getElementById('termsList');
             list.innerHTML = '';
@@ -695,9 +698,6 @@
             });
         }
 
-        // ================================================================
-        // FIX #4: saveQuote — always write customTerms → snapshotted_terms
-        // ================================================================
         async function saveQuote() {
             const clientId = document.getElementById('qClient').value;
             if (!clientId) return alert("اختر العميل");
@@ -713,7 +713,6 @@
                 const vId = varSelect.value;
                 const qty = Number(qtyInput.value);
                 const price = Number(priceInput.value);
-                // FIX #1: save exactly what's in the input, no forced default
                 const unit = unitInput ? unitInput.value : '';
                 if (vId && qty > 0) {
                     items.push({ variant_id: vId, quantity: qty, unit_price: price, unit: unit });
@@ -723,7 +722,6 @@
 
             if (!items.length) return alert("أضف صنف واحد على الأقل");
 
-            // FIX #4: read the textarea value and send to snapshotted_terms
             const snapshottedTerms = document.getElementById('customTerms').value;
 
             const data = {
@@ -731,7 +729,7 @@
                 status: ORDER_STATUS.QUOTE,
                 total_amount: sub,
                 grand_total: parseFloat((sub * 1.15).toFixed(2)),
-                snapshotted_terms: snapshottedTerms   // FIX #4
+                snapshotted_terms: snapshottedTerms
             };
 
             try {
@@ -758,9 +756,6 @@
             }
         }
 
-        // ================================================================
-        // FIX #4: editQuote — load snapshotted_terms back into #customTerms
-        // ================================================================
         async function editQuote(id) {
             currentQuoteId = id;
             document.getElementById('listView').classList.add('hidden');
@@ -771,7 +766,7 @@
                 const [orderRes, itemsRes] = await Promise.all([
                     supabaseClient.from('orders').select('*').eq('id', id).single(),
                     supabaseClient.from('order_items')
-                        .select('*, product_variants(id, size_name, unit, products(name))')
+                        .select('*, product_variants(id, size_name, unit, products(name, unit))') // Added products(unit)
                         .eq('order_id', id)
                 ]);
                 if (orderRes.error) throw orderRes.error;
@@ -781,8 +776,6 @@
                 document.getElementById('qClient').value = order.client_id;
                 document.getElementById('qDate').value = order.created_at.split('T')[0];
                 document.getElementById('pRef').innerText = '#' + order.order_number;
-
-                // FIX #4: load snapshotted_terms into the textarea
                 document.getElementById('customTerms').value = order.snapshotted_terms || '';
 
                 renderTermsList();
@@ -790,17 +783,18 @@
                 document.getElementById('itemsContainer').innerHTML = '';
                 itemsRes.data.forEach(i => {
                     if (i.product_variants && i.product_variants.products) {
+                        // Determine the unit fallback logic for existing items
+                        let finalUnit = '';
+                        if (i.unit) finalUnit = i.unit; // 1. Saved on item
+                        else if (i.product_variants.unit) finalUnit = i.product_variants.unit; // 2. Saved on variant
+                        else if (i.product_variants.products.unit) finalUnit = i.product_variants.products.unit; // 3. Saved on Parent
+
                         addItemRow({
                             pName: i.product_variants.products.name,
                             variant_id: i.variant_id,
                             quantity: i.quantity,
                             unit_price: i.unit_price,
-                            // FIX #1: prefer saved unit from order_items, then variant unit, then ''
-                            unit: (i.unit !== null && i.unit !== undefined)
-                                ? i.unit
-                                : ((i.product_variants.unit !== null && i.product_variants.unit !== undefined)
-                                    ? i.product_variants.unit
-                                    : '')
+                            unit: finalUnit
                         });
                     }
                 });
@@ -811,9 +805,6 @@
             }
         }
 
-        // ================================================================
-        // openConvertModal
-        // ================================================================
         async function openConvertModal(orderId, clientId) {
             document.getElementById('convQuoteId').value = orderId;
             document.getElementById('convClientId').value = clientId;
@@ -861,11 +852,6 @@
             document.querySelectorAll('.conv-check').forEach(c => c.checked = checkbox.checked);
         }
 
-        // ================================================================
-        // FIX #1 + FIX #2: showClientInfo
-        // - No .limit() restriction (removed, fetches up to 50)
-        // - Order number cell is clickable → opens drill-down modal
-        // ================================================================
         async function showClientInfo() {
             const cId = document.getElementById('qClient').value;
             if (!cId) return alert('اختر العميل أولاً');
@@ -885,7 +871,6 @@
             toggleModal('clientInfoModal');
 
             try {
-                // FIX #2: Fetch up to 50 orders, no restrictive limit
                 const { data: orders, error } = await supabaseClient
                     .from('orders')
                     .select('id, order_number, created_at, grand_total, status')
@@ -898,17 +883,15 @@
 
                 if (orders && orders.length > 0) {
                     orders.forEach(o => {
-                        // FIX #3: use STATUS_AR with updated keys
                         const statusLabel = STATUS_AR[o.status] || o.status || '-';
                         const statusColor = STATUS_COLOR[o.status] || 'bg-gray-100 text-gray-600';
                         const dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString('ar-SA') : '-';
                         const total = o.grand_total ? parseFloat(o.grand_total).toFixed(2) + ' ر.س' : '0.00 ر.س';
 
-                        // FIX #2: order number is a clickable link
                         tbody.innerHTML += `
                             <tr class="hover:bg-gray-50">
                                 <td class="p-2 border-b">
-                                    <button
+                                    <button 
                                         onclick="openOrderItemsModal('${o.id}', '${o.order_number}', '${dateStr}')"
                                         class="font-bold text-purple-700 hover:text-purple-900 hover:underline cursor-pointer"
                                     >#${o.order_number || '-'}</button>
@@ -928,9 +911,6 @@
             }
         }
 
-        // ================================================================
-        // FIX #2: openOrderItemsModal — drill-down: show items of a historic order
-        // ================================================================
         async function openOrderItemsModal(orderId, orderNumber, dateStr) {
             document.getElementById('orderItemsTitle').innerText = `تفاصيل الطلب #${orderNumber}`;
             document.getElementById('orderItemsDate').innerText = dateStr;
@@ -972,7 +952,7 @@
                                 <td class="p-2 border-b text-center font-mono font-bold text-purple-700">${lineTotal.toFixed(2)}</td>
                             </tr>`;
                     });
-                    document.getElementById('orderItemsTotal').innerHTML =
+                    document.getElementById('orderItemsTotal').innerHTML = 
                         `<span class="text-gray-500">الإجمالي قبل الضريبة:</span>
                          <span class="mr-2 text-purple-800">${grandSub.toFixed(2)} ر.س</span>
                          <span class="text-gray-400 text-xs mr-2">| شامل الضريبة:</span>
@@ -989,9 +969,6 @@
             }
         }
 
-        // ================================================================
-        // showProductHistory
-        // ================================================================
         async function showProductHistory(rowId) {
             const cId = document.getElementById('qClient').value;
             const varSelect = document.getElementById(`var-${rowId}`);
@@ -1033,7 +1010,6 @@
 
                 if (items && items.length > 0) {
                     items.forEach(h => {
-                        // FIX #3: use updated STATUS_AR
                         const statusLabel = STATUS_AR[orderStatusMap[h.order_id]] || orderStatusMap[h.order_id] || '-';
                         const statusColor = STATUS_COLOR[orderStatusMap[h.order_id]] || 'bg-gray-100 text-gray-600';
                         const dateStr = h.created_at ? new Date(h.created_at).toLocaleDateString('ar-SA') : '-';
@@ -1055,9 +1031,6 @@
             }
         }
 
-        // ================================================================
-        // saveMiniProduct
-        // ================================================================
         async function saveMiniProduct() {
             const size = document.getElementById('mpSize').value.trim();
             const price = parseFloat(document.getElementById('mpPrice').value) || 0;
@@ -1093,9 +1066,6 @@
             }
         }
 
-        // ================================================================
-        // saveMiniClient
-        // ================================================================
         async function saveMiniClient() {
             const name = document.getElementById('mcName').value.trim();
             if (!name) return alert('أدخل اسم المنشأة');
@@ -1123,9 +1093,6 @@
             }
         }
 
-        // ================================================================
-        // FIX #3: executeConversion — status set to 'production', NOT 'converted'
-        // ================================================================
         async function executeConversion() {
             const orderId = document.getElementById('convQuoteId').value;
             const payAmount = parseFloat(document.getElementById('payAmount').value) || 0;
@@ -1140,7 +1107,6 @@
             });
             if (!checkedItems.length) return alert('اختر صنفاً واحداً على الأقل');
             try {
-                // FIX #3: use ORDER_STATUS.PRODUCTION ('production'), not 'converted'
                 const { error } = await supabaseClient
                     .from('orders')
                     .update({
@@ -1159,9 +1125,6 @@
             }
         }
 
-        // ================================================================
-        // Utility Functions
-        // ================================================================
         async function archiveQuote(id) {
             if (!confirm('هل تريد أرشفة هذا العرض؟')) return;
             try {
@@ -1193,8 +1156,8 @@
 
         function toggleArchiveView() {
             isArchiveView = !isArchiveView;
-            document.getElementById('archiveBtn').innerHTML = isArchiveView
-                ? '<i class="fas fa-arrow-right"></i> <span>العودة</span>'
+            document.getElementById('archiveBtn').innerHTML = isArchiveView 
+                ? '<i class="fas fa-arrow-right"></i> <span>العودة</span>' 
                 : '<i class="fas fa-trash-restore"></i> <span>الأرشيف</span>';
             fetchQuotes();
         }
@@ -1206,7 +1169,7 @@
             document.getElementById('createBtn').classList.add('hidden');
             document.getElementById('itemsContainer').innerHTML = '';
             document.getElementById('qClient').value = '';
-            document.getElementById('customTerms').value = '';  // FIX #4: clear on new form
+            document.getElementById('customTerms').value = '';
             document.getElementById('pRef').innerText = 'NEW';
             renderTermsList();
             addItemRow();
@@ -1222,12 +1185,12 @@
 
         function preparePrint() {
             const sel = document.getElementById('qClient');
-            if (sel.selectedIndex >= 0 && sel.value)
+            if (sel.selectedIndex >= 0 && sel.value) 
                 document.getElementById('printClientName').innerText = sel.options[sel.selectedIndex].text;
             document.getElementById('pDate').innerText = document.getElementById('qDate').value;
             const custom = document.getElementById('customTerms').value;
             const pCustom = document.getElementById('printCustomTerms');
-            if (custom) { pCustom.innerText = "ملاحظات: " + custom; pCustom.classList.remove('hidden'); }
+            if (custom) { pCustom.innerText = "ملاحظات: " + custom; pCustom.classList.remove('hidden'); } 
             else pCustom.classList.add('hidden');
             window.print();
         }
@@ -1248,11 +1211,11 @@
             const isNew = mode === 'new';
             document.getElementById('newProdInputs').classList.toggle('hidden', !isNew);
             document.getElementById('existProdInputs').classList.toggle('hidden', isNew);
-            document.getElementById('btnNewProd').className = isNew
-                ? 'flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800'
+            document.getElementById('btnNewProd').className = isNew 
+                ? 'flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800' 
                 : 'flex-1 py-1 rounded text-sm text-gray-500';
-            document.getElementById('btnExistProd').className = !isNew
-                ? 'flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800'
+            document.getElementById('btnExistProd').className = !isNew 
+                ? 'flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800' 
                 : 'flex-1 py-1 rounded text-sm text-gray-500';
         }
     </script>
