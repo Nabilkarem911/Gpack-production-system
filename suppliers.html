@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G.PACK - إدارة الموردين</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; }
+        .gpack-purple { background-color: #3e206d; }
+        .gpack-yellow { color: #fccf4d; }
+        .gpack-btn { background-color: #fccf4d; color: #3e206d; transition: all 0.3s; font-weight: bold; }
+        .gpack-btn:hover { background-color: #e6bd45; transform: translateY(-1px); }
+        .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
+        .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
+        .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; transition: all 0.2s; cursor: pointer; padding: 12px 20px; }
+        .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background: #f9fafb; }
+        .modal { transition: opacity 0.25s ease; }
+        .modal-active { overflow: hidden; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-right">
+
+    <aside class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-20 hidden md:flex">
+        <div class="h-20 flex items-center justify-center border-b border-purple-800/50">
+            <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2">
+                <i class="fas fa-box-open gpack-yellow"></i> <span>G.PACK</span>
+            </h1>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4">
+            <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300"><i class="fas fa-th-large"></i> الرئيسية</a>
+            <a href="production.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300"><i class="fas fa-industry"></i> أوامر التشغيل</a>
+            <a href="suppliers.html" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-white"><i class="fas fa-truck"></i> الموردين</a>
+            <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300"><i class="fas fa-users"></i> العملاء</a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <header class="h-20 bg-white shadow-sm flex items-center justify-between px-8">
+            <div class="flex items-center gap-4">
+                <h2 class="text-xl font-bold text-gray-800">إدارة الموردين</h2>
+                <div id="loading" class="hidden text-purple-600 animate-spin"><i class="fas fa-sync"></i></div>
+            </div>
+            <div class="flex gap-4">
+                <input type="text" id="search" onkeyup="renderSuppliers()" placeholder="بحث عن مورد..." class="px-4 py-2 border rounded-lg text-sm w-64 focus:ring-2 focus:ring-purple-500 outline-none">
+                <button onclick="openModal('supplierModal')" class="gpack-btn px-6 py-2 rounded-lg flex items-center gap-2 shadow-sm">
+                    <i class="fas fa-plus"></i> مورد جديد
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-8">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50 text-gray-500 text-xs uppercase text-right">
+                        <tr>
+                            <th class="px-6 py-4">المورد</th>
+                            <th class="px-6 py-4">التصنيف</th>
+                            <th class="px-6 py-4">المسؤول</th>
+                            <th class="px-6 py-4">الجوال</th>
+                            <th class="px-6 py-4 text-center">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="supplierTableBody" class="divide-y divide-gray-100 text-sm"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="supplierModal" class="modal opacity-0 pointer-events-none fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white w-full max-w-lg rounded-2xl p-6 shadow-2xl transform scale-95 transition-all">
+            <h3 class="text-xl font-bold text-purple-900 mb-6 border-b pb-2" id="modalTitle">إضافة مورد جديد</h3>
+            <form id="supplierForm" class="space-y-4">
+                <input type="hidden" id="sId">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold mb-1">اسم المورد/الشركة</label><input type="text" id="sName" class="w-full border p-2 rounded" required></div>
+                    <div><label class="block text-xs font-bold mb-1">التصنيف</label>
+                        <select id="sType" class="w-full border p-2 rounded">
+                            <option value="raw_materials">خامات ورق</option>
+                            <option value="ink">أحبار</option>
+                            <option value="machines">ماكينات وقطع غيار</option>
+                            <option value="other">أخرى</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold mb-1">الشخص المسؤول</label><input type="text" id="sPerson" class="w-full border p-2 rounded"></div>
+                    <div><label class="block text-xs font-bold mb-1">الجوال</label><input type="text" id="sPhone" class="w-full border p-2 rounded"></div>
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t">
+                    <button type="button" onclick="closeModal('supplierModal')" class="px-4 py-2 text-gray-500">إلغاء</button>
+                    <button type="submit" class="gpack-btn px-8 py-2 rounded-lg">حفظ المورد</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="profileModal" class="modal opacity-0 pointer-events-none fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+        <div class="bg-white w-full max-w-5xl h-[90vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+            <div class="gpack-purple p-6 text-white flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-purple-900 text-xl font-bold"><i class="fas fa-truck"></i></div>
+                    <div>
+                        <h2 id="pSupplierName" class="text-2xl font-bold">اسم المورد</h2>
+                        <p id="pSupplierMeta" class="text-purple-200 text-sm"></p>
+                    </div>
+                </div>
+                <button onclick="closeModal('profileModal')" class="text-2xl hover:text-yellow-400"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="flex border-b">
+                <button onclick="switchTab('active_orders')" id="tab-active_orders-btn" class="tab-btn active"><i class="fas fa-spinner"></i> أوامر التشغيل الحالية</button>
+                <button onclick="switchTab('completed_orders')" id="tab-completed_orders-btn" class="tab-btn"><i class="fas fa-history"></i> الأرشيف (المنتهية)</button>
+                <button onclick="switchTab('finance')" id="tab-finance-btn" class="tab-btn"><i class="fas fa-wallet"></i> الحسابات المالية</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <div id="tab-active_orders" class="profile-tab">
+                    <table class="w-full bg-white rounded-lg shadow-sm">
+                        <thead class="bg-gray-100 text-right"><tr class="text-xs">
+                            <th class="p-4">رقم الأمر</th><th class="p-4">التاريخ</th><th class="p-4">الحالة</th><th class="p-4">إجمالي المبلغ</th><th class="p-4">المتبقي</th>
+                        </tr></thead>
+                        <tbody id="activeOrdersBody"></tbody>
+                    </table>
+                </div>
+
+                <div id="tab-finance" class="profile-tab hidden">
+                    <div class="grid grid-cols-3 gap-6 mb-6">
+                        <div class="bg-white p-4 rounded-xl border-r-4 border-purple-600 shadow-sm text-center">
+                            <p class="text-gray-500 text-xs mb-1">إجمالي التعاملات</p>
+                            <p id="fTotal" class="text-2xl font-black">0</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border-r-4 border-green-500 shadow-sm text-center">
+                            <p class="text-gray-500 text-xs mb-1">المدفوع</p>
+                            <p id="fPaid" class="text-2xl font-black text-green-600">0</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border-r-4 border-red-500 shadow-sm text-center">
+                            <p class="text-gray-500 text-xs mb-1">المتبقي للمورد</p>
+                            <p id="fBalance" class="text-2xl font-black text-red-600">0</p>
+                        </div>
+                    </div>
+                    <h4 class="font-bold mb-3 flex justify-between items-center">
+                        سجل المدفوعات والفواتير
+                        <button onclick="addSupplierTransaction()" class="text-xs bg-purple-600 text-white px-3 py-1 rounded-full">+ حركة مالية</button>
+                    </h4>
+                    <table class="w-full bg-white rounded-lg shadow-sm text-sm">
+                        <thead class="bg-gray-100"><tr class="text-right"><th class="p-3">التاريخ</th><th class="p-3">البيان</th><th class="p-3">علينا</th><th class="p-3">سددنا</th></tr></thead>
+                        <tbody id="supplierFinanceTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="orderDetailModal" class="modal opacity-0 pointer-events-none fixed inset-0 bg-black/40 flex items-center justify-center z-[60]">
+        <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-2xl border-2 border-yellow-400">
+            <h4 class="text-lg font-bold border-b pb-2 mb-4">تفاصيل أمر التشغيل <span id="dtOrderNo"></span></h4>
+            <div id="dtOrderContent" class="space-y-3 text-sm">
+                </div>
+            <button onclick="closeModal('orderDetailModal')" class="w-full mt-6 bg-gray-100 py-2 rounded font-bold">إغلاق</button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // كمل مفتاحك هنا
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let suppliers = [];
+        let currentSupplierId = null;
+
+        window.onload = loadSuppliers;
+
+        async function loadSuppliers() {
+            toggleLoading(true);
+            const { data, error } = await client.from('suppliers').select('*').order('name');
+            if (data) {
+                suppliers = data;
+                renderSuppliers();
+            }
+            toggleLoading(false);
+        }
+
+        function renderSuppliers() {
+            const term = document.getElementById('search').value.toLowerCase();
+            const body = document.getElementById('supplierTableBody');
+            body.innerHTML = '';
+
+            suppliers.filter(s => s.name.toLowerCase().includes(term)).forEach(s => {
+                body.innerHTML += `
+                    <tr class="hover:bg-purple-50 transition-colors">
+                        <td class="px-6 py-4 font-bold text-purple-900">${s.name}</td>
+                        <td class="px-6 py-4"><span class="bg-gray-100 px-2 py-1 rounded text-[10px]">${s.type || 'عام'}</span></td>
+                        <td class="px-6 py-4 text-gray-600">${s.contact_person || '-'}</td>
+                        <td class="px-6 py-4 font-mono text-xs">${s.phone || '-'}</td>
+                        <td class="px-6 py-4 flex justify-center gap-3">
+                            <button onclick="openProfile('${s.id}')" class="text-purple-600 hover:scale-110 transition-transform" title="الملف المالي والحركات"><i class="fas fa-folder-open text-lg"></i></button>
+                            <button onclick="editSupplier('${s.id}')" class="text-blue-500 hover:scale-110"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteSupplier('${s.id}')" class="text-red-400 hover:scale-110"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        async function openProfile(id) {
+            currentSupplierId = id;
+            const s = suppliers.find(x => x.id === id);
+            document.getElementById('pSupplierName').innerText = s.name;
+            document.getElementById('pSupplierMeta').innerText = `${s.type || ''} | ${s.phone || ''}`;
+            
+            await Promise.all([loadSupplierOrders(id), loadSupplierFinance(id)]);
+            
+            openModal('profileModal');
+            switchTab('active_orders');
+        }
+
+        // دالة عرض أوامر التشغيل (تخيلية حالياً حتى بناء صفحة الأوامر)
+        async function loadSupplierOrders(sid) {
+            // هنا مستقبلاً هنربط بجدول production_orders
+            // const { data } = await client.from('production_orders').select('*').eq('supplier_id', sid);
+            document.getElementById('activeOrdersBody').innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400 italic">لا توجد أوامر تشغيل حالية للمورد.. سيتم الربط عند إنشاء موديول التشغيل</td></tr>`;
+        }
+
+        // تفاصيل الأمر (Pop-up)
+        function showOrderDetails(orderNo) {
+            document.getElementById('dtOrderNo').innerText = `#${orderNo}`;
+            document.getElementById('dtOrderContent').innerHTML = `
+                <div class="flex justify-between border-b pb-1"><span>الصنف:</span> <b>كرتون مقوى 300 جرام</b></div>
+                <div class="flex justify-between border-b pb-1"><span>الكمية:</span> <b>5000 فرخ</b></div>
+                <div class="flex justify-between border-b pb-1"><span>الإجمالي:</span> <b>12,000 ريال</b></div>
+                <div class="flex justify-between text-green-600"><span>المدفوع:</span> <b>5,000 ريال</b></div>
+                <div class="flex justify-between text-red-600 font-bold"><span>المتبقي:</span> <b>7,000 ريال</b></div>
+            `;
+            openModal('orderDetailModal');
+        }
+
+        // الحسابات المالية
+        async function loadSupplierFinance(sid) {
+            // استعلام تجريبي من جدول الترانزاكشن
+            const { data } = await client.from('client_transactions').select('*').eq('client_id', sid); // سنستخدم نفس الجدول مع تمييز النوع
+            const body = document.getElementById('supplierFinanceTable');
+            body.innerHTML = '';
+            let total = 0, paid = 0;
+
+            if (data) {
+                data.forEach(t => {
+                    const isInv = t.type === 'invoice';
+                    if(isInv) total += t.amount; else paid += t.amount;
+                    body.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-3 text-gray-500">${new Date(t.created_at).toLocaleDateString()}</td>
+                            <td class="p-3">${t.description}</td>
+                            <td class="p-3 font-bold">${isInv ? t.amount : '-'}</td>
+                            <td class="p-3 font-bold text-green-600">${!isInv ? t.amount : '-'}</td>
+                        </tr>`;
+                });
+            }
+            document.getElementById('fTotal').innerText = total;
+            document.getElementById('fPaid').innerText = paid;
+            document.getElementById('fBalance').innerText = total - paid;
+        }
+
+        // Utilities
+        function openModal(id) {
+            const m = document.getElementById(id);
+            m.classList.remove('opacity-0', 'pointer-events-none');
+            m.querySelector('div').classList.remove('scale-95');
+        }
+
+        function closeModal(id) {
+            const m = document.getElementById(id);
+            m.classList.add('opacity-0', 'pointer-events-none');
+            m.querySelector('div').classList.add('scale-95');
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.profile-tab').forEach(t => t.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            document.getElementById('tab-' + tab + '-btn').classList.add('active');
+        }
+
+        function toggleLoading(show) {
+            document.getElementById('loading').classList.toggle('hidden', !show);
+        }
+
+        // CRUD الموردين (بشكل سريع ومطابق للعملاء)
+        document.getElementById('supplierForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('sId').value;
+            const data = {
+                name: document.getElementById('sName').value,
+                type: document.getElementById('sType').value,
+                contact_person: document.getElementById('sPerson').value,
+                phone: document.getElementById('sPhone').value
+            };
+            
+            if(id) await client.from('suppliers').update(data).eq('id', id);
+            else await client.from('suppliers').insert([data]);
+            
+            closeModal('supplierModal');
+            loadSuppliers();
+        };
+
+        async function deleteSupplier(id) {
+            if(confirm('هل أنت متأكد من حذف هذا المورد؟ سيتم حذف جميع سجلاته.')) {
+                await client.from('suppliers').delete().eq('id', id);
+                loadSuppliers();
+            }
+        }
+    </script>
+</body>
+</html>
