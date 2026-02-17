@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G.PACK - إدارة الموردين</title>
+    <title>G.PACK - الموردين</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -17,10 +17,25 @@
         .gpack-btn:hover { background-color: #e6bd45; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
-        .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; cursor: pointer; padding: 10px 15px; white-space: nowrap; transition: 0.3s; }
-        .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background-color: #f9fafb; }
-        .item-tag { background: #eef2ff; color: #3e206d; padding: 2px 8px; border-radius: 4px; font-size: 11px; border: 1px solid #c7d2fe; }
+        
+        /* Modal Transitions */
         .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+        
+        /* Tabs Styling */
+        .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; cursor: pointer; padding: 10px 15px; white-space: nowrap; }
+        .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background-color: #f9fafb; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Tags Input Style */
+        .tag-badge { display: inline-flex; align-items: center; background-color: #f3f4f6; border: 1px solid #e5e7eb; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; color: #374151; margin: 2px; }
+        .tag-remove { margin-right: 4px; cursor: pointer; color: #ef4444; }
+        .supply-tag { background-color: #ede9fe; color: #5b21b6; border-color: #ddd6fe; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 2px; display: inline-block; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -32,35 +47,49 @@
                 <span>G.PACK</span>
             </h1>
         </div>
+        <div class="p-6 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20">
+            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400">
+                <i class="fas fa-user text-yellow-400"></i>
+            </div>
+            <div>
+                <p class="text-sm font-bold">المدير العام</p>
+                <p class="text-xs text-gray-300">Admin</p>
+            </div>
+        </div>
         <nav class="flex-1 overflow-y-auto py-4 space-y-1">
             <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-th-large w-5"></i> الرئيسية</a>
+            <a href="products.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-box w-5"></i> الأصناف</a>
+            <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-file-invoice-dollar w-5"></i> عروض الأسعار</a>
             <a href="production_orders.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-industry w-5"></i> أوامر التشغيل</a>
+            <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-cubes w-5"></i> المستودعات</a>
             <a href="suppliers.html" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-white font-medium"><i class="fas fa-truck w-5"></i> الموردين</a>
             <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-users w-5"></i> العملاء</a>
-            <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-cubes w-5"></i> المستودعات</a>
+            <a href="employees.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-id-card w-5"></i> الموظفين</a>
+            <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-list-alt w-5"></i> القوائم</a>
         </nav>
     </aside>
 
     <main class="flex-1 flex flex-col overflow-hidden relative">
         <header class="h-20 bg-white shadow-sm flex items-center justify-between px-8 z-10">
             <div class="flex items-center gap-4">
-                <h2 class="text-xl font-bold text-gray-800">إدارة الموردين</h2>
-                <div id="loadingIndicator" class="hidden flex items-center gap-2 text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full"><i class="fas fa-sync fa-spin"></i></div>
+                <h2 class="text-xl font-bold text-gray-800">سجل الموردين</h2>
+                <div id="loadingIndicator" class="hidden flex items-center gap-2 text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full"><i class="fas fa-sync fa-spin"></i> جار التحميل...</div>
             </div>
-            
             <div class="flex items-center gap-4">
-                <select id="filterType" onchange="fetchSuppliers()" class="border-none bg-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500">
-                    <option value="all">كل الأنواع</option>
-                    <option value="raw_materials">مواد خام</option>
-                    <option value="machines">ماكينات / صيانة</option>
-                    <option value="services">خدمات خارجية</option>
-                </select>
-                <div class="relative">
-                    <input type="text" id="searchInput" onkeyup="filterSuppliers()" placeholder="ابحث باسم المورد أو الصنف..." class="pl-10 pr-4 py-2 w-64 rounded-lg bg-gray-100 border-none focus:ring-2 focus:ring-purple-500 text-sm">
+                <div class="relative hidden md:block">
+                     <select id="typeFilter" onchange="filterSuppliers()" class="pl-8 pr-4 py-2 w-48 rounded-lg bg-gray-100 border-none focus:ring-2 focus:ring-purple-500 text-sm appearance-none cursor-pointer">
+                        <option value="">كل التوريدات</option>
+                        </select>
+                    <i class="fas fa-filter absolute left-3 top-2.5 text-gray-400"></i>
+                </div>
+
+                <div class="relative hidden md:block">
+                    <input type="text" id="searchInput" onkeyup="filterSuppliers()" placeholder="بحث باسم المورد..." class="pl-10 pr-4 py-2 w-64 rounded-lg bg-gray-100 border-none focus:ring-2 focus:ring-purple-500 text-sm">
                     <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
                 </div>
+
                 <button onclick="openAddModal()" class="gpack-btn px-4 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2">
-                    <i class="fas fa-plus-circle"></i><span>مورد جديد</span>
+                    <i class="fas fa-plus"></i><span>مورد جديد</span>
                 </button>
             </div>
         </header>
@@ -70,22 +99,23 @@
                 <table class="w-full text-right">
                     <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
                         <tr>
-                            <th class="px-6 py-4">المورد</th>
-                            <th class="px-6 py-4">النوع</th>
-                            <th class="px-6 py-4">الأصناف الموردة</th>
+                            <th class="px-6 py-4">اسم المورد / الشركة</th>
                             <th class="px-6 py-4">المسؤول</th>
+                            <th class="px-6 py-4">نوع التوريد</th>
                             <th class="px-6 py-4">الجوال</th>
+                            <th class="px-6 py-4">المواقع</th>
                             <th class="px-6 py-4">الإجراءات</th>
                         </tr>
                     </thead>
-                    <tbody id="suppliersTableBody" class="divide-y divide-gray-100 text-sm"></tbody>
+                    <tbody id="suppliersTableBody" class="divide-y divide-gray-100 text-sm">
+                        </tbody>
                 </table>
             </div>
         </div>
     </main>
 
     <div id="supplierModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
-        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('supplierModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <div class="flex justify-between items-center pb-3 border-b mb-4">
                 <p class="text-xl font-bold text-purple-800" id="modalTitle">إضافة مورد جديد</p>
@@ -94,29 +124,37 @@
             <form id="supplierForm" class="space-y-4">
                 <input type="hidden" id="sId">
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="text-sm font-bold block mb-1">اسم المورد/الشركة</label><input type="text" id="sName" class="w-full border p-2 rounded focus:ring-2 focus:ring-purple-500" required></div>
-                    <div>
-                        <label class="text-sm font-bold block mb-1">نوع التوريد</label>
-                        <select id="sType" class="w-full border p-2 rounded">
-                            <option value="raw_materials">مواد خام</option>
-                            <option value="machines">ماكينات / صيانة</option>
-                            <option value="services">خدمات خارجية</option>
-                        </select>
-                    </div>
+                    <div><label class="text-sm font-bold block mb-1">اسم المورد / الشركة</label><input type="text" id="sName" class="w-full border p-2 rounded focus:border-purple-500 outline-none" required></div>
+                    <div><label class="text-sm font-bold block mb-1">المسؤول</label><input type="text" id="sPerson" class="w-full border p-2 rounded focus:border-purple-500 outline-none"></div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="text-sm font-bold block mb-1">المسؤول</label><input type="text" id="sPerson" class="w-full border p-2 rounded"></div>
-                    <div><label class="text-sm font-bold block mb-1">الجوال</label><input type="text" id="sPhone" class="w-full border p-2 rounded"></div>
-                </div>
-                <div>
-                    <label class="text-sm font-bold block mb-1">الأصناف التي يوفرها (افصل بفاصلة ,)</label>
-                    <input type="text" id="sItems" placeholder="مثال: أكواب بلاستيك, بوكسات ورق, أكياس" class="w-full border p-2 rounded">
-                </div>
-                <div><label class="text-sm font-bold block mb-1">العنوان / المدينة</label><input type="text" id="sAddress" class="w-full border p-2 rounded"></div>
                 
-                <div class="pt-4 flex justify-end gap-2 border-t">
-                    <button type="button" onclick="toggleModal('supplierModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button>
-                    <button type="submit" class="gpack-btn px-6 py-2 rounded font-bold">حفظ المورد</button>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-sm font-bold block mb-1">الجوال</label><input type="text" id="sPhone" class="w-full border p-2 rounded focus:border-purple-500 outline-none"></div>
+                    <div><label class="text-sm font-bold block mb-1">المدينة</label><input type="text" id="sCity" class="w-full border p-2 rounded focus:border-purple-500 outline-none"></div>
+                </div>
+
+                <div>
+                    <label class="text-sm font-bold block mb-1">نوع التوريد (أكواب، ورق، أحبار...)</label>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="supplyInput" class="flex-1 border p-2 text-sm rounded focus:border-purple-500 outline-none" placeholder="اكتب النوع واضغط إضافة">
+                        <button type="button" onclick="addSupplyTag()" class="bg-purple-100 text-purple-700 px-4 rounded text-sm font-bold hover:bg-purple-200">إضافة</button>
+                    </div>
+                    <div id="tagsContainer" class="flex flex-wrap gap-2 min-h-[30px] p-2 bg-gray-50 rounded border border-dashed border-gray-300"></div>
+                </div>
+
+                <div>
+                    <label class="text-sm font-bold block mb-1">المواقع (Google Maps)</label>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="locLabel" class="w-1/3 border p-1 text-sm rounded" placeholder="اسم الفرع/المصنع">
+                        <input type="text" id="locUrl" class="flex-1 border p-1 text-sm rounded" placeholder="الرابط...">
+                        <button type="button" onclick="addLocation()" class="bg-gray-100 text-gray-700 px-3 rounded hover:bg-gray-200"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div id="locationsContainer" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-2 border-t mt-4">
+                    <button type="button" onclick="toggleModal('supplierModal')" class="bg-gray-100 px-4 py-2 rounded text-gray-600 hover:bg-gray-200">إلغاء</button>
+                    <button type="submit" id="saveBtn" class="gpack-btn px-6 py-2 rounded font-bold">حفظ البيانات</button>
                 </div>
             </form>
         </div>
@@ -126,250 +164,586 @@
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-80" onclick="toggleModal('profileModal')"></div>
         <div class="modal-container bg-white w-full h-full md:w-11/12 md:h-[95vh] mx-auto rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col transform transition-all scale-95">
             
-            <div class="bg-purple-900 text-white p-6 flex justify-between items-center shrink-0">
-                <div class="flex items-center gap-6">
-                    <div class="w-16 h-16 bg-yellow-400 rounded-2xl flex items-center justify-center text-3xl text-purple-900 shadow-lg"><i class="fas fa-truck-loading"></i></div>
+            <div class="bg-purple-900 text-white p-4 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-2xl border border-yellow-400"><i class="fas fa-truck"></i></div>
                     <div>
-                        <h2 class="text-2xl font-bold" id="pNameDisplay">...</h2>
-                        <div class="flex gap-4 mt-1 text-purple-200 text-sm">
-                            <span><i class="fas fa-user-tie ml-1"></i> <span id="pPersonDisplay"></span></span>
-                            <span><i class="fas fa-phone ml-1"></i> <span id="pPhoneDisplay"></span></span>
+                        <h2 class="text-xl font-bold" id="pNameDisplay">...</h2>
+                        <div class="flex gap-2 text-sm text-purple-200">
+                            <span id="pPersonDisplay">...</span>
+                            <span class="text-yellow-400 px-1">|</span>
+                            <span id="pTypesDisplay" class="italic text-xs opacity-90"></span>
                         </div>
                     </div>
                 </div>
-                <button onclick="toggleModal('profileModal')" class="bg-white/10 w-10 h-10 rounded-full hover:bg-white/20 transition"><i class="fas fa-times"></i></button>
+                <button onclick="toggleModal('profileModal')" class="text-white hover:text-red-300 text-2xl transition-colors"><i class="fas fa-times"></i></button>
             </div>
 
             <div class="flex-1 overflow-hidden flex flex-col md:flex-row">
-                <div class="w-full md:w-72 bg-gray-50 p-6 border-l border-gray-200 overflow-y-auto shrink-0">
-                    <div class="mb-8">
-                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">التصنيف المورد</h3>
-                        <div id="pItemsTags" class="flex flex-wrap gap-2"></div>
+                <div class="w-full md:w-72 bg-gray-50 p-5 border-l border-gray-200 overflow-y-auto shrink-0 flex flex-col gap-6">
+                    
+                    <div class="text-sm text-gray-600 space-y-3">
+                        <div class="flex items-center gap-3 p-2 bg-white rounded shadow-sm">
+                            <i class="fas fa-phone text-purple-600"></i> <span id="pPhone" class="font-mono font-bold text-gray-800"></span>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 bg-white rounded shadow-sm">
+                            <i class="fas fa-map-marker-alt text-purple-600"></i> <span id="pCity"></span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-bold text-gray-800 text-xs uppercase mb-2 tracking-wide">المواقع والمصانع</h3>
+                        <div id="pLocations" class="space-y-1"></div>
                     </div>
 
-                    <div class="space-y-4">
-                        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm text-center">
-                            <p class="text-xs text-gray-500 mb-1">إجمالي التعاملات</p>
-                            <p class="text-xl font-black text-purple-800" id="pTotalDeals">0</p>
-                        </div>
-                        <div class="bg-green-50 p-4 rounded-xl border border-green-100 text-center">
-                            <p class="text-xs text-green-600 mb-1">إجمالي المدفوع</p>
-                            <p class="text-xl font-black text-green-700" id="pTotalPaid">0</p>
-                        </div>
-                        <div class="bg-red-50 p-4 rounded-xl border border-red-100 text-center">
-                            <p class="text-xs text-red-600 mb-1">الرصيد المتبقي (له)</p>
-                            <p class="text-xl font-black text-red-700" id="pBalance">0</p>
+                    <div class="bg-white p-4 rounded-xl border border-purple-100 shadow-md">
+                        <h3 class="font-bold text-purple-900 mb-3 text-center border-b pb-2">الملخص المالي</h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-xs text-gray-600">
+                                <span>إجمالي المشتريات:</span> <span class="font-bold text-gray-900 text-sm" id="pTotalPurchases">0</span>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-600">
+                                <span>إجمالي المدفوع:</span> <span class="font-bold text-green-600 text-sm" id="pTotalPaid">0</span>
+                            </div>
+                            <div class="border-t border-dashed my-2"></div>
+                            <div class="flex justify-between items-center bg-red-50 p-2 rounded">
+                                <span class="text-red-800 font-bold text-xs">المتبقي (له):</span>
+                                <span class="font-bold text-red-600 text-lg" id="pBalance">0</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex-1 flex flex-col bg-white">
-                    <div class="border-b border-gray-200 px-6 flex gap-8">
-                        <button onclick="switchTab('current')" id="tab-current-btn" class="tab-btn active"><i class="fas fa-spinner fa-spin text-blue-500 ml-2"></i> أوامر تشغيل حالية</button>
-                        <button onclick="switchTab('history')" id="tab-history-btn" class="tab-btn"><i class="fas fa-archive text-gray-500 ml-2"></i> الأرشيف المنتهي</button>
-                        <button onclick="switchTab('finance')" id="tab-finance-btn" class="tab-btn"><i class="fas fa-calculator text-green-500 ml-2"></i> كشف الحساب</button>
+                    <div class="border-b border-gray-200 px-4 flex gap-4 overflow-x-auto bg-gray-50/50">
+                        <button onclick="switchTab('finance')" id="tab-finance-btn" class="tab-btn active"><i class="fas fa-coins text-yellow-500"></i> حسابات المورد</button>
+                        <button onclick="switchTab('current')" id="tab-current-btn" class="tab-btn"><i class="fas fa-spinner text-blue-500"></i> أوامر التشغيل (الحالية)</button>
+                        <button onclick="switchTab('completed')" id="tab-completed-btn" class="tab-btn"><i class="fas fa-check-circle text-green-500"></i> الأرشيف (المنتهية)</button>
                     </div>
                     
-                    <div class="p-8 overflow-y-auto flex-1 bg-gray-50/50">
-                        <div id="tab-current" class="profile-tab block">
-                            <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
-                                <table class="w-full text-right text-sm">
-                                    <thead class="bg-gray-50"><tr><th class="p-4">رقم الأمر</th><th class="p-4">الصنف</th><th class="p-4">الكمية</th><th class="p-4">الحالة</th><th class="p-4">عرض</th></tr></thead>
-                                    <tbody id="currentOrdersTable"></tbody>
-                                </table>
+                    <div class="p-6 overflow-y-auto flex-1 bg-white relative">
+                        
+                        <div id="tab-finance" class="profile-tab block">
+                            <div class="flex justify-between mb-4 items-center">
+                                <h3 class="font-bold text-gray-700 border-r-4 border-yellow-400 pr-2">سجل الحركات المالية</h3>
+                                <button onclick="addTransaction()" class="bg-green-600 text-white px-4 py-2 rounded text-xs hover:bg-green-700 shadow-sm transition-colors">
+                                    <i class="fas fa-plus"></i> تسجيل دفعة نقدية
+                                </button>
                             </div>
-                        </div>
-
-                        <div id="tab-history" class="profile-tab hidden">
-                            <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
-                                <table class="w-full text-right text-sm">
-                                    <thead class="bg-gray-50"><tr><th class="p-4">رقم الأمر</th><th class="p-4">تاريخ الانتهاء</th><th class="p-4">إجمالي المبلغ</th></tr></thead>
-                                    <tbody id="historyOrdersTable"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div id="tab-finance" class="profile-tab hidden">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="font-bold text-purple-900">سجل المدفوعات والفواتير</h3>
-                                <button onclick="addSupplierTransaction()" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md">+ إضافة حركة مالية</button>
-                            </div>
-                            <table class="w-full text-right text-sm bg-white rounded-xl shadow-sm border">
-                                <thead class="bg-gray-100"><tr><th class="p-4">التاريخ</th><th class="p-4">البيان</th><th class="p-4">فاتورة (له)</th><th class="p-4">مدفوع (مننا)</th></tr></thead>
-                                <tbody id="supplierFinanceTable"></tbody>
+                            <table class="w-full text-right text-sm bg-white rounded border border-gray-200">
+                                <thead class="bg-gray-100 text-gray-600 font-medium">
+                                    <tr>
+                                        <th class="p-3">التاريخ</th>
+                                        <th class="p-3">البيان / رقم الأمر</th>
+                                        <th class="p-3">استحقاق (له)</th>
+                                        <th class="p-3">دفعة (مننا)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="financeTable" class="divide-y divide-gray-100"></tbody>
                             </table>
                         </div>
+
+                        <div id="tab-current" class="profile-tab hidden">
+                            <h3 class="font-bold text-gray-700 mb-4 border-r-4 border-blue-500 pr-2">أوامر تحت التنفيذ</h3>
+                            <table class="w-full text-right text-sm border rounded">
+                                <thead class="bg-blue-50 text-blue-800">
+                                    <tr>
+                                        <th class="p-3">رقم الأمر</th>
+                                        <th class="p-3">تاريخ البدء</th>
+                                        <th class="p-3">الأصناف</th>
+                                        <th class="p-3">الإجمالي</th>
+                                        <th class="p-3">المتبقي</th>
+                                        <th class="p-3">الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="currentOrdersTable" class="divide-y"></tbody>
+                            </table>
+                        </div>
+
+                        <div id="tab-completed" class="profile-tab hidden">
+                            <h3 class="font-bold text-gray-700 mb-4 border-r-4 border-green-500 pr-2">الأرشيف (أوامر مسلمة)</h3>
+                            <table class="w-full text-right text-sm border rounded">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="p-3">رقم الأمر</th>
+                                        <th class="p-3">تاريخ الاستلام</th>
+                                        <th class="p-3">الإجمالي</th>
+                                        <th class="p-3 text-center">التفاصيل</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="completedOrdersTable" class="divide-y"></tbody>
+                            </table>
+                        </div>
+
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="orderDetailModal" class="fixed inset-0 z-[60] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="absolute inset-0 bg-black/60" onclick="closeOrderPopup()"></div>
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg mx-4 z-10 p-0 overflow-hidden transform scale-95 transition-transform duration-300 relative">
+            <div class="bg-purple-800 text-white p-3 flex justify-between items-center">
+                <h3 class="font-bold" id="popupOrderTitle">أمر تشغيل #000</h3>
+                <button onclick="closeOrderPopup()" class="text-white hover:text-gray-300"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-5">
+                <div class="mb-4 bg-gray-50 p-3 rounded border">
+                    <div class="flex justify-between text-sm mb-1"><span>التاريخ:</span> <span class="font-bold" id="popupDate">-</span></div>
+                    <div class="flex justify-between text-sm"><span>الحالة:</span> <span id="popupStatus" class="px-2 rounded text-xs">-</span></div>
+                </div>
+                
+                <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">الأصناف المطلوبة</h4>
+                <div class="border rounded max-h-40 overflow-y-auto mb-4">
+                    <table class="w-full text-sm text-right">
+                        <thead class="bg-gray-100 text-xs"><tr><th class="p-2">الصنف</th><th class="p-2">الكمية</th><th class="p-2">السعر</th></tr></thead>
+                        <tbody id="popupItems"></tbody>
+                    </table>
+                </div>
+
+                <div class="bg-yellow-50 p-3 rounded border border-yellow-200 space-y-2">
+                    <div class="flex justify-between text-sm"><span>الإجمالي:</span> <span class="font-bold" id="popupTotal">0</span></div>
+                    <div class="flex justify-between text-sm text-green-700"><span>المدفوع (مقدم):</span> <span class="font-bold" id="popupPaid">0</span></div>
+                    <div class="border-t border-yellow-200"></div>
+                    <div class="flex justify-between font-bold text-red-700"><span>المتبقي:</span> <span id="popupRemaining">0</span></div>
+                </div>
+            </div>
+            <div class="p-3 bg-gray-50 text-center border-t">
+                <button onclick="closeOrderPopup()" class="bg-gray-200 text-gray-700 px-6 py-2 rounded text-sm font-bold hover:bg-gray-300">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // --- 1. Supabase Config ---
         const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // --- 2. State Management ---
         let allSuppliers = [];
+        let tempLocations = [];
+        let tempTags = []; // For the Add/Edit Modal
         let currentProfileId = null;
 
-        window.onload = fetchSuppliers;
+        // --- 3. Initialization ---
+        window.onload = async () => {
+            await fetchSuppliers();
+        };
 
+        // --- 4. Main Data Fetching ---
         async function fetchSuppliers() {
             document.getElementById('loadingIndicator').classList.remove('hidden');
-            const filter = document.getElementById('filterType').value;
             
-            let query = supabaseClient.from('suppliers').select('*').order('name');
-            if (filter !== 'all') query = query.eq('type', filter);
+            // Note: Ensuring we fetch 'supply_types' which is stored as JSON or Array
+            const { data, error } = await supabaseClient
+                .from('suppliers')
+                .select('*')
+                .order('created_at', {ascending: false});
 
-            const { data, error } = await query;
-            if(error) console.error(error);
+            if(error) {
+                console.error("Supabase Error:", error);
+                // alert("خطأ في تحميل البيانات");
+            }
+
             allSuppliers = data || [];
+            
+            populateFilterOptions();
             renderSuppliers(allSuppliers);
             document.getElementById('loadingIndicator').classList.add('hidden');
         }
 
-        function renderSuppliers(suppliers) {
+        function populateFilterOptions() {
+            const filterSelect = document.getElementById('typeFilter');
+            // Extract all unique tags
+            let allTags = new Set();
+            allSuppliers.forEach(s => {
+                if(s.supply_types && Array.isArray(s.supply_types)) {
+                    s.supply_types.forEach(tag => allTags.add(tag));
+                }
+            });
+            
+            // Clear existing options except first
+            filterSelect.innerHTML = '<option value="">كل التوريدات</option>';
+            allTags.forEach(tag => {
+                const opt = document.createElement('option');
+                opt.value = tag;
+                opt.innerText = tag;
+                filterSelect.appendChild(opt);
+            });
+        }
+
+        function renderSuppliers(list) {
             const tbody = document.getElementById('suppliersTableBody');
             tbody.innerHTML = '';
-            
-            suppliers.forEach(s => {
-                const items = s.provided_items ? s.provided_items.split(',').map(i => `<span class="item-tag">${i.trim()}</span>`).join(' ') : '-';
-                const typeMap = { 'raw_materials': 'مواد خام', 'machines': 'ماكينات', 'services': 'خدمات' };
-                
+
+            if(list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">لا يوجد موردين مطابقين</td></tr>';
+                return;
+            }
+
+            list.forEach(s => {
+                const locCount = s.locations ? s.locations.length : 0;
+                // Render Tags
+                let tagsHtml = '';
+                if(s.supply_types && Array.isArray(s.supply_types)) {
+                    tagsHtml = s.supply_types.slice(0, 3).map(t => `<span class="supply-tag">${t}</span>`).join('');
+                    if(s.supply_types.length > 3) tagsHtml += `<span class="text-[10px] text-gray-400 mr-1">+${s.supply_types.length - 3}</span>`;
+                }
+
                 tbody.innerHTML += `
-                    <tr class="hover:bg-purple-50 transition border-b last:border-none group">
-                        <td class="px-6 py-4 font-bold text-purple-900">${s.name}</td>
-                        <td class="px-6 py-4"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${typeMap[s.type] || s.type}</span></td>
-                        <td class="px-6 py-4 flex flex-wrap gap-1 max-w-xs">${items}</td>
+                    <tr class="hover:bg-gray-50 border-b last:border-none transition-colors">
+                        <td class="px-6 py-4 font-bold text-gray-800">${s.name}</td>
                         <td class="px-6 py-4 text-gray-600">${s.contact_person || '-'}</td>
-                        <td class="px-6 py-4 font-mono">${s.phone || '-'}</td>
-                        <td class="px-6 py-4">
-                            <div class="flex gap-3 opacity-0 group-hover:opacity-100 transition">
-                                <button onclick="openProfile('${s.id}')" class="text-purple-600 hover:scale-125 transition" title="فتح الملف"><i class="fas fa-eye"></i></button>
-                                <button onclick="editSupplier('${s.id}')" class="text-blue-500 hover:scale-125 transition"><i class="fas fa-edit"></i></button>
-                                <button onclick="deleteSupplier('${s.id}')" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
-                            </div>
+                        <td class="px-6 py-4">${tagsHtml}</td>
+                        <td class="px-6 py-4 font-mono text-xs">${s.phone || '-'}</td>
+                        <td class="px-6 py-4"><span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">${locCount} موقع</span></td>
+                        <td class="px-6 py-4 flex gap-3">
+                            <button onclick="openProfile('${s.id}')" class="text-gray-400 hover:text-purple-600 transition-colors" title="الملف المالي"><i class="fas fa-folder-open text-lg"></i></button>
+                            <button onclick="editSupplier('${s.id}')" class="text-blue-400 hover:text-blue-600 transition-colors" title="تعديل"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteSupplier('${s.id}')" class="text-red-300 hover:text-red-600 transition-colors" title="حذف"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>`;
             });
         }
 
+        // --- 5. Filtering Logic ---
         function filterSuppliers() {
             const term = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = allSuppliers.filter(s => 
-                s.name.toLowerCase().includes(term) || 
-                (s.provided_items && s.provided_items.toLowerCase().includes(term))
-            );
+            const type = document.getElementById('typeFilter').value;
+
+            const filtered = allSuppliers.filter(s => {
+                // Name Search
+                const matchName = s.name.toLowerCase().includes(term) || (s.contact_person && s.contact_person.toLowerCase().includes(term));
+                // Type Filter
+                let matchType = true;
+                if(type) {
+                    matchType = s.supply_types && s.supply_types.includes(type);
+                }
+                return matchName && matchType;
+            });
+
             renderSuppliers(filtered);
         }
 
-        async function openProfile(id) {
-            currentProfileId = id;
-            const s = allSuppliers.find(x => x.id === id);
-            
-            document.getElementById('pNameDisplay').innerText = s.name;
-            document.getElementById('pPersonDisplay').innerText = s.contact_person || 'غير محدد';
-            document.getElementById('pPhoneDisplay').innerText = s.phone || '-';
-            
-            // Render Tags
-            const tagContainer = document.getElementById('pItemsTags');
-            tagContainer.innerHTML = s.provided_items ? s.provided_items.split(',').map(i => `<span class="item-tag">${i.trim()}</span>`).join('') : 'لا يوجد أصناف';
-
-            toggleModal('profileModal');
-            switchTab('current');
-            loadSupplierFinance(id);
-        }
-
-        async function loadSupplierFinance(supplierId) {
-            // ملاحظة: هنا بنفترض وجود جدول supplier_transactions
-            const { data: trans } = await supabaseClient.from('supplier_transactions').select('*').eq('supplier_id', supplierId).order('created_at');
-            const tbody = document.getElementById('supplierFinanceTable');
-            tbody.innerHTML = '';
-            
-            let totalInv = 0; let totalPaid = 0;
-            if(trans && trans.length > 0) {
-                trans.forEach(t => {
-                    const isInv = t.type === 'invoice';
-                    if(isInv) totalInv += t.amount; else totalPaid += t.amount;
-                    tbody.innerHTML += `
-                        <tr class="border-b">
-                            <td class="p-4 text-xs text-gray-500">${new Date(t.created_at).toLocaleDateString('ar-EG')}</td>
-                            <td class="p-4 font-medium">${t.description}</td>
-                            <td class="p-4 font-bold text-red-600">${isInv ? t.amount.toLocaleString() : '-'}</td>
-                            <td class="p-4 font-bold text-green-600">${!isInv ? t.amount.toLocaleString() : '-'}</td>
-                        </tr>`;
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-8 text-gray-400 italic">لا توجد حركات مالية مسجلة</td></tr>';
-            }
-            
-            document.getElementById('pTotalDeals').innerText = totalInv.toLocaleString();
-            document.getElementById('pTotalPaid').innerText = totalPaid.toLocaleString();
-            document.getElementById('pBalance').innerText = (totalInv - totalPaid).toLocaleString();
-        }
-
-        // --- Tabs Logic ---
-        function switchTab(tabName) {
-            document.querySelectorAll('.profile-tab').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabName}-btn`).classList.add('active');
-        }
-
-        // --- CRUD Ops ---
+        // --- 6. Modal & CRUD Logic ---
         function openAddModal() {
             document.getElementById('modalTitle').innerText = 'إضافة مورد جديد';
-            document.getElementById('supplierForm').reset();
             document.getElementById('sId').value = '';
+            document.getElementById('supplierForm').reset();
+            tempLocations = [];
+            tempTags = [];
+            renderTempLocations();
+            renderTempTags();
             toggleModal('supplierModal');
         }
 
         async function editSupplier(id) {
             const s = allSuppliers.find(x => x.id === id);
+            if(!s) return;
+
             document.getElementById('modalTitle').innerText = 'تعديل بيانات المورد';
             document.getElementById('sId').value = s.id;
             document.getElementById('sName').value = s.name;
-            document.getElementById('sType').value = s.type;
             document.getElementById('sPerson').value = s.contact_person || '';
             document.getElementById('sPhone').value = s.phone || '';
-            document.getElementById('sItems').value = s.provided_items || '';
-            document.getElementById('sAddress').value = s.address || '';
+            document.getElementById('sCity').value = s.city || '';
+
+            tempLocations = s.locations || [];
+            tempTags = s.supply_types || [];
+            
+            renderTempLocations();
+            renderTempTags();
             toggleModal('supplierModal');
         }
 
+        // Tags Handling
+        function addSupplyTag() {
+            const input = document.getElementById('supplyInput');
+            const val = input.value.trim();
+            if(val && !tempTags.includes(val)) {
+                tempTags.push(val);
+                renderTempTags();
+                input.value = '';
+                input.focus();
+            }
+        }
+        function removeTag(idx) {
+            tempTags.splice(idx, 1);
+            renderTempTags();
+        }
+        function renderTempTags() {
+            const div = document.getElementById('tagsContainer');
+            div.innerHTML = tempTags.map((t, i) => `
+                <span class="tag-badge">
+                    <span class="tag-remove" onclick="removeTag(${i})">&times;</span>
+                    ${t}
+                </span>
+            `).join('');
+        }
+
+        // Locations Handling (Same as Clients)
+        function addLocation() {
+            const l = document.getElementById('locLabel').value;
+            const u = document.getElementById('locUrl').value;
+            if(l) { tempLocations.push({label: l, url: u}); renderTempLocations(); }
+            document.getElementById('locLabel').value = ''; document.getElementById('locUrl').value = '';
+        }
+        function renderTempLocations() {
+            document.getElementById('locationsContainer').innerHTML = tempLocations.map((l, i) => `<span class="bg-gray-100 border text-xs px-2 py-1 rounded flex items-center gap-1">${l.label} <button type="button" onclick="tempLocations.splice(${i},1);renderTempLocations()" class="text-red-500 font-bold ml-1">×</button></span>`).join('');
+        }
+
+        // Save Form
         document.getElementById('supplierForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            
             const id = document.getElementById('sId').value;
-            const formData = {
+            const payload = {
                 name: document.getElementById('sName').value,
-                type: document.getElementById('sType').value,
                 contact_person: document.getElementById('sPerson').value,
                 phone: document.getElementById('sPhone').value,
-                provided_items: document.getElementById('sItems').value,
-                address: document.getElementById('sAddress').value
+                city: document.getElementById('sCity').value,
+                locations: tempLocations,
+                supply_types: tempTags // Saving tags array
             };
 
-            if(id) await supabaseClient.from('suppliers').update(formData).eq('id', id);
-            else await supabaseClient.from('suppliers').insert([formData]);
+            let err;
+            if(id) {
+                const { error } = await supabaseClient.from('suppliers').update(payload).eq('id', id);
+                err = error;
+            } else {
+                const { error } = await supabaseClient.from('suppliers').insert([payload]);
+                err = error;
+            }
 
+            btn.innerHTML = 'حفظ البيانات';
+            
+            if(err) { alert("حدث خطأ: " + err.message); return; }
+            
             toggleModal('supplierModal');
             fetchSuppliers();
         });
 
         async function deleteSupplier(id) {
-            if(confirm('هل أنت متأكد من حذف هذا المورد؟ سيتم حذف سجلاته المالية أيضاً.')) {
+            if(confirm('هل أنت متأكد من حذف هذا المورد؟ لا يمكن التراجع.')) {
                 await supabaseClient.from('suppliers').delete().eq('id', id);
                 fetchSuppliers();
             }
         }
 
+        // --- 7. Profile & Tabs Logic ---
+        async function openProfile(id) {
+            currentProfileId = id;
+            const s = allSuppliers.find(x => x.id === id);
+
+            // Populate Info
+            document.getElementById('pNameDisplay').innerText = s.name;
+            document.getElementById('pPersonDisplay').innerText = s.contact_person || '-';
+            document.getElementById('pTypesDisplay').innerText = (s.supply_types || []).join('، ');
+            document.getElementById('pPhone').innerText = s.phone || '-';
+            document.getElementById('pCity').innerText = s.city || '-';
+            
+            // Render Profile Locations
+            const locDiv = document.getElementById('pLocations');
+            locDiv.innerHTML = '';
+            if(s.locations) s.locations.forEach(l => {
+                locDiv.innerHTML += `<a href="${l.url}" target="_blank" class="block bg-white border border-l-4 border-l-purple-500 p-2 rounded text-xs text-gray-700 hover:bg-gray-50 mb-1 truncate"><i class="fas fa-map-pin text-red-500 ml-1"></i> ${l.label}</a>`;
+            });
+
+            // Load Data for Tabs
+            await loadSupplierFinancials(id);
+            await loadSupplierOrders(id);
+
+            toggleModal('profileModal');
+            switchTab('finance'); // Default tab
+        }
+
+        function switchTab(name) {
+            document.querySelectorAll('.profile-tab').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`tab-${name}`).classList.remove('hidden');
+            document.getElementById(`tab-${name}-btn`).classList.add('active');
+        }
+
+        // --- 8. Order Data Logic (Mocked + Ready for DB) ---
+        async function loadSupplierOrders(supplierId) {
+            const currentTable = document.getElementById('currentOrdersTable');
+            const completedTable = document.getElementById('completedOrdersTable');
+            currentTable.innerHTML = ''; completedTable.innerHTML = '';
+
+            // TODO: Create 'supplier_orders' table in DB.
+            // Schema assumed: id, supplier_id, order_number, status, total_amount, paid_amount, items (json), created_at
+            
+            // For now, let's fetch safely (or return empty if table missing)
+            let orders = [];
+            try {
+                const { data, error } = await supabaseClient
+                    .from('supplier_orders')
+                    .select('*')
+                    .eq('supplier_id', supplierId)
+                    .order('created_at', {ascending: false});
+                if(!error) orders = data;
+            } catch (e) { console.log("Supplier orders table not found yet"); }
+
+            if(orders.length === 0) {
+                const emptyRow = '<tr><td colspan="6" class="text-center py-4 text-gray-400 text-xs">لا توجد أوامر</td></tr>';
+                currentTable.innerHTML = emptyRow;
+                completedTable.innerHTML = emptyRow;
+                return;
+            }
+
+            orders.forEach(o => {
+                const remaining = (o.total_amount - o.paid_amount).toFixed(2);
+                // HTML for the clickable row (opens popup)
+                const rowHtml = `
+                    <tr class="cursor-pointer hover:bg-yellow-50 transition-colors" onclick='openOrderPopup(${JSON.stringify(o)})'>
+                        <td class="p-3 font-bold text-purple-700">#${o.order_number}</td>
+                        <td class="p-3 text-xs text-gray-500">${new Date(o.created_at).toLocaleDateString()}</td>
+                        <td class="p-3 text-xs text-gray-600 truncate max-w-[100px]">عرض التفاصيل..</td>
+                        <td class="p-3 font-bold">${o.total_amount}</td>
+                        <td class="p-3 font-bold ${remaining > 0 ? 'text-red-600' : 'text-green-600'}">${remaining}</td>
+                        <td class="p-3"><span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">${o.status}</span></td>
+                    </tr>
+                `;
+
+                if(o.status === 'completed') completedTable.innerHTML += rowHtml;
+                else currentTable.innerHTML += rowHtml;
+            });
+        }
+
+        // --- 9. Financials Logic ---
+        async function loadSupplierFinancials(supplierId) {
+            const tbody = document.getElementById('financeTable');
+            tbody.innerHTML = '';
+            
+            // Assuming 'supplier_transactions' table exists
+            // Schema: id, supplier_id, type (invoice/payment), amount, description, created_at
+            let trans = [];
+            try {
+                const { data } = await supabaseClient
+                    .from('supplier_transactions')
+                    .select('*')
+                    .eq('supplier_id', supplierId)
+                    .order('created_at');
+                trans = data || [];
+            } catch(e) {}
+
+            let totalPurchases = 0;
+            let totalPaid = 0;
+
+            if(trans.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-400">لا توجد حركات مالية</td></tr>';
+            } else {
+                trans.forEach(t => {
+                    const isInv = t.type === 'invoice'; // invoice means we bought something (Debt increases)
+                    const val = parseFloat(t.amount);
+                    if(isInv) totalPurchases += val; else totalPaid += val;
+
+                    tbody.innerHTML += `
+                        <tr class="border-b last:border-none">
+                            <td class="p-3 text-xs text-gray-500">${new Date(t.created_at).toLocaleDateString()}</td>
+                            <td class="p-3 text-gray-800 font-medium">${t.description}</td>
+                            <td class="p-3 font-bold text-gray-800 bg-gray-50">${isInv ? val.toLocaleString() : '-'}</td>
+                            <td class="p-3 font-bold text-green-700 bg-green-50">${!isInv ? val.toLocaleString() : '-'}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Update Summary Sidebar
+            document.getElementById('pTotalPurchases').innerText = totalPurchases.toLocaleString();
+            document.getElementById('pTotalPaid').innerText = totalPaid.toLocaleString();
+            document.getElementById('pBalance').innerText = (totalPurchases - totalPaid).toLocaleString();
+        }
+
+        async function addTransaction() {
+            const amount = prompt("أدخل قيمة الدفعة:");
+            if(!amount) return;
+            const note = prompt("ملاحظات / رقم السند:", "دفعة نقدية");
+            
+            await supabaseClient.from('supplier_transactions').insert([{
+                supplier_id: currentProfileId,
+                type: 'payment',
+                amount: parseFloat(amount),
+                description: note
+            }]);
+            
+            loadSupplierFinancials(currentProfileId);
+        }
+
+        // --- 10. Order Detail Popup Logic ---
+        function openOrderPopup(orderData) {
+            // Parsing order data coming from the click
+            const modal = document.getElementById('orderDetailModal');
+            const container = modal.querySelector('.transform'); // For animation
+
+            document.getElementById('popupOrderTitle').innerText = `أمر تشغيل #${orderData.order_number}`;
+            document.getElementById('popupDate').innerText = new Date(orderData.created_at).toLocaleDateString('ar-EG');
+            
+            // Status Styling
+            const st = document.getElementById('popupStatus');
+            st.innerText = orderData.status;
+            st.className = orderData.status === 'completed' 
+                ? 'px-2 py-1 rounded text-xs bg-green-100 text-green-800 font-bold' 
+                : 'px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 font-bold';
+
+            // Items Table
+            const tbody = document.getElementById('popupItems');
+            tbody.innerHTML = '';
+            // Assuming 'items' is a JSONB column in Supabase containing array of objects
+            const items = orderData.items || []; 
+            if(items.length > 0) {
+                items.forEach(i => {
+                    tbody.innerHTML += `<tr class="border-b last:border-none"><td class="p-2">${i.name}</td><td class="p-2 text-center font-mono">${i.qty}</td><td class="p-2 text-left font-bold">${i.price}</td></tr>`;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-400 py-2">لا توجد أصناف مسجلة</td></tr>';
+            }
+
+            // Calculations
+            document.getElementById('popupTotal').innerText = orderData.total_amount;
+            document.getElementById('popupPaid').innerText = orderData.paid_amount || 0;
+            document.getElementById('popupRemaining').innerText = (orderData.total_amount - (orderData.paid_amount || 0)).toFixed(2);
+
+            // Show
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            container.classList.remove('scale-95');
+            container.classList.add('scale-100');
+        }
+
+        function closeOrderPopup() {
+            const modal = document.getElementById('orderDetailModal');
+            const container = modal.querySelector('.transform');
+            
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+            }, 200);
+        }
+
+        // Helper
         function toggleModal(id) {
             const el = document.getElementById(id);
-            el.classList.toggle('opacity-0');
-            el.classList.toggle('pointer-events-none');
-            el.querySelector('.modal-container').classList.toggle('scale-95');
-            el.querySelector('.modal-container').classList.toggle('scale-100');
+            const container = el.querySelector('.modal-container');
+            
+            if(el.classList.contains('opacity-0')) {
+                // Open
+                el.classList.remove('opacity-0', 'pointer-events-none');
+                container.classList.remove('scale-95');
+                container.classList.add('scale-100');
+                document.body.classList.add('modal-active');
+            } else {
+                // Close
+                container.classList.remove('scale-100');
+                container.classList.add('scale-95');
+                el.classList.add('opacity-0', 'pointer-events-none');
+                document.body.classList.remove('modal-active');
+            }
         }
     </script>
 </body>
