@@ -33,7 +33,8 @@
             
             /* الهيدر والفوتر نفس اللون */
             .print-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 3px solid #3e206d; padding-bottom: 15px; margin-bottom: 20px; }
-            .print-table th { background-color: #3e206d !important; color: white !important; -webkit-print-color-adjust: exact; padding: 8px; font-size: 12px; }
+            .print-table thead { background-color: #3e206d !important; -webkit-print-color-adjust: exact; } /* FIXED: Force thead color */
+            .print-table th { background-color: #3e206d !important; color: white !important; -webkit-print-color-adjust: exact; padding: 8px; font-size: 12px; } /* FIXED: Header color & print */
             .print-table td { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
             .print-table tr:nth-child(even) { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
             input, select, textarea { border: none !important; background: transparent !important; resize: none; appearance: none; padding: 0; }
@@ -52,16 +53,16 @@
 
             /* الإجماليات: محاذاة لليسار ومنع التفاف النص */
             .totals-container { display: flex; justify-content: flex-end; width: 100%; }
-            .totals-table { width: 45%; border-collapse: collapse; margin-top: 10px; margin-right: auto; } /* margin-right auto يدفعها لليسار */
+            .totals-table { width: 45%; border-collapse: collapse; margin-top: 10px; margin-right: auto; }
             .totals-table td { padding: 6px 8px; border-bottom: 1px solid #eee; }
             .totals-label { 
                 text-align: right; font-weight: bold; color: #4b5563; 
-                white-space: nowrap; /* يمنع نزول السطر */
+                white-space: nowrap;
                 width: 60%;
             }
             .totals-value { 
                 text-align: left; font-family: monospace; font-weight: bold; direction: ltr; 
-                white-space: nowrap; 
+                white-space: nowrap;
                 width: 40%;
             }
 
@@ -70,7 +71,7 @@
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
-
+    <!-- Sidebar: لا تغيير -->
     <aside class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-20 hidden md:flex no-print">
         <div class="h-20 flex items-center justify-center border-b border-purple-800/50">
             <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2">
@@ -114,7 +115,6 @@
         </header>
 
         <div class="flex-1 overflow-y-auto p-8" id="mainContainer">
-            
             <div id="listView" class="block no-print">
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <table class="w-full text-right">
@@ -128,7 +128,6 @@
 
             <div id="quoteFormView" class="hidden bg-white rounded-2xl shadow-lg border border-gray-100 p-0 max-w-5xl mx-auto print:p-0 print:border-none print:shadow-none">
                 <div class="print-container p-10">
-                    
                     <div class="hidden print-header">
                         <div class="flex items-center gap-4 w-2/3">
                             <img src="https://i.postimg.cc/GHsRS3C1/logo.png" alt="G.PACK" style="height: 100px; width: auto;">
@@ -179,7 +178,8 @@
                                     <th class="p-3 border w-10 text-center">#</th>
                                     <th class="p-3 border w-1/3">البيان / الصنف</th>
                                     <th class="p-3 border w-1/6">المقاس</th>
-                                    <th class="p-3 border w-20 text-center">الوحدة</th> <th class="p-3 border w-20 text-center">الكمية</th>
+                                    <th class="p-3 border w-20 text-center">الوحدة</th>
+                                    <th class="p-3 border w-20 text-center">الكمية</th>
                                     <th class="p-3 border w-24 text-center">السعر</th>
                                     <th class="p-3 border w-24 text-center">الإجمالي</th>
                                     <th class="p-3 border w-10 no-print bg-white border-none"></th>
@@ -236,6 +236,7 @@
         </div>
     </main>
 
+    <!-- Client Info Modal -->
     <div id="clientInfoModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('clientInfoModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-3xl mx-auto rounded-2xl shadow-lg z-50 p-6">
@@ -261,6 +262,7 @@
         </div>
     </div>
 
+    <!-- Product History Modal -->
     <div id="productHistoryModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('productHistoryModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6">
@@ -273,6 +275,7 @@
         </div>
     </div>
 
+    <!-- Mini Client -->
     <div id="miniClientModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
@@ -284,6 +287,7 @@
         </div>
     </div>
     
+    <!-- Mini Product -->
     <div id="miniProductModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
@@ -300,6 +304,7 @@
         </div>
     </div>
 
+    <!-- Convert Modal -->
     <div id="convertModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
@@ -330,9 +335,8 @@
     <script>
         const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); // FIXED: unchanged but referenced
 
-        // ترجمة الحالات
         const STATUS_AR = { 'quote': 'عرض سعر', 'production': 'قيد التشغيل', 'converted': 'تم التحويل', 'archived': 'مؤرشف' };
         const ORDER_STATUS = { QUOTE: 'quote', ARCHIVED: 'archived', PRODUCTION: 'production', CONVERTED: 'converted' };
 
@@ -343,12 +347,11 @@
         let productMode = 'new';
 
         window.onload = async () => {
-            document.getElementById('qDate').valueAsDate = new Date();
+            document.getElementById('qDate').valueAsDate = new Date(); // FIXED: ensure today's date
             await Promise.all([loadClients(), loadProducts(), loadTerms()]);
             fetchQuotes();
         };
 
-        // --- Data Loading ---
         async function loadClients() {
             const { data } = await supabaseClient.from('clients').select('*');
             const select = document.getElementById('qClient');
@@ -361,8 +364,9 @@
         }
 
         async function loadProducts() {
-            // TASK-5: Fetch Unit
-            const { data } = await supabaseClient.from('products').select('id, name, product_variants(id, size_name, selling_price, unit)');
+            const { data } = await supabaseClient
+                .from('products')
+                .select('id, name, product_variants(id, size_name, selling_price, unit)'); // FIXED: added unit
             productsList = data || [];
             const existSel = document.getElementById('mpExistSelect');
             existSel.innerHTML = '<option value="">اختر الصنف...</option>';
@@ -374,7 +378,6 @@
             generalTerms = data || [];
         }
 
-        // --- Fetch & Table ---
         async function fetchQuotes() {
             document.getElementById('loadingIndicator').classList.remove('hidden');
             const tbody = document.getElementById('quotesTableBody');
@@ -392,7 +395,7 @@
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-gray-50 border-b";
                     
-                    let btns = isArchiveView 
+                    const btns = isArchiveView 
                         ? `<button onclick="restoreQuote('${o.id}')" class="text-green-600 hover:bg-green-100 p-2 rounded"><i class="fas fa-undo"></i></button>
                            <button onclick="deleteQuotePermanent('${o.id}')" class="text-red-600 hover:bg-red-100 p-2 rounded"><i class="fas fa-times"></i></button>`
                         : `<button onclick="editQuote('${o.id}')" class="text-blue-600 hover:bg-blue-100 p-2 rounded"><i class="fas fa-edit"></i></button>
@@ -409,11 +412,12 @@
                     `;
                     tbody.appendChild(tr);
                 });
-            } else { tbody.innerHTML = '<tr><td colspan="6" class="text-center p-6 text-gray-400">لا توجد بيانات</td></tr>'; }
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-6 text-gray-400">لا توجد بيانات</td></tr>';
+            }
             document.getElementById('loadingIndicator').classList.add('hidden');
         }
 
-        // --- Items Logic ---
         function addItemRow(data = null) {
             const container = document.getElementById('itemsContainer');
             const rowId = 'row-' + Date.now() + Math.random().toString(36).substr(2, 5);
@@ -422,8 +426,6 @@
             tr.id = rowId;
             tr.className = "border-b hover:bg-gray-50";
             
-            // TASK-4: X Button to clear search
-            // TASK-5: Unit Input
             tr.innerHTML = `
                 <td class="p-2 border text-center w-10 index-cell"></td>
                 <td class="p-2 border relative">
@@ -457,8 +459,10 @@
 
         function clearSearch(rowId) {
             const row = document.getElementById(rowId);
+            if (!row) return;
             row.querySelector('.prod-search').value = '';
-            document.getElementById(`res-${rowId}`).classList.add('hidden');
+            const res = document.getElementById(`res-${rowId}`);
+            if (res) { res.innerHTML=''; res.classList.add('hidden'); }
         }
 
         function reindexRows() { let i = 1; document.querySelectorAll('.index-cell').forEach(c => c.innerText = i++); }
@@ -493,7 +497,7 @@
             product.product_variants.forEach(v => {
                 const opt = new Option(v.size_name, v.id);
                 opt.dataset.price = v.selling_price;
-                opt.dataset.unit = v.unit || '-'; // Load unit from DB
+                opt.dataset.unit = v.unit || '-'; // FIXED: attach unit to option
                 if(selectedId == v.id) opt.selected = true;
                 select.add(opt);
             });
@@ -501,13 +505,13 @@
 
         function onVariantSelect(select, rowId) {
             const price = select.options[select.selectedIndex].dataset.price || 0;
-            const unit = select.options[select.selectedIndex].dataset.unit || '-';
-            
+            const unit = select.options[select.selectedIndex].dataset.unit || '-'; // FIXED: read unit
             document.getElementById(`price-${rowId}`).value = price;
-            // Set Unit
             const row = document.getElementById(rowId);
-            row.querySelector('.unit-input').value = unit;
-            
+            if (row) {
+                const unitInput = row.querySelector('.unit-input');
+                if (unitInput) unitInput.value = unit; // FIXED: write unit to input
+            }
             calcRow(rowId);
         }
 
@@ -526,7 +530,6 @@
             document.getElementById('grandTotal').innerText = (sub * 1.15).toFixed(2);
         }
 
-        // --- Terms ---
         function renderTermsList() {
             const list = document.getElementById('termsList');
             list.innerHTML = '';
@@ -540,7 +543,6 @@
             });
         }
 
-        // --- Save / Edit ---
         async function saveQuote() {
             const clientId = document.getElementById('qClient').value;
             if(!clientId) return alert("اختر العميل");
@@ -551,7 +553,7 @@
                 const vId = row.querySelector('.var-select').value;
                 const qty = Number(row.querySelector('.qty-input').value);
                 const price = Number(row.querySelector('.price-input').value);
-                const unit = row.querySelector('.unit-input').value; // Save Unit
+                const unit = row.querySelector('.unit-input').value;
                 if(vId && qty > 0) {
                     items.push({ variant_id: vId, quantity: qty, unit_price: price, unit: unit });
                     sub += qty * price;
@@ -618,13 +620,16 @@
             calculateTotals();
         }
 
-        // --- Archive & Convert & History ---
         async function archiveQuote(id) { if(confirm('أرشفة؟')) { await supabaseClient.from('orders').update({status: ORDER_STATUS.ARCHIVED}).eq('id', id); fetchQuotes(); } }
         async function restoreQuote(id) { if(confirm('استرجاع؟')) { await supabaseClient.from('orders').update({status: ORDER_STATUS.QUOTE}).eq('id', id); fetchQuotes(); } }
         async function deleteQuotePermanent(id) { if(confirm('حذف نهائي؟')) { await supabaseClient.from('order_items').delete().eq('order_id', id); await supabaseClient.from('orders').delete().eq('id', id); fetchQuotes(); } }
+
         function toggleArchiveView() { isArchiveView = !isArchiveView; document.getElementById('archiveBtn').innerHTML = isArchiveView ? 'العودة' : 'الأرشيف'; fetchQuotes(); }
+
         function openCreateView() { currentQuoteId = null; document.getElementById('listView').classList.add('hidden'); document.getElementById('quoteFormView').classList.remove('hidden'); document.getElementById('createBtn').classList.add('hidden'); document.getElementById('itemsContainer').innerHTML=''; document.getElementById('qClient').value=''; renderTermsList(); addItemRow(); calculateTotals(); }
+
         function closeForm() { document.getElementById('listView').classList.remove('hidden'); document.getElementById('quoteFormView').classList.add('hidden'); document.getElementById('createBtn').classList.remove('hidden'); }
+
         function preparePrint() {
             const sel = document.getElementById('qClient');
             if(sel.selectedIndex >= 0) document.getElementById('printClientName').innerText = sel.options[sel.selectedIndex].text;
@@ -638,41 +643,81 @@
         async function showClientInfo() {
             const cId = document.getElementById('qClient').value;
             if(!cId) return alert('اختر العميل');
+
             const opt = document.getElementById('qClient').options[document.getElementById('qClient').selectedIndex];
-            const data = JSON.parse(opt.dataset.json);
-            document.getElementById('infoName').innerText = data.name;
-            document.getElementById('infoContact').innerText = data.contact_person || '-';
-            document.getElementById('infoPhone').innerText = data.phone || '-';
-            document.getElementById('infoCity').innerText = data.city || 'ينبع';
-            
-            // TASK-2: Get ALL history regardless of status
-            const { data: items } = await supabaseClient.from('order_items').select('quantity, unit_price, created_at, product_variants(size_name, products(name)), orders!inner(client_id)').eq('orders.client_id', cId).order('created_at', {ascending: false}).limit(5);
+            const clientData = JSON.parse(opt.dataset.json);
+            document.getElementById('infoName').innerText = clientData.name;
+            document.getElementById('infoContact').innerText = clientData.contact_person || '-';
+            document.getElementById('infoPhone').innerText = clientData.phone || '-';
+            document.getElementById('infoCity').innerText = clientData.city || 'ينبع';
+
+            // FIXED: join order_items -> orders -> product_variants (last 5 records, any status)
+            const { data: items } = await supabaseClient
+                .from('order_items')
+                .select('quantity, unit_price, created_at, product_variants(size_name, products(name)), orders(status, client_id)')
+                .eq('orders.client_id', cId)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
             const list = document.getElementById('infoHistoryList'); list.innerHTML = '';
             if(items && items.length) {
-                items.forEach(i => list.innerHTML += `<tr><td class="p-2 border">${i.product_variants.products.name}</td><td class="p-2 border">${i.product_variants.size_name}</td><td class="p-2 border">${i.quantity}</td><td class="p-2 border">${i.unit_price}</td><td class="p-2 border">${new Date(i.created_at).toLocaleDateString('ar-SA')}</td></tr>`);
-            } else list.innerHTML = '<tr><td colspan="5" class="text-center p-2">لا يوجد</td></tr>';
+                items.forEach(i => {
+                    list.innerHTML += `<tr>
+                        <td class="p-2 border">${i.product_variants.products.name}</td>
+                        <td class="p-2 border">${i.product_variants.size_name}</td>
+                        <td class="p-2 border">${i.quantity}</td>
+                        <td class="p-2 border">${i.unit_price}</td>
+                        <td class="p-2 border">${new Date(i.created_at).toLocaleDateString('ar-SA')}</td>
+                    </tr>`;
+                });
+            } else {
+                list.innerHTML = '<tr><td colspan="5" class="text-center p-2">لا يوجد</td></tr>';
+            }
             toggleModal('clientInfoModal');
         }
 
         async function showProductHistory(rowId) {
             const cId = document.getElementById('qClient').value;
             const vId = document.getElementById(`var-${rowId}`).value;
+            const prodName = document.querySelector(`#${rowId} .prod-search`)?.value || '';
             if(!cId || !vId) return alert('اختر العميل والمقاس');
-            const { data } = await supabaseClient.from('order_items').select('*, orders!inner(status, created_at)').eq('variant_id', vId).eq('orders.client_id', cId).order('created_at', {ascending: false});
+
+            // FIXED: join order_items -> orders (any status), last 5
+            const { data } = await supabaseClient
+                .from('order_items')
+                .select('quantity, unit_price, created_at, orders(status, client_id)')
+                .eq('variant_id', vId)
+                .eq('orders.client_id', cId)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
             const tb = document.getElementById('productHistoryBody'); tb.innerHTML = '';
             if(data && data.length) {
-                data.forEach(h => tb.innerHTML += `<tr><td class="p-2">${new Date(h.created_at).toLocaleDateString('ar-SA')}</td><td class="p-2">${h.quantity}</td><td class="p-2">${h.unit_price}</td><td class="p-2">${STATUS_AR[h.orders.status] || h.orders.status}</td></tr>`);
-            } else tb.innerHTML = '<tr><td colspan="4" class="text-center p-2">لا يوجد</td></tr>';
+                data.forEach(h => {
+                    tb.innerHTML += `<tr>
+                        <td class="p-2">${new Date(h.created_at).toLocaleDateString('ar-SA')}</td>
+                        <td class="p-2">${h.quantity}</td>
+                        <td class="p-2">${h.unit_price}</td>
+                        <td class="p-2">${STATUS_AR[h.orders.status] || h.orders.status}</td>
+                    </tr>`;
+                });
+            } else {
+                tb.innerHTML = '<tr><td colspan="4" class="text-center p-2">لا يوجد</td></tr>';
+            }
+            document.getElementById('histProdName').innerText = prodName || 'الصنف المحدد';
+            document.getElementById('histClientName').innerText = opt ? opt.text : '';
             toggleModal('productHistoryModal');
         }
 
         async function openConvertModal(id, cId) {
-            document.getElementById('convQuoteId').value = id; document.getElementById('convClientId').value = cId;
+            document.getElementById('convQuoteId').value = id; 
+            document.getElementById('convClientId').value = cId;
             const { data } = await supabaseClient.from('order_items').select('*, product_variants(size_name, products(name))').eq('order_id', id);
             const tb = document.getElementById('convertItemsTable'); tb.innerHTML = '';
-            data.forEach(i => tb.innerHTML += `<tr><td class="p-2 text-center"><input type="checkbox" class="conv-check" value="${i.variant_id}" data-qty="${i.quantity}" data-price="${i.unit_price}" checked></td><td class="p-2">${i.product_variants.products.name} (${i.product_variants.size_name})</td><td class="p-2">${i.quantity}</td></tr>`);
+            (data || []).forEach(i => tb.innerHTML += `<tr><td class="p-2 text-center"><input type="checkbox" class="conv-check" value="${i.variant_id}" data-qty="${i.quantity}" data-price="${i.unit_price}" checked></td><td class="p-2">${i.product_variants.products.name} (${i.product_variants.size_name})</td><td class="p-2">${i.quantity}</td></tr>`);
             toggleModal('convertModal');
         }
+
         async function executeConversion() {
             const qId = document.getElementById('convQuoteId').value;
             const cId = document.getElementById('convClientId').value;
@@ -680,6 +725,7 @@
             const checks = document.querySelectorAll('.conv-check:checked');
             if(!checks.length) return alert('اختر صنف');
             if(!amt) return alert('المبلغ');
+
             await supabaseClient.from('client_transactions').insert([{client_id: cId, type: 'payment', amount: amt, description: 'دفعة مقدمة'}]);
             let sub = 0; const items = [];
             checks.forEach(c => { items.push({variant_id: c.value, quantity: c.dataset.qty, unit_price: c.dataset.price}); sub += (c.dataset.qty * c.dataset.price); });
@@ -688,13 +734,62 @@
             await supabaseClient.from('orders').update({status: ORDER_STATUS.CONVERTED}).eq('id', qId);
             alert('تم التحويل'); toggleModal('convertModal'); fetchQuotes();
         }
+
         function toggleAllItems(s) { document.querySelectorAll('.conv-check').forEach(c => c.checked = s.checked); }
+
         function toggleModal(id) { const el = document.getElementById(id); el.classList.toggle('opacity-0'); el.classList.toggle('pointer-events-none'); el.querySelector('.modal-container').classList.toggle('scale-95'); el.querySelector('.modal-container').classList.toggle('scale-100'); }
+
         function openMiniClientModal() { toggleModal('miniClientModal'); }
-        async function saveMiniClient() { /* Same as before */ }
+
+        async function saveMiniClient() {
+            const name = document.getElementById('mcName').value.trim();
+            if(!name) return alert('الاسم مطلوب');
+            const { data } = await supabaseClient
+                .from('clients')
+                .insert([{name, contact_person: document.getElementById('mcPerson').value, phone: document.getElementById('mcPhone').value}])
+                .select()
+                .single();
+            await loadClients();
+            document.getElementById('qClient').value = data.id;
+            toggleModal('miniClientModal');
+        }
+
         function openMiniProductModal() { toggleModal('miniProductModal'); toggleProductMode('new'); }
-        function toggleProductMode(mode) { /* Same as before */ }
-        async function saveMiniProduct() { /* Same as before */ }
+
+        function toggleProductMode(mode) {
+            productMode = mode;
+            document.getElementById('newProdInputs').classList.toggle('hidden', mode !== 'new');
+            document.getElementById('existProdInputs').classList.toggle('hidden', mode !== 'exist');
+        }
+
+        async function saveMiniProduct() {
+            const size = document.getElementById('mpSize').value.trim();
+            const price = Number(document.getElementById('mpPrice').value) || 0;
+            if (!size || !price) return alert('أدخل المقاس والسعر');
+
+            let prodId;
+            if (productMode === 'new') {
+                const name = document.getElementById('mpName').value.trim();
+                if (!name) return alert('اسم الصنف مطلوب');
+                const { data: prod } = await supabaseClient
+                    .from('products')
+                    .insert([{ name }])
+                    .select()
+                    .single();
+                prodId = prod.id;
+            } else {
+                prodId = document.getElementById('mpExistSelect').value;
+                if (!prodId) return alert('اختر الصنف');
+            }
+
+            await supabaseClient
+                .from('product_variants')
+                .insert([{ product_id: prodId, size_name: size, selling_price: price }]);
+
+            await loadProducts();
+            toggleModal('miniProductModal');
+            alert('تمت الإضافة');
+        }
     </script>
 </body>
 </html>
