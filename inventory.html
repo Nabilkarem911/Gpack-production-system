@@ -15,118 +15,157 @@
         .gpack-yellow { color: #fccf4d; }
         .gpack-btn { background-color: #fccf4d; color: #3e206d; transition: all 0.3s; }
         .gpack-btn:hover { background-color: #e6bd45; transform: translateY(-2px); }
+        
+        /* Sidebar Styling */
         .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
         
         /* Helpers */
         .modal { transition: opacity 0.2s ease-in-out; }
         body.modal-active { overflow: hidden; }
-        .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; cursor: pointer; padding: 10px 20px; }
+        .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; cursor: pointer; padding: 10px 15px; white-space: nowrap; }
         .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background-color: #f9fafb; }
-        
         .stock-tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
         .stock-general { background-color: #e0f2fe; color: #0369a1; }
         .stock-allocated { background-color: #fce7f3; color: #be185d; }
+
+        /* Mobile Sidebar Transition */
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        .sidebar-hidden { transform: translateX(100%); } /* For RTL, translates right */
+        @media (min-width: 768px) {
+            .sidebar-hidden { transform: none; }
+        }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden">
+<body class="flex h-screen overflow-hidden bg-gray-100">
 
-    <aside class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-20 hidden md:flex no-print">
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
+
+    <aside id="sidebar" class="fixed inset-y-0 right-0 w-64 gpack-purple text-white flex flex-col shadow-2xl z-30 transform sidebar-hidden md:transform-none md:static shrink-0 transition-transform duration-300">
         <div class="h-20 flex items-center justify-center border-b border-purple-800/50">
             <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2">
                 <i class="fas fa-box-open gpack-yellow"></i> <span>G.PACK</span>
             </h1>
+            <button onclick="toggleSidebar()" class="md:hidden absolute left-4 text-white hover:text-yellow-400">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
+        
+        <div class="p-4 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20">
+            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400">
+                <i class="fas fa-user text-yellow-400"></i>
+            </div>
+            <div>
+                <p class="text-sm font-bold">المدير العام</p>
+                <p class="text-xs text-gray-300">Admin</p>
+            </div>
+        </div>
+
         <nav class="flex-1 overflow-y-auto py-4 space-y-1">
             <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-th-large w-5"></i> الرئيسية</a>
+            <a href="products.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-box w-5"></i> الأصناف</a>
+            <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-file-invoice-dollar w-5"></i> عروض الأسعار</a>
+            <a href="production_orders.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-industry w-5"></i> أوامر التشغيل</a>
             <a href="inventory.html" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-white font-medium"><i class="fas fa-cubes w-5"></i> المستودعات</a>
+            <a href="suppliers.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-truck w-5"></i> الموردين</a>
+            <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-users w-5"></i> العملاء</a>
+            <a href="employees.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-id-card w-5"></i> الموظفين</a>
+            <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-list-alt w-5"></i> القوائم</a>
+            <a href="permissions.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-user-shield w-5"></i> الصلاحيات</a>
+            <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-tasks w-5"></i> المهام</a>
+            <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-file-signature w-5"></i> الشروط العامة</a>
         </nav>
+        
+        <div class="p-4 border-t border-purple-800/50">
+            <button class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
+        </div>
     </aside>
 
-    <main class="flex-1 flex flex-col overflow-hidden relative">
-        <header class="h-20 bg-white shadow-sm flex items-center justify-between px-8 z-10">
-            <div class="flex items-center gap-4">
-                <h2 class="text-xl font-bold text-gray-800">إدارة المستودعات واللوجستيات</h2>
+    <main class="flex-1 flex flex-col overflow-hidden relative w-full">
+        <header class="h-20 bg-white shadow-sm flex items-center justify-between px-4 md:px-8 z-10 shrink-0">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-600 text-2xl focus:outline-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 class="text-lg md:text-xl font-bold text-gray-800">إدارة المستودعات</h2>
                 <div id="loadingIndicator" class="hidden flex items-center gap-2 text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full"><i class="fas fa-sync fa-spin"></i></div>
             </div>
+            
             <div class="flex items-center gap-4">
-                <button onclick="openMoveModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2">
-                    <i class="fas fa-dolly"></i> <span>تسوية مخزون (يدوي)</span>
+                <button onclick="openMoveModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-bold text-xs md:text-sm shadow-md flex items-center gap-2">
+                    <i class="fas fa-dolly"></i> <span class="hidden md:inline">تسوية مخزون</span>
                 </button>
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-8">
-            <div class="bg-white rounded-t-2xl border-b border-gray-100 flex overflow-x-auto">
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
+            <div class="bg-white rounded-t-2xl border-b border-gray-100 flex overflow-x-auto whitespace-nowrap scrollbar-hide">
                 <button onclick="switchTab('stock')" id="tab-stock-btn" class="tab-btn active"><i class="fas fa-layer-group"></i> أرصدة الأصناف</button>
-                <button onclick="switchTab('deliveries')" id="tab-deliveries-btn" class="tab-btn"><i class="fas fa-shipping-fast text-orange-500"></i> أوامر التسليم (المعلقة)</button>
+                <button onclick="switchTab('deliveries')" id="tab-deliveries-btn" class="tab-btn"><i class="fas fa-shipping-fast text-orange-500"></i> أوامر التسليم</button>
                 <button onclick="switchTab('movements')" id="tab-movements-btn" class="tab-btn"><i class="fas fa-history"></i> سجل الحركات</button>
                 <button onclick="switchTab('warehouses')" id="tab-warehouses-btn" class="tab-btn"><i class="fas fa-warehouse"></i> إدارة المستودعات</button>
             </div>
 
-            <div class="bg-white rounded-b-2xl shadow-sm border border-gray-100 p-6 min-h-[500px]">
+            <div class="bg-white rounded-b-2xl shadow-sm border border-gray-100 p-4 md:p-6 min-h-[500px]">
                 
                 <div id="tab-stock" class="tab-content block">
-                    <div class="flex justify-between mb-4">
-                        <div class="flex gap-2">
-                            <input type="text" id="stockSearch" onkeyup="filterStock()" placeholder="بحث باسم الصنف أو العميل..." class="border rounded-lg p-2 w-64 text-sm focus:outline-none focus:border-purple-500">
-                            <select id="warehouseFilter" onchange="filterStock()" class="border rounded-lg p-2 text-sm w-48 bg-white"><option value="all">كل المستودعات</option></select>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm text-gray-500">
-                            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-blue-100 rounded-full inline-block"></span> مخزون عام</span>
-                            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-pink-100 rounded-full inline-block"></span> مخصص لعميل</span>
+                    <div class="flex flex-col md:flex-row justify-between mb-4 gap-2">
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <input type="text" id="stockSearch" onkeyup="filterStock()" placeholder="بحث..." class="border rounded-lg p-2 w-full md:w-64 text-sm focus:outline-none focus:border-purple-500">
+                            <select id="warehouseFilter" onchange="filterStock()" class="border rounded-lg p-2 text-sm w-40 bg-white"><option value="all">كل المستودعات</option></select>
                         </div>
                     </div>
-                    <table class="w-full text-right text-sm">
-                        <thead class="bg-gray-50 text-gray-600">
-                            <tr>
-                                <th class="p-3">اسم الصنف (المقاس)</th>
-                                <th class="p-3">المستودع</th>
-                                <th class="p-3">التخصيص (الملكية)</th>
-                                <th class="p-3 text-center">الرصيد الفعلي (On-Hand)</th>
-                                <th class="p-3">الحالة</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stockTableBody"></tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm min-w-[600px]">
+                            <thead class="bg-gray-50 text-gray-600">
+                                <tr>
+                                    <th class="p-3">اسم الصنف</th>
+                                    <th class="p-3">المستودع</th>
+                                    <th class="p-3">التخصيص</th>
+                                    <th class="p-3 text-center">الرصيد الفعلي</th>
+                                    <th class="p-3">الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stockTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div id="tab-deliveries" class="tab-content hidden">
-                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4 flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold text-orange-800"><i class="fas fa-info-circle"></i> منطقة الشحن والتسليم</h3>
-                            <p class="text-xs text-orange-700">هنا تظهر الفواتير التي تم إصدارها (محاسبياً) ولكن البضاعة لم تخرج من المستودع بعد. يجب تأكيد التسليم لخصم الكمية نهائياً.</p>
-                        </div>
-                        <button onclick="fetchDeliveries()" class="text-sm bg-white border border-orange-300 px-3 py-1 rounded text-orange-700 hover:bg-orange-100"><i class="fas fa-sync"></i> تحديث</button>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm min-w-[700px]">
+                            <thead class="bg-gray-50 text-gray-600">
+                                <tr>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">النوع</th>
+                                    <th class="p-3">الطرف</th>
+                                    <th class="p-3">الصنف</th>
+                                    <th class="p-3">الكمية</th>
+                                    <th class="p-3">المستودع</th>
+                                    <th class="p-3 text-center">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deliveriesTableBody"></tbody>
+                        </table>
                     </div>
-                    <table class="w-full text-right text-sm">
-                        <thead class="bg-gray-50 text-gray-600">
-                            <tr>
-                                <th class="p-3">تاريخ الفاتورة</th>
-                                <th class="p-3">النوع</th>
-                                <th class="p-3">العميل / المورد</th>
-                                <th class="p-3">الصنف</th>
-                                <th class="p-3">الكمية</th>
-                                <th class="p-3">المستودع</th>
-                                <th class="p-3 text-center">إجراء</th>
-                            </tr>
-                        </thead>
-                        <tbody id="deliveriesTableBody"></tbody>
-                    </table>
                 </div>
 
                 <div id="tab-movements" class="tab-content hidden">
-                    <table class="w-full text-right text-sm">
-                        <thead class="bg-gray-50 text-gray-600"><tr><th class="p-3">التاريخ</th><th class="p-3">النوع</th><th class="p-3">الصنف</th><th class="p-3">التفاصيل</th><th class="p-3">الكمية</th><th class="p-3">الحالة</th></tr></thead>
-                        <tbody id="movementsTableBody"></tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm min-w-[700px]">
+                            <thead class="bg-gray-50 text-gray-600"><tr><th class="p-3">التاريخ</th><th class="p-3">النوع</th><th class="p-3">الصنف</th><th class="p-3">التفاصيل</th><th class="p-3">الكمية</th><th class="p-3">الحالة</th></tr></thead>
+                            <tbody id="movementsTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div id="tab-warehouses" class="tab-content hidden">
                     <div class="flex justify-end mb-4">
                         <button onclick="openWarehouseModal()" class="gpack-btn px-4 py-2 rounded-lg text-sm font-bold">+ مستودع جديد</button>
                     </div>
-                    <div id="warehousesGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                    <div id="warehousesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                 </div>
             </div>
         </div>
@@ -134,7 +173,7 @@
 
     <div id="moveModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="closeModal('moveModal')"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-lg mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
+        <div class="modal-container bg-white w-full max-w-lg mx-4 rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <div class="flex justify-between items-center pb-3 border-b mb-4">
                 <p class="text-xl font-bold text-gray-800">تسوية مخزون (يدوي)</p>
                 <button onclick="closeModal('moveModal')"><i class="fas fa-times text-gray-500"></i></button>
@@ -152,12 +191,11 @@
                 <div>
                     <label class="block text-sm font-bold mb-1">تخصيص العميل (اختياري)</label>
                     <select id="mClient" class="w-full border p-2 rounded text-sm bg-gray-50">
-                        <option value="">-- مخزون عام (بدون تخصيص) --</option>
-                        </select>
-                    <p class="text-[10px] text-gray-500 mt-1">اختر العميل فقط إذا كانت البضاعة مخصصة له (منتج تام).</p>
+                        <option value="">-- مخزون عام --</option>
+                    </select>
                 </div>
                 <div><label class="block text-sm font-bold mb-1">الكمية</label><input type="number" id="mQty" class="w-full border p-2 rounded text-center" min="1" required></div>
-                <div><label class="block text-sm font-bold mb-1">ملاحظات</label><input type="text" id="mNotes" class="w-full border p-2 rounded" placeholder="سبب التسوية..."></div>
+                <div><label class="block text-sm font-bold mb-1">ملاحظات</label><input type="text" id="mNotes" class="w-full border p-2 rounded" placeholder="السبب..."></div>
                 <div class="pt-4 flex justify-end gap-2 border-t"><button type="button" onclick="closeModal('moveModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button><button type="submit" class="gpack-btn px-6 py-2 rounded font-bold">تنفيذ</button></div>
             </form>
         </div>
@@ -165,7 +203,7 @@
 
     <div id="warehouseModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="closeModal('warehouseModal')"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
+        <div class="modal-container bg-white w-full max-w-md mx-4 rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <h3 class="text-xl font-bold text-purple-800 mb-4">إضافة مستودع</h3>
             <form id="warehouseForm" class="space-y-4">
                 <input type="hidden" id="whId">
@@ -190,6 +228,20 @@
             switchTab('stock');
         };
 
+        // --- Mobile Sidebar Toggle ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            // Toggle translate class
+            if (sidebar.classList.contains('sidebar-hidden')) {
+                sidebar.classList.remove('sidebar-hidden');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('sidebar-hidden');
+                overlay.classList.add('hidden');
+            }
+        }
+
         // --- Tabs Logic ---
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -200,25 +252,45 @@
             if(tabName === 'stock') fetchStock();
             if(tabName === 'deliveries') fetchDeliveries();
             if(tabName === 'movements') fetchMovements();
-            if(tabName === 'warehouses') renderWarehouses();
+            if(tabName === 'warehouses') fetchWarehouses(); // Refresh warehouses to be sure
         }
 
-        // --- Fetch Data ---
+        // --- Fetch Data & Fix Duplicates ---
         async function fetchWarehouses() {
             const { data } = await supabaseClient.from('warehouses').select('*').order('created_at');
             allWarehouses = data || [];
             
-            // Populate Dropdowns
+            renderWarehousesGrid(); // Update Grid
+            
+            // Populate Dropdowns (Clear First!)
             const filters = document.getElementById('warehouseFilter');
             const moveSelect = document.getElementById('mWarehouse');
             
-            // Keep first option (All)
             filters.innerHTML = '<option value="all">كل المستودعات</option>';
             moveSelect.innerHTML = '';
             
             allWarehouses.forEach(w => {
                 filters.innerHTML += `<option value="${w.id}">${w.name}</option>`;
                 moveSelect.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+            });
+        }
+
+        function renderWarehousesGrid() {
+            const grid = document.getElementById('warehousesGrid');
+            grid.innerHTML = '';
+            allWarehouses.forEach(w => {
+                grid.innerHTML += `
+                    <div class="bg-white border rounded-xl p-5 shadow-sm hover:shadow-md transition">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-xl"><i class="fas fa-warehouse"></i></div>
+                            <div class="flex gap-2">
+                                <button onclick="editWarehouse('${w.id}')" class="text-blue-500 hover:bg-blue-50 p-1 rounded"><i class="fas fa-edit"></i></button>
+                                <button onclick="deleteWarehouse('${w.id}')" class="text-red-500 hover:bg-red-50 p-1 rounded"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-lg">${w.name}</h3>
+                        <p class="text-gray-500 text-sm"><i class="fas fa-map-marker-alt w-4"></i> ${w.location || '-'}</p>
+                    </div>`;
             });
         }
 
@@ -232,9 +304,14 @@
             });
         }
 
-        // --- STOCK LOGIC (With Allocation) ---
+        async function fetchProductsList() {
+            const { data } = await supabaseClient.from('products').select('id, name');
+            const options = (data||[]).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            document.getElementById('mProduct').innerHTML = '<option value="">اختر..</option>' + options;
+        }
+
+        // --- STOCK LOGIC ---
         async function fetchStock() {
-            // Fetch stock joined with warehouse, product info, AND client info
             const { data } = await supabaseClient.from('warehouse_stock')
                 .select(`*, warehouses(name), product_variants(size_name, min_stock_level, products(name)), clients(name)`);
             allStock = data || [];
@@ -247,17 +324,15 @@
             if(stockData.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">لا يوجد مخزون</td></tr>'; return; }
             
             stockData.forEach(s => {
-                const prodName = s.product_variants.products.name;
-                const size = s.product_variants.size_name;
-                const min = s.product_variants.min_stock_level || 10;
+                const prodName = s.product_variants?.products?.name || 'Unknown';
+                const size = s.product_variants?.size_name || '';
+                const min = s.product_variants?.min_stock_level || 10;
                 
-                // Status Logic
                 let status = '<span class="text-green-600 font-bold text-xs">متوفر</span>';
                 if(s.quantity <= 0) status = '<span class="text-red-600 font-bold text-xs bg-red-100 px-2 rounded">نفذت</span>';
                 else if(s.quantity <= min) status = `<span class="text-orange-600 font-bold text-xs bg-orange-100 px-2 rounded">منخفض (${min})</span>`;
 
-                // Allocation Badge
-                let allocBadge = '<span class="stock-tag stock-general">عام (General)</span>';
+                let allocBadge = '<span class="stock-tag stock-general">عام</span>';
                 if(s.clients && s.clients.name) {
                     allocBadge = `<span class="stock-tag stock-allocated"><i class="fas fa-user-tag"></i> ${s.clients.name}</span>`;
                 }
@@ -265,7 +340,7 @@
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-gray-50">
                         <td class="p-3 font-bold">${prodName} <span class="text-gray-500 font-normal">(${size})</span></td>
-                        <td class="p-3 text-blue-600">${s.warehouses.name}</td>
+                        <td class="p-3 text-blue-600">${s.warehouses?.name || '-'}</td>
                         <td class="p-3">${allocBadge}</td>
                         <td class="p-3 text-center font-mono font-bold text-lg dir-ltr">${s.quantity}</td>
                         <td class="p-3">${status}</td>
@@ -276,9 +351,8 @@
         function filterStock() {
             const term = document.getElementById('stockSearch').value.toLowerCase();
             const wh = document.getElementById('warehouseFilter').value;
-            
             const filtered = allStock.filter(s => {
-                const pName = s.product_variants.products.name.toLowerCase();
+                const pName = s.product_variants?.products?.name.toLowerCase() || '';
                 const cName = s.clients ? s.clients.name.toLowerCase() : '';
                 const matchesTerm = pName.includes(term) || cName.includes(term);
                 const matchesWh = wh === 'all' || s.warehouse_id === wh;
@@ -287,175 +361,53 @@
             renderStock(filtered);
         }
 
-        // --- DELIVERY LOGIC (The Core Requirement) ---
+        // --- DELIVERY LOGIC ---
         async function fetchDeliveries() {
             const tbody = document.getElementById('deliveriesTableBody');
             tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4">جاري التحميل...</td></tr>';
-
-            // Fetch transactions where status = 'pending' (Created by Sales/Returns but not delivered)
             const { data } = await supabaseClient.from('inventory_transactions')
-                .select(`
-                    id, created_at, transaction_type, quantity,
-                    product_variants(size_name, products(name)),
-                    warehouses(name),
-                    clients(name),
-                    suppliers(company_name)
-                `)
-                .eq('delivery_status', 'pending')
-                .order('created_at');
+                .select(`id, created_at, transaction_type, quantity, product_variants(size_name, products(name)), warehouses(name), clients(name), suppliers(company_name)`)
+                .eq('delivery_status', 'pending').order('created_at');
 
             tbody.innerHTML = '';
-            if(!data || data.length === 0) { 
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-green-600 font-bold">لا توجد شحنات معلقة، كل شيء تم تسليمه ✅</td></tr>'; 
-                return; 
-            }
+            if(!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-green-600 font-bold">لا توجد شحنات معلقة ✅</td></tr>'; return; }
 
             data.forEach(d => {
                 const typeLabel = d.transaction_type === 'dispense' ? 'بيع / صرف' : 'مردود / توريد';
                 const party = d.clients ? d.clients.name : (d.suppliers ? d.suppliers.company_name : 'غير محدد');
-                
                 tbody.innerHTML += `
                     <tr class="border-b bg-orange-50/50">
                         <td class="p-3 text-sm">${new Date(d.created_at).toLocaleDateString()}</td>
                         <td class="p-3 font-bold">${typeLabel}</td>
                         <td class="p-3">${party}</td>
-                        <td class="p-3">${d.product_variants.products.name} (${d.product_variants.size_name})</td>
+                        <td class="p-3">${d.product_variants?.products?.name}</td>
                         <td class="p-3 font-bold text-red-600">${d.quantity}</td>
                         <td class="p-3 text-gray-500">${d.warehouses?.name || '-'}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="confirmDelivery('${d.id}')" class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 shadow">
-                                <i class="fas fa-check"></i> تأكيد خروج/استلام
-                            </button>
-                        </td>
+                        <td class="p-3 text-center"><button onclick="confirmDelivery('${d.id}')" class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 shadow"><i class="fas fa-check"></i> تأكيد</button></td>
                     </tr>`;
             });
         }
 
         async function confirmDelivery(transId) {
-            if(!confirm('هل تؤكد خروج البضاعة فعلياً من المستودع (أو استلامها)؟')) return;
-
-            // 1. Update Status to 'delivered'
-            const { error } = await supabaseClient.from('inventory_transactions')
-                .update({ delivery_status: 'delivered' })
-                .eq('id', transId);
-
-            if(error) alert('خطأ: ' + error.message);
-            else {
-                // Note: The physical stock quantity is usually deducted when the Invoice is created (Reserved). 
-                // If your logic is to deduct ONLY upon delivery, we would do the stock deduction here.
-                // Assuming "Accounting Deduction" happens at Invoice, and this is just status update.
-                
-                alert('تم تأكيد التسليم بنجاح ✅');
-                fetchDeliveries(); // Refresh list
-            }
+            if(!confirm('تأكيد خروج/استلام البضاعة؟')) return;
+            const { error } = await supabaseClient.from('inventory_transactions').update({ delivery_status: 'delivered' }).eq('id', transId);
+            if(error) alert('خطأ: ' + error.message); else { alert('تم التأكيد ✅'); fetchDeliveries(); }
         }
 
         // --- MOVEMENTS LOG ---
         async function fetchMovements() {
             const { data } = await supabaseClient.from('inventory_transactions')
                 .select(`*, product_variants(size_name, products(name)), warehouses(name), clients(name)`)
-                .neq('delivery_status', 'pending') // Show only completed/delivered
-                .order('created_at', {ascending: false})
-                .limit(50);
-                
+                .neq('delivery_status', 'pending').order('created_at', {ascending: false}).limit(50);
             const tbody = document.getElementById('movementsTableBody');
             tbody.innerHTML = '';
             data.forEach(m => {
-                let badge = m.transaction_type === 'supply' 
-                    ? '<span class="text-green-600 font-bold">📥 توريد</span>' 
-                    : '<span class="text-red-600 font-bold">📤 صرف</span>';
-                
-                let clientInfo = m.clients ? `<span class="text-xs text-gray-500 block">(${m.clients.name})</span>` : '';
-
-                tbody.innerHTML += `
-                    <tr class="border-b text-xs hover:bg-gray-50">
-                        <td class="p-3">${new Date(m.created_at).toLocaleDateString()}</td>
-                        <td class="p-3">${badge}</td>
-                        <td class="p-3 font-bold">${m.product_variants.products.name} ${clientInfo}</td>
-                        <td class="p-3">${m.notes || '-'}</td>
-                        <td class="p-3 font-mono font-bold text-lg">${m.quantity}</td>
-                        <td class="p-3"><span class="bg-gray-100 px-2 rounded text-gray-600">${m.delivery_status}</span></td>
-                    </tr>`;
+                let badge = m.transaction_type === 'supply' ? '<span class="text-green-600 font-bold">📥 توريد</span>' : '<span class="text-red-600 font-bold">📤 صرف</span>';
+                tbody.innerHTML += `<tr class="border-b text-xs hover:bg-gray-50"><td class="p-3">${new Date(m.created_at).toLocaleDateString()}</td><td class="p-3">${badge}</td><td class="p-3 font-bold">${m.product_variants?.products?.name}</td><td class="p-3">${m.notes || '-'}</td><td class="p-3 font-mono font-bold text-lg">${m.quantity}</td><td class="p-3"><span class="bg-gray-100 px-2 rounded text-gray-600">${m.delivery_status}</span></td></tr>`;
             });
         }
 
-        // --- MANUAL MOVES & VALIDATION ---
-        async function fetchProductsList() {
-            const { data } = await supabaseClient.from('products').select('id, name');
-            const options = data.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-            document.getElementById('mProduct').innerHTML = '<option value="">اختر..</option>' + options;
-        }
-
-        async function loadVariantsForMove(prodId, targetId) {
-            const sel = document.getElementById(targetId);
-            sel.innerHTML = '<option>...</option>';
-            const { data } = await supabaseClient.from('product_variants').select('*').eq('product_id', prodId);
-            sel.innerHTML = '';
-            sel.disabled = false;
-            if(data) data.forEach(v => sel.innerHTML += `<option value="${v.id}">${v.size_name}</option>`);
-        }
-
-        document.getElementById('moveForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const type = document.querySelector('input[name="moveType"]:checked').value;
-            const whId = document.getElementById('mWarehouse').value;
-            const varId = document.getElementById('mVariant').value;
-            const clientId = document.getElementById('mClient').value || null; // Handle allocation
-            const qty = parseInt(document.getElementById('mQty').value);
-            const notes = document.getElementById('mNotes').value;
-
-            // 1. Check Current Stock (Specific to Client Allocation)
-            // We search for stock matching Warehouse + Variant + ClientID
-            let query = supabaseClient.from('warehouse_stock').select('*').eq('warehouse_id', whId).eq('variant_id', varId);
-            
-            if(clientId) query = query.eq('client_id', clientId);
-            else query = query.is('client_id', null);
-
-            const { data: stockData } = await query.single();
-            const currentQty = stockData ? stockData.quantity : 0;
-
-            // 2. Validate Negative Stock
-            if(type === 'dispense' && currentQty < qty) {
-                alert(`خطأ: الرصيد الفعلي غير كافي!\nالمتوفر: ${currentQty}\nالمطلوب صرفه: ${qty}`);
-                return;
-            }
-
-            // 3. Update DB
-            const newQty = type === 'supply' ? currentQty + qty : currentQty - qty;
-            
-            const matchQuery = { warehouse_id: whId, variant_id: varId };
-            if(clientId) matchQuery.client_id = clientId; 
-            // Note: Upsert needs to handle the composite key including client_id (handled by unique index in DB)
-            
-            // Manual Upsert Logic to handle NULL client_id safely
-            if (clientId) {
-                 await supabaseClient.from('warehouse_stock').upsert({ ...matchQuery, quantity: newQty });
-            } else {
-                // If client is null, we can't simple upsert with null in match object in some supabase versions easily, 
-                // but since we made a unique index, standard upsert works if we pass the whole object.
-                 await supabaseClient.from('warehouse_stock').upsert({ warehouse_id: whId, variant_id: varId, client_id: null, quantity: newQty });
-            }
-
-            // 4. Log Transaction
-            await supabaseClient.from('inventory_transactions').insert([{
-                variant_id: varId, 
-                warehouse_id: whId, // Assumed column based on previous context, or mapped to warehouse_to/from
-                // Adapting to schema: 
-                warehouse_to: type === 'supply' ? whId : null,
-                warehouse_from: type === 'dispense' ? whId : null,
-                client_id: clientId,
-                quantity: qty, 
-                transaction_type: type, 
-                notes: notes,
-                delivery_status: 'delivered' // Manual moves are considered immediate
-            }]);
-
-            closeModal('moveModal');
-            fetchStock();
-            alert('تمت العملية بنجاح ✅');
-        });
-
-        // --- Helpers ---
+        // --- Modals & CRUD ---
         function openMoveModal() { openModal('moveModal'); }
         function openWarehouseModal() { document.getElementById('warehouseForm').reset(); document.getElementById('whId').value=''; openModal('warehouseModal'); }
         
@@ -469,17 +421,85 @@
             const el = document.getElementById(id);
             el.querySelector('.modal-container').classList.add('scale-95');
             el.querySelector('.modal-container').classList.remove('scale-100');
-            setTimeout(() => el.classList.add('opacity-0', 'pointer-events-none'), 200);
+            setTimeout(() => { el.classList.add('opacity-0', 'pointer-events-none'); }, 200);
         }
-        
-        // Warehouse CRUD (Simplified)
+
+        // Warehouse CRUD
         document.getElementById('warehouseForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('whId').value;
             const data = { name: document.getElementById('whName').value, location: document.getElementById('whLoc').value };
-            if(id) await supabaseClient.from('warehouses').update(data).eq('id', id);
-            else await supabaseClient.from('warehouses').insert([data]);
-            closeModal('warehouseModal'); fetchWarehouses();
+            
+            // Check for duplicates locally first (optional but good UX)
+            if(!id && allWarehouses.some(w => w.name === data.name)) {
+                return alert("اسم المستودع موجود بالفعل!");
+            }
+
+            let error;
+            if(id) { ({ error } = await supabaseClient.from('warehouses').update(data).eq('id', id)); }
+            else { ({ error } = await supabaseClient.from('warehouses').insert([data])); }
+            
+            if(error) alert("خطأ: " + error.message);
+            else { closeModal('warehouseModal'); fetchWarehouses(); }
+        });
+
+        async function editWarehouse(id) {
+            const w = allWarehouses.find(x => x.id === id);
+            document.getElementById('whId').value = w.id;
+            document.getElementById('whName').value = w.name;
+            document.getElementById('whLoc').value = w.location;
+            openModal('warehouseModal');
+        }
+
+        async function deleteWarehouse(id) {
+            if(confirm('هل أنت متأكد؟')) { await supabaseClient.from('warehouses').delete().eq('id', id); fetchWarehouses(); }
+        }
+
+        // Move Form
+        async function loadVariantsForMove(prodId, targetId) {
+            const sel = document.getElementById(targetId);
+            sel.innerHTML = '<option>...</option>';
+            const { data } = await supabaseClient.from('product_variants').select('*').eq('product_id', prodId);
+            sel.innerHTML = ''; sel.disabled = false;
+            if(data) data.forEach(v => sel.innerHTML += `<option value="${v.id}">${v.size_name}</option>`);
+        }
+
+        document.getElementById('moveForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const type = document.querySelector('input[name="moveType"]:checked').value;
+            const whId = document.getElementById('mWarehouse').value;
+            const varId = document.getElementById('mVariant').value;
+            const clientId = document.getElementById('mClient').value || null;
+            const qty = parseInt(document.getElementById('mQty').value);
+            const notes = document.getElementById('mNotes').value;
+
+            // Logic matching the detailed requirement (upsert logic handled in backend or simple check here)
+            // Simplified for reliability:
+            let query = supabaseClient.from('warehouse_stock').select('*').eq('warehouse_id', whId).eq('variant_id', varId);
+            if(clientId) query = query.eq('client_id', clientId); else query = query.is('client_id', null);
+            
+            const { data: stockData } = await query.single();
+            const currentQty = stockData ? stockData.quantity : 0;
+
+            if(type === 'dispense' && currentQty < qty) return alert(`الرصيد غير كافي! المتوفر: ${currentQty}`);
+
+            const newQty = type === 'supply' ? currentQty + qty : currentQty - qty;
+            const match = { warehouse_id: whId, variant_id: varId };
+            if(clientId) match.client_id = clientId; else match.client_id = null; // Important for uniqueness
+
+            // Use direct insert/update logic because upsert with nulls can be tricky in some JS clients
+            if(stockData) {
+                await supabaseClient.from('warehouse_stock').update({ quantity: newQty }).eq('id', stockData.id);
+            } else {
+                if(type === 'dispense') return alert("لا يوجد رصيد للصرف!");
+                await supabaseClient.from('warehouse_stock').insert([{ ...match, quantity: newQty }]);
+            }
+
+            await supabaseClient.from('inventory_transactions').insert([{
+                variant_id: varId, warehouse_id: whId, client_id: clientId, quantity: qty, transaction_type: type, notes, delivery_status: 'delivered'
+            }]);
+
+            closeModal('moveModal'); fetchStock(); alert('تم ✅');
         });
     </script>
 </body>
