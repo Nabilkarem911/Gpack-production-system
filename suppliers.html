@@ -315,7 +315,7 @@
         </div>
     </div>
 
-    <script>
+<script>
         // --- 1. Supabase Config ---
         const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
@@ -324,7 +324,7 @@
         // --- 2. State Management ---
         let allSuppliers = [];
         let tempLocations = [];
-        let tempTags = []; // For the Add/Edit Modal
+        let tempTags = []; 
         let currentProfileId = null;
 
         // --- 3. Initialization ---
@@ -336,7 +336,6 @@
         async function fetchSuppliers() {
             document.getElementById('loadingIndicator').classList.remove('hidden');
             
-            // Note: Ensuring we fetch 'supply_types' which is stored as JSON or Array
             const { data, error } = await supabaseClient
                 .from('suppliers')
                 .select('*')
@@ -344,7 +343,7 @@
 
             if(error) {
                 console.error("Supabase Error:", error);
-                // alert("خطأ في تحميل البيانات");
+                alert("خطأ في الاتصال: " + error.message);
             }
 
             allSuppliers = data || [];
@@ -356,7 +355,6 @@
 
         function populateFilterOptions() {
             const filterSelect = document.getElementById('typeFilter');
-            // Extract all unique tags
             let allTags = new Set();
             allSuppliers.forEach(s => {
                 if(s.supply_types && Array.isArray(s.supply_types)) {
@@ -364,7 +362,6 @@
                 }
             });
             
-            // Clear existing options except first
             filterSelect.innerHTML = '<option value="">كل التوريدات</option>';
             allTags.forEach(tag => {
                 const opt = document.createElement('option');
@@ -385,16 +382,16 @@
 
             list.forEach(s => {
                 const locCount = s.locations ? s.locations.length : 0;
-                // Render Tags
                 let tagsHtml = '';
                 if(s.supply_types && Array.isArray(s.supply_types)) {
                     tagsHtml = s.supply_types.slice(0, 3).map(t => `<span class="supply-tag">${t}</span>`).join('');
                     if(s.supply_types.length > 3) tagsHtml += `<span class="text-[10px] text-gray-400 mr-1">+${s.supply_types.length - 3}</span>`;
                 }
 
+                // FIX: Used s.company_name instead of s.name
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 border-b last:border-none transition-colors">
-                        <td class="px-6 py-4 font-bold text-gray-800">${s.name}</td>
+                        <td class="px-6 py-4 font-bold text-gray-800">${s.company_name || 'غير معروف'}</td>
                         <td class="px-6 py-4 text-gray-600">${s.contact_person || '-'}</td>
                         <td class="px-6 py-4">${tagsHtml}</td>
                         <td class="px-6 py-4 font-mono text-xs">${s.phone || '-'}</td>
@@ -414,9 +411,12 @@
             const type = document.getElementById('typeFilter').value;
 
             const filtered = allSuppliers.filter(s => {
-                // Name Search
-                const matchName = s.name.toLowerCase().includes(term) || (s.contact_person && s.contact_person.toLowerCase().includes(term));
-                // Type Filter
+                // FIX: Check company_name
+                const name = s.company_name ? s.company_name.toLowerCase() : '';
+                const person = s.contact_person ? s.contact_person.toLowerCase() : '';
+                
+                const matchName = name.includes(term) || person.includes(term);
+                
                 let matchType = true;
                 if(type) {
                     matchType = s.supply_types && s.supply_types.includes(type);
@@ -445,7 +445,10 @@
 
             document.getElementById('modalTitle').innerText = 'تعديل بيانات المورد';
             document.getElementById('sId').value = s.id;
-            document.getElementById('sName').value = s.name;
+            
+            // FIX: Bind company_name to input
+            document.getElementById('sName').value = s.company_name; 
+            
             document.getElementById('sPerson').value = s.contact_person || '';
             document.getElementById('sPhone').value = s.phone || '';
             document.getElementById('sCity').value = s.city || '';
@@ -458,7 +461,6 @@
             toggleModal('supplierModal');
         }
 
-        // Tags Handling
         function addSupplyTag() {
             const input = document.getElementById('supplyInput');
             const val = input.value.trim();
@@ -483,7 +485,6 @@
             `).join('');
         }
 
-        // Locations Handling (Same as Clients)
         function addLocation() {
             const l = document.getElementById('locLabel').value;
             const u = document.getElementById('locUrl').value;
@@ -494,20 +495,21 @@
             document.getElementById('locationsContainer').innerHTML = tempLocations.map((l, i) => `<span class="bg-gray-100 border text-xs px-2 py-1 rounded flex items-center gap-1">${l.label} <button type="button" onclick="tempLocations.splice(${i},1);renderTempLocations()" class="text-red-500 font-bold ml-1">×</button></span>`).join('');
         }
 
-        // Save Form
         document.getElementById('supplierForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('saveBtn');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
             
             const id = document.getElementById('sId').value;
+            
+            // FIX: Send company_name instead of name
             const payload = {
-                name: document.getElementById('sName').value,
+                company_name: document.getElementById('sName').value, 
                 contact_person: document.getElementById('sPerson').value,
                 phone: document.getElementById('sPhone').value,
                 city: document.getElementById('sCity').value,
                 locations: tempLocations,
-                supply_types: tempTags // Saving tags array
+                supply_types: tempTags 
             };
 
             let err;
@@ -521,10 +523,12 @@
 
             btn.innerHTML = 'حفظ البيانات';
             
-            if(err) { alert("حدث خطأ: " + err.message); return; }
-            
-            toggleModal('supplierModal');
-            fetchSuppliers();
+            if(err) { 
+                alert("حدث خطأ: " + err.message); 
+            } else {
+                toggleModal('supplierModal');
+                fetchSuppliers();
+            }
         });
 
         async function deleteSupplier(id) {
@@ -539,26 +543,24 @@
             currentProfileId = id;
             const s = allSuppliers.find(x => x.id === id);
 
-            // Populate Info
-            document.getElementById('pNameDisplay').innerText = s.name;
+            // FIX: Use company_name
+            document.getElementById('pNameDisplay').innerText = s.company_name || 'غير معروف';
             document.getElementById('pPersonDisplay').innerText = s.contact_person || '-';
             document.getElementById('pTypesDisplay').innerText = (s.supply_types || []).join('، ');
             document.getElementById('pPhone').innerText = s.phone || '-';
             document.getElementById('pCity').innerText = s.city || '-';
             
-            // Render Profile Locations
             const locDiv = document.getElementById('pLocations');
             locDiv.innerHTML = '';
             if(s.locations) s.locations.forEach(l => {
                 locDiv.innerHTML += `<a href="${l.url}" target="_blank" class="block bg-white border border-l-4 border-l-purple-500 p-2 rounded text-xs text-gray-700 hover:bg-gray-50 mb-1 truncate"><i class="fas fa-map-pin text-red-500 ml-1"></i> ${l.label}</a>`;
             });
 
-            // Load Data for Tabs
             await loadSupplierFinancials(id);
             await loadSupplierOrders(id);
 
             toggleModal('profileModal');
-            switchTab('finance'); // Default tab
+            switchTab('finance'); 
         }
 
         function switchTab(name) {
@@ -569,16 +571,12 @@
             document.getElementById(`tab-${name}-btn`).classList.add('active');
         }
 
-        // --- 8. Order Data Logic (Mocked + Ready for DB) ---
+        // --- 8. Financials & Orders (Existing Logic) ---
         async function loadSupplierOrders(supplierId) {
             const currentTable = document.getElementById('currentOrdersTable');
             const completedTable = document.getElementById('completedOrdersTable');
             currentTable.innerHTML = ''; completedTable.innerHTML = '';
 
-            // TODO: Create 'supplier_orders' table in DB.
-            // Schema assumed: id, supplier_id, order_number, status, total_amount, paid_amount, items (json), created_at
-            
-            // For now, let's fetch safely (or return empty if table missing)
             let orders = [];
             try {
                 const { data, error } = await supabaseClient
@@ -587,7 +585,7 @@
                     .eq('supplier_id', supplierId)
                     .order('created_at', {ascending: false});
                 if(!error) orders = data;
-            } catch (e) { console.log("Supplier orders table not found yet"); }
+            } catch (e) { }
 
             if(orders.length === 0) {
                 const emptyRow = '<tr><td colspan="6" class="text-center py-4 text-gray-400 text-xs">لا توجد أوامر</td></tr>';
@@ -598,7 +596,6 @@
 
             orders.forEach(o => {
                 const remaining = (o.total_amount - o.paid_amount).toFixed(2);
-                // HTML for the clickable row (opens popup)
                 const rowHtml = `
                     <tr class="cursor-pointer hover:bg-yellow-50 transition-colors" onclick='openOrderPopup(${JSON.stringify(o)})'>
                         <td class="p-3 font-bold text-purple-700">#${o.order_number}</td>
@@ -615,13 +612,10 @@
             });
         }
 
-        // --- 9. Financials Logic ---
         async function loadSupplierFinancials(supplierId) {
             const tbody = document.getElementById('financeTable');
             tbody.innerHTML = '';
             
-            // Assuming 'supplier_transactions' table exists
-            // Schema: id, supplier_id, type (invoice/payment), amount, description, created_at
             let trans = [];
             try {
                 const { data } = await supabaseClient
@@ -639,7 +633,7 @@
                 tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-400">لا توجد حركات مالية</td></tr>';
             } else {
                 trans.forEach(t => {
-                    const isInv = t.type === 'invoice'; // invoice means we bought something (Debt increases)
+                    const isInv = t.type === 'invoice'; 
                     const val = parseFloat(t.amount);
                     if(isInv) totalPurchases += val; else totalPaid += val;
 
@@ -654,7 +648,6 @@
                 });
             }
 
-            // Update Summary Sidebar
             document.getElementById('pTotalPurchases').innerText = totalPurchases.toLocaleString();
             document.getElementById('pTotalPaid').innerText = totalPaid.toLocaleString();
             document.getElementById('pBalance').innerText = (totalPurchases - totalPaid).toLocaleString();
@@ -675,26 +668,21 @@
             loadSupplierFinancials(currentProfileId);
         }
 
-        // --- 10. Order Detail Popup Logic ---
         function openOrderPopup(orderData) {
-            // Parsing order data coming from the click
             const modal = document.getElementById('orderDetailModal');
-            const container = modal.querySelector('.transform'); // For animation
+            const container = modal.querySelector('.transform'); 
 
             document.getElementById('popupOrderTitle').innerText = `أمر تشغيل #${orderData.order_number}`;
             document.getElementById('popupDate').innerText = new Date(orderData.created_at).toLocaleDateString('ar-EG');
             
-            // Status Styling
             const st = document.getElementById('popupStatus');
             st.innerText = orderData.status;
             st.className = orderData.status === 'completed' 
                 ? 'px-2 py-1 rounded text-xs bg-green-100 text-green-800 font-bold' 
                 : 'px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 font-bold';
 
-            // Items Table
             const tbody = document.getElementById('popupItems');
             tbody.innerHTML = '';
-            // Assuming 'items' is a JSONB column in Supabase containing array of objects
             const items = orderData.items || []; 
             if(items.length > 0) {
                 items.forEach(i => {
@@ -704,12 +692,10 @@
                 tbody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-400 py-2">لا توجد أصناف مسجلة</td></tr>';
             }
 
-            // Calculations
             document.getElementById('popupTotal').innerText = orderData.total_amount;
             document.getElementById('popupPaid').innerText = orderData.paid_amount || 0;
             document.getElementById('popupRemaining').innerText = (orderData.total_amount - (orderData.paid_amount || 0)).toFixed(2);
 
-            // Show
             modal.classList.remove('opacity-0', 'pointer-events-none');
             container.classList.remove('scale-95');
             container.classList.add('scale-100');
@@ -718,27 +704,20 @@
         function closeOrderPopup() {
             const modal = document.getElementById('orderDetailModal');
             const container = modal.querySelector('.transform');
-            
             container.classList.remove('scale-100');
             container.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('opacity-0', 'pointer-events-none');
-            }, 200);
+            setTimeout(() => { modal.classList.add('opacity-0', 'pointer-events-none'); }, 200);
         }
 
-        // Helper
         function toggleModal(id) {
             const el = document.getElementById(id);
             const container = el.querySelector('.modal-container');
-            
             if(el.classList.contains('opacity-0')) {
-                // Open
                 el.classList.remove('opacity-0', 'pointer-events-none');
                 container.classList.remove('scale-95');
                 container.classList.add('scale-100');
                 document.body.classList.add('modal-active');
             } else {
-                // Close
                 container.classList.remove('scale-100');
                 container.classList.add('scale-95');
                 el.classList.add('opacity-0', 'pointer-events-none');
