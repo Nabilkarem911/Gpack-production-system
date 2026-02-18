@@ -13,23 +13,24 @@
         body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; }
         .gpack-purple { background-color: #3e206d; }
         .gpack-yellow { color: #fccf4d; }
-        .text-gpack-purple { color: #3e206d; }
         .gpack-btn { background-color: #fccf4d; color: #3e206d; transition: all 0.3s; }
         .gpack-btn:hover { background-color: #e6bd45; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
         
-        /* Modal & Tabs */
+        /* Helpers */
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; cursor: pointer; padding: 10px 15px; white-space: nowrap; }
         .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background-color: #f9fafb; }
-        
         .supply-tag { background-color: #ede9fe; color: #5b21b6; border-color: #ddd6fe; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 2px; display: inline-block; }
         .input-std { width: 100%; border: 1px solid #d1d5db; padding: 8px; border-radius: 6px; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }
         .input-std:focus { border-color: #3e206d; ring: 1px; }
 
-        /* --- PRINT STYLES (Identity Match) --- */
+        /* Force LTR for Serial Numbers to ensure 20026 is on left */
+        .serial-num { direction: ltr; unicode-bidi: embed; display: inline-block; }
+
+        /* --- PRINT STYLES --- */
         @media print {
             body * { visibility: hidden; }
             #printableInvoice, #printableInvoice * { visibility: visible; }
@@ -38,13 +39,12 @@
                 background: white; z-index: 99999; padding: 0; display: block !important; 
             }
             .no-print { display: none !important; }
-            /* Force Background Colors for Print */
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
 
         .print-header { background-color: #3e206d; color: white; padding: 20px; border-bottom: 4px solid #fccf4d; }
-        .print-table th { background-color: #3e206d !important; color: white !important; padding: 8px; font-size: 12px; }
-        .print-table td { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
+        .print-table th { background-color: #3e206d !important; color: white !important; padding: 8px; font-size: 12px; border: 1px solid #3e206d; }
+        .print-table td { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; border: 1px solid #eee; }
         .print-row-even { background-color: #f9fafb; }
     </style>
 </head>
@@ -76,6 +76,9 @@
             <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-users w-5"></i> العملاء</a>
             <a href="employees.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-id-card w-5"></i> الموظفين</a>
             <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-list-alt w-5"></i> القوائم</a>
+            <a href="permissions.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-user-shield w-5"></i> الصلاحيات</a>
+            <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-tasks w-5"></i> المهام</a>
+            <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-file-signature w-5"></i> الشروط العامة</a>
         </nav>
         <div class="p-4 border-t border-purple-800/50">
             <button class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2">
@@ -195,12 +198,20 @@
                         </div>
                         <div>
                             <label class="text-xs font-bold text-gray-600 block mb-1">رقم الفاتورة (تلقائي)</label>
-                            <input type="text" id="transDoc" class="input-std bg-gray-100 text-gray-500 cursor-not-allowed" readonly placeholder="سيتم إنشاؤه بعد الحفظ">
-                            <p class="text-[10px] text-gray-400 mt-1">Format: 20026-XXXX</p>
+                            <input type="text" id="transDoc" class="input-std bg-gray-100 text-gray-500 cursor-not-allowed serial-num" readonly placeholder="200XX-XXXX">
                         </div>
-                        <div class="flex items-center gap-2 pt-6">
-                            <input type="checkbox" id="transTax" class="w-4 h-4 text-purple-600 rounded" checked>
-                            <label for="transTax" class="text-sm font-bold text-gray-700">فاتورة ضريبية (15%)</label>
+                        <div class="md:col-span-2 flex gap-4 items-center pt-2">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="transTax" class="w-4 h-4 text-purple-600 rounded" checked>
+                                <label for="transTax" class="text-sm font-bold text-gray-700">فاتورة ضريبية (15%)</label>
+                            </div>
+                            <div class="flex items-center gap-2 border-r pr-4 mr-4">
+                                <label class="text-xs font-bold text-gray-600">توجيه البضاعة إلي:</label>
+                                <select id="transWarehouse" class="input-std text-xs w-40">
+                                    <option value="main">المستودع الرئيسي</option>
+                                    <option value="client">مخزون عميل (تحت الطباعة)</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -324,7 +335,7 @@
                                         <th class="p-3">الرصيد</th>
                                     </tr>
                                 </thead>
-                                <tbody id="financeTable" class="divide-y divide-gray-100 cursor-pointer"></tbody>
+                                <tbody id="financeTable" class="divide-y divide-gray-100"></tbody>
                             </table>
                         </div>
 
@@ -356,11 +367,11 @@
                 <p class="text-sm opacity-80" id="printDocType">Purchase Invoice</p>
                 <div class="mt-4 text-sm">
                     <p><strong>التاريخ:</strong> <span id="printDate"></span></p>
-                    <p><strong>رقم المستند:</strong> <span id="printRef" class="font-mono text-yellow-400 font-bold text-lg"></span></p>
+                    <p><strong>رقم المستند:</strong> <span id="printRef" class="serial-num font-mono text-yellow-400 font-bold text-lg"></span></p>
                 </div>
             </div>
             <div class="text-center">
-                 <h2 class="text-4xl font-bold text-white tracking-wider"><i class="fas fa-box-open text-yellow-400"></i> G.PACK</h2>
+                 <img src="https://postimg.cc/GHsRS3C1" alt="G.PACK Logo" class="h-20 mb-2 mx-auto filter brightness-0 invert">
                  <p class="text-xs text-gray-300 mt-1">Packaging Solutions</p>
                  <p class="text-xs text-gray-300">CR: 4700121038 | VAT: 310033995300003</p>
             </div>
@@ -371,7 +382,6 @@
                 <h3 class="text-purple-900 font-bold mb-2">بيانات المورد:</h3>
                 <div class="flex justify-between">
                     <p class="font-bold text-xl" id="printSupplier">-</p>
-                    <p>المسؤول: <span id="printPerson">-</span></p>
                 </div>
             </div>
 
@@ -414,7 +424,6 @@
                 </div>
             </div>
         </div>
-
         <div class="fixed bottom-0 w-full bg-purple-900 h-4"></div>
     </div>
 
@@ -425,7 +434,7 @@
 
         let allSuppliers = [];
         let allProducts = []; 
-        let uniqueParentProducts = []; // For dropdown Step 1
+        let uniqueParentProducts = []; 
         let currentProfileId = null;
         let transItems = [];
 
@@ -445,17 +454,10 @@
         }
 
         async function fetchProducts() {
-            // Fetch variants joined with parent products
             const { data } = await supabaseClient.from('product_variants').select('*, products(id, name)');
             allProducts = data || [];
-            
-            // Extract Unique Parent Products for Step 1 Dropdown
             const parents = {};
-            allProducts.forEach(v => {
-                if(v.products) {
-                    parents[v.products.id] = v.products.name;
-                }
-            });
+            allProducts.forEach(v => { if(v.products) parents[v.products.id] = v.products.name; });
             uniqueParentProducts = Object.entries(parents).map(([id, name]) => ({id, name}));
         }
 
@@ -480,7 +482,7 @@
             });
         }
 
-        // --- Transaction Modal & Product Logic ---
+        // --- Transaction Modal ---
         function openGlobalTransaction(type) {
             currentProfileId = null;
             document.getElementById('supplierSelectDiv').classList.remove('hidden');
@@ -502,7 +504,7 @@
             const titles = { 'invoice': 'فاتورة مشتريات', 'return': 'مردود مشتريات', 'payment': 'تسجيل دفعة' };
             document.getElementById('transTitle').innerText = titles[type];
             
-            // Auto Serial Placeholder (Visual Only)
+            // Auto Serial Placeholder
             const year = new Date().getFullYear().toString().substr(-2);
             document.getElementById('transDoc').placeholder = `سيتم الإنشاء تلقائياً: 200${year}-XXXX`;
 
@@ -512,7 +514,6 @@
             } else {
                 document.getElementById('productsSection').classList.remove('hidden');
                 document.getElementById('paymentSection').classList.add('hidden');
-                // Start with one empty item
                 if(transItems.length === 0) addTransItem();
                 else renderTransItems();
             }
@@ -523,20 +524,10 @@
         }
 
         function addTransItem() {
-            // Parent Product Options
             let parentOpts = '<option value="">اختر المنتج...</option>';
-            uniqueParentProducts.forEach(p => {
-                parentOpts += `<option value="${p.id}">${p.name}</option>`;
-            });
+            uniqueParentProducts.forEach(p => { parentOpts += `<option value="${p.id}">${p.name}</option>`; });
 
-            transItems.push({ 
-                parentId: '', 
-                variantId: '', 
-                parentName: '',
-                variantName: '',
-                qty: 1, 
-                price: 0 
-            });
+            transItems.push({ parentId: '', variantId: '', parentName: '', variantName: '', qty: 1, price: 0 });
             renderTransItems(parentOpts);
         }
 
@@ -545,7 +536,6 @@
             tbody.innerHTML = '';
             let subtotal = 0;
 
-            // Cache parent options to avoid regenerating loop if not passed
             if(!parentOpts) {
                 parentOpts = '<option value="">اختر المنتج...</option>';
                 uniqueParentProducts.forEach(p => { parentOpts += `<option value="${p.id}">${p.name}</option>`; });
@@ -555,7 +545,6 @@
                 const rowTotal = item.qty * item.price;
                 subtotal += rowTotal;
 
-                // Filter variants based on selected parent
                 let variantOpts = '<option value="">اختر المقاس...</option>';
                 if(item.parentId) {
                     const filtered = allProducts.filter(p => p.products.id === item.parentId);
@@ -567,7 +556,6 @@
                     variantOpts = '<option value="" disabled>اختر المنتج أولاً</option>';
                 }
 
-                // Re-select parent
                 let currentParentOpts = parentOpts.replace(`value="${item.parentId}"`, `value="${item.parentId}" selected`);
 
                 tbody.innerHTML += `
@@ -581,7 +569,7 @@
                         <td class="p-1"><input type="number" value="${item.qty}" onchange="updateItemData(${index}, 'qty', this.value)" class="input-std text-center"></td>
                         <td class="p-1"><input type="number" value="${item.price}" onchange="updateItemData(${index}, 'price', this.value)" class="input-std text-center"></td>
                         <td class="p-1 font-bold text-gray-700">${rowTotal.toFixed(2)}</td>
-                        <td class="p-1 text-center"><button onclick="transItems.splice(${index},1); renderTransItems()" class="text-red-500">×</button></td>
+                        <td class="p-1 text-center"><button type="button" onclick="transItems.splice(${index},1); renderTransItems()" class="text-red-500">×</button></td>
                     </tr>
                 `;
             });
@@ -591,36 +579,34 @@
             document.getElementById('transSubtotal').innerText = subtotal.toFixed(2);
             document.getElementById('transTaxVal').innerText = taxVal.toFixed(2);
             document.getElementById('transTotal').innerText = (subtotal + taxVal).toFixed(2);
-            
             document.getElementById('taxRow').style.visibility = taxRate > 0 ? 'visible' : 'hidden';
         }
 
-        // --- Item Updates ---
         function updateItemParent(index, el) {
-            const pId = el.value;
-            transItems[index].parentId = pId;
+            transItems[index].parentId = el.value;
             transItems[index].parentName = el.options[el.selectedIndex].text;
-            transItems[index].variantId = ''; // Reset variant
+            transItems[index].variantId = ''; 
             transItems[index].variantName = '';
             renderTransItems();
         }
-
         function updateItemVariant(index, el) {
             transItems[index].variantId = el.value;
             transItems[index].variantName = el.options[el.selectedIndex].text;
         }
-
         function updateItemData(index, field, val) {
             transItems[index][field] = parseFloat(val);
             renderTransItems();
         }
 
-        // --- SUBMIT WITH SMART SERIAL & INVENTORY ---
+        document.getElementById('transTax').addEventListener('change', () => renderTransItems());
+
+        // --- SUBMIT ---
         async function submitTransaction() {
             const type = document.getElementById('transType').value;
             const supplierId = document.getElementById('transSupplierSelect').value || currentProfileId;
             const date = document.getElementById('transDate').value;
             const desc = document.getElementById('transDesc').value;
+            const targetWarehouse = document.getElementById('transWarehouse').value; // Just storing intent for now
             
             if(!supplierId) return alert("الرجاء اختيار المورد");
             
@@ -630,20 +616,19 @@
 
             if(amount <= 0) return alert("المبلغ يجب أن يكون أكبر من صفر");
 
-            // 1. Generate Serial (Logic: 200 + YY + Sequence)
-            // Fetch count of existing transactions to determine next sequence
+            // Smart Serial
             const { count } = await supabaseClient.from('supplier_transactions').select('*', { count: 'exact', head: true });
             const nextSeq = (count || 0) + 1;
             const year = new Date().getFullYear().toString().substr(-2);
-            const serialPrefix = type === 'payment' ? 'PAY' : '200'; // 200 for Purchase Invoice/Return
+            const serialPrefix = type === 'payment' ? 'PAY' : '200';
             const docNum = `${serialPrefix}${year}-${String(nextSeq).padStart(4, '0')}`;
 
-            // 2. Insert Transaction
+            // Save
             const { data: transData, error } = await supabaseClient.from('supplier_transactions').insert([{
                 supplier_id: supplierId,
                 type: type,
                 amount: amount,
-                description: desc,
+                description: desc + (type !== 'payment' ? ` [توجيه: ${targetWarehouse}]` : ''),
                 document_number: docNum,
                 created_at: date,
                 items: transItems,
@@ -652,39 +637,37 @@
 
             if(error) return alert("خطأ في الحفظ: " + error.message);
 
-            // 3. Update Inventory (If Invoice or Return)
+            // Update Stock
             if(type !== 'payment') {
                 for(const item of transItems) {
                     if(!item.variantId) continue;
                     const { data: v } = await supabaseClient.from('product_variants').select('stock_quantity').eq('id', item.variantId).single();
                     if(v) {
                         let newStock = v.stock_quantity;
-                        // Invoice = Increase Stock, Return = Decrease Stock
                         if(type === 'invoice') newStock += item.qty;
                         else if(type === 'return') newStock -= item.qty;
-                        
                         await supabaseClient.from('product_variants').update({stock_quantity: newStock}).eq('id', item.variantId);
                     }
                 }
             }
 
             alert(`تم الحفظ بنجاح رقم السند: ${docNum}`);
-            
-            // 4. Switch to View Mode & Allow Print
             viewTransaction(transData); 
-            // Optional: Auto open print
-            if(confirm("هل تريد طباعة السند الآن؟")) printCurrentTransaction();
-
             if(currentProfileId) loadSupplierFinancials(currentProfileId);
         }
 
         // --- VIEW & PRINT ---
         function viewTransaction(t) {
-            toggleModal('transModal'); // Close to reset if needed, or just update UI
+            // Force modal open logic
+            const el = document.getElementById('transModal');
+            el.classList.remove('opacity-0', 'pointer-events-none');
+            el.querySelector('.modal-container').classList.remove('scale-95');
+            el.querySelector('.modal-container').classList.add('scale-100');
+            
             setupTransModal(t.type);
             document.getElementById('transSupplierSelect').value = t.supplier_id;
             document.getElementById('transDate').value = t.created_at.split('T')[0];
-            document.getElementById('transDoc').value = t.document_number; // Show generated ID
+            document.getElementById('transDoc').value = t.document_number;
             document.getElementById('transDesc').value = t.description;
             document.getElementById('transTax').checked = t.is_taxable;
 
@@ -695,12 +678,9 @@
                 renderTransItems();
             }
 
-            // Lock UI
             document.getElementById('saveTransBtn').classList.add('hidden');
-            document.getElementById('printTransBtn').classList.remove('hidden'); // Show Print Button
+            document.getElementById('printTransBtn').classList.remove('hidden');
             document.getElementById('transTitle').innerText += " (محفوظ)";
-            
-            // Store for printing
             window.currentViewingTrans = t;
         }
 
@@ -708,19 +688,14 @@
             const t = window.currentViewingTrans;
             if(!t) return;
 
-            // Fill Print Template
             const typeAr = t.type === 'invoice' ? 'فاتورة مشتريات' : (t.type === 'return' ? 'مردود مشتريات' : 'سند صرف نقدية');
             document.getElementById('printDocType').innerText = typeAr;
             document.getElementById('printDate').innerText = t.created_at.split('T')[0];
-            document.getElementById('printRef').innerText = t.document_number;
+            document.getElementById('printRef').innerText = t.document_number; // LTR class will fix direction
             
-            // Supplier Info
-            // Find supplier details (might need to fetch if not in current view)
             const s = allSuppliers.find(x => x.id === t.supplier_id);
             document.getElementById('printSupplier').innerText = s ? s.company_name : 'N/A';
-            document.getElementById('printPerson').innerText = s ? (s.contact_person || '-') : '-';
 
-            // Items
             const tbody = document.getElementById('printItemsBody');
             tbody.innerHTML = '';
             
@@ -744,23 +719,19 @@
                             <td class="text-center font-bold">${tot.toFixed(2)}</td>
                         </tr>`;
                 });
-                
                 const tax = t.is_taxable ? (sub * 0.15) : 0;
                 document.getElementById('printSub').innerText = sub.toFixed(2);
                 document.getElementById('printTax').innerText = tax.toFixed(2);
                 document.getElementById('printNet').innerText = (sub + tax).toFixed(2);
             }
 
-            // Add Notes
             const notes = document.getElementById('printNotesArea');
-            if(t.description) {
-                notes.innerHTML += `<li>ملاحظات: ${t.description}</li>`;
-            }
+            if(t.description) notes.innerHTML += `<li>ملاحظات: ${t.description}</li>`;
 
             window.print();
         }
 
-        // --- Profile & Tabs ---
+        // --- Profile ---
         async function openProfile(id) {
             currentProfileId = id;
             const s = allSuppliers.find(x => x.id === id);
@@ -769,11 +740,7 @@
             document.getElementById('pPhone').innerText = s.phone;
             document.getElementById('pCity').innerText = s.city;
             toggleModal('profileModal');
-            
-            await Promise.all([
-                loadSupplierFinancials(id),
-                loadSupplierOrders(id) // Load Restored Tabs Data
-            ]);
+            await Promise.all([loadSupplierFinancials(id), loadSupplierOrders(id)]);
         }
 
         function switchTab(name) {
@@ -797,16 +764,17 @@
                 
                 const typeNames = {'invoice': 'فاتورة', 'return': 'مردود', 'payment': 'دفعة'};
                 const row = document.createElement('tr');
-                row.className = 'border-b hover:bg-yellow-50 transition';
+                row.className = 'border-b hover:bg-yellow-50 transition cursor-pointer';
                 row.innerHTML = `
                     <td class="p-3 text-gray-500">${new Date(t.created_at).toLocaleDateString()}</td>
-                    <td class="p-3 font-mono text-gray-600 font-bold">${t.document_number || '-'}</td>
+                    <td class="p-3 font-mono text-gray-600 font-bold serial-num text-right">${t.document_number || '-'}</td>
                     <td class="p-3 font-bold text-gray-800">${typeNames[t.type]}</td>
                     <td class="p-3 text-green-700 bg-green-50/30">${debit || '-'}</td>
                     <td class="p-3 text-red-700 bg-red-50/30">${credit || '-'}</td>
                     <td class="p-3 font-bold bg-gray-100">${bal.toFixed(2)}</td>
                 `;
-                row.onclick = () => viewTransaction(t);
+                // FIX: Stop propagation to prevent immediate close
+                row.onclick = (e) => { e.stopPropagation(); viewTransaction(t); };
                 tbody.appendChild(row);
             });
             document.getElementById('pTotalPurchases').innerText = cred.toFixed(2);
@@ -814,28 +782,19 @@
             document.getElementById('pBalance').innerText = bal.toFixed(2);
         }
 
-        // --- Load Production Orders (Restored Feature) ---
         async function loadSupplierOrders(supplierId) {
             const currentTbody = document.getElementById('currentOrdersTable');
             const completedTbody = document.getElementById('completedOrdersTable');
             currentTbody.innerHTML = ''; completedTbody.innerHTML = '';
-
             const { data } = await supabaseClient.from('supplier_orders').select('*').eq('supplier_id', supplierId);
             if(data) data.forEach(o => {
-                const row = `
-                    <tr class="border-b">
-                        <td class="p-3 font-bold">#${o.order_number || 'N/A'}</td>
-                        <td class="p-3">${new Date(o.created_at).toLocaleDateString()}</td>
-                        <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${o.status}</span></td>
-                        <td class="p-3 font-bold">${o.total_amount}</td>
-                    </tr>`;
-                
-                if(o.status === 'completed') completedTbody.innerHTML += row.replace('bg-blue-100', 'bg-green-100').replace('text-blue-800', 'text-green-800');
+                const row = `<tr class="border-b"><td class="p-3 font-bold">#${o.order_number||'N/A'}</td><td class="p-3">${new Date(o.created_at).toLocaleDateString()}</td><td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${o.status}</span></td><td class="p-3 font-bold">${o.total_amount}</td></tr>`;
+                if(o.status === 'completed') completedTbody.innerHTML += row.replace('bg-blue-100', 'bg-green-100');
                 else currentTbody.innerHTML += row;
             });
         }
 
-        // --- Modal Helpers ---
+        // --- Common ---
         function toggleModal(id) {
             const el = document.getElementById(id);
             const container = el.querySelector('.modal-container');
@@ -847,6 +806,23 @@
                 setTimeout(() => el.classList.add('opacity-0', 'pointer-events-none'), 200);
             }
         }
+        
+        // --- Add/Edit Supplier CRUD (Abbreviated, same logic as before) ---
+        function openAddModal() { document.getElementById('supplierForm').reset(); document.getElementById('sId').value=''; toggleModal('supplierModal'); }
+        async function editSupplier(id) { 
+            const s = allSuppliers.find(x => x.id === id); document.getElementById('sId').value = s.id; document.getElementById('sName').value = s.company_name;
+            document.getElementById('sPerson').value = s.contact_person; document.getElementById('sPhone').value = s.phone; document.getElementById('sCity').value = s.city;
+            toggleModal('supplierModal'); 
+        }
+        document.getElementById('supplierForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = { company_name: document.getElementById('sName').value, contact_person: document.getElementById('sPerson').value, phone: document.getElementById('sPhone').value, city: document.getElementById('sCity').value };
+            const id = document.getElementById('sId').value;
+            if(id) await supabaseClient.from('suppliers').update(payload).eq('id', id);
+            else await supabaseClient.from('suppliers').insert([payload]);
+            toggleModal('supplierModal'); fetchSuppliers();
+        });
+        async function deleteSupplier(id) { if(confirm('حذف؟')) { await supabaseClient.from('suppliers').delete().eq('id', id); fetchSuppliers(); } }
     </script>
 </body>
 </html>
