@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>G.PACK - إدارة الموردين</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -13,6 +13,7 @@
         body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; }
         .gpack-purple { background-color: #3e206d; }
         .gpack-yellow { color: #fccf4d; }
+        .text-gpack-purple { color: #3e206d; }
         .gpack-btn { background-color: #fccf4d; color: #3e206d; transition: all 0.3s; }
         .gpack-btn:hover { background-color: #e6bd45; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
@@ -24,18 +25,27 @@
         .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; cursor: pointer; padding: 10px 15px; white-space: nowrap; }
         .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background-color: #f9fafb; }
         
-        /* Tags & Inputs */
         .supply-tag { background-color: #ede9fe; color: #5b21b6; border-color: #ddd6fe; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 2px; display: inline-block; }
         .input-std { width: 100%; border: 1px solid #d1d5db; padding: 8px; border-radius: 6px; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }
         .input-std:focus { border-color: #3e206d; ring: 1px; }
 
-        /* --- PRINT STYLES (CRITICAL FIX) --- */
+        /* --- PRINT STYLES (Identity Match) --- */
         @media print {
             body * { visibility: hidden; }
             #printableInvoice, #printableInvoice * { visibility: visible; }
-            #printableInvoice { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: white; z-index: 99999; padding: 20px; display: block !important; }
+            #printableInvoice { 
+                position: absolute; left: 0; top: 0; width: 100%; min-height: 100%; 
+                background: white; z-index: 99999; padding: 0; display: block !important; 
+            }
             .no-print { display: none !important; }
+            /* Force Background Colors for Print */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
+
+        .print-header { background-color: #3e206d; color: white; padding: 20px; border-bottom: 4px solid #fccf4d; }
+        .print-table th { background-color: #3e206d !important; color: white !important; padding: 8px; font-size: 12px; }
+        .print-table td { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
+        .print-row-even { background-color: #f9fafb; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -66,9 +76,6 @@
             <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-users w-5"></i> العملاء</a>
             <a href="employees.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-id-card w-5"></i> الموظفين</a>
             <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-list-alt w-5"></i> القوائم</a>
-            <a href="permissions.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-user-shield w-5"></i> الصلاحيات</a>
-            <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-tasks w-5"></i> المهام</a>
-            <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white"><i class="fas fa-file-signature w-5"></i> الشروط العامة</a>
         </nav>
         <div class="p-4 border-t border-purple-800/50">
             <button class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2">
@@ -187,11 +194,12 @@
                             <select id="transSupplierSelect" class="input-std bg-white"></select>
                         </div>
                         <div>
-                            <label class="text-xs font-bold text-gray-600 block mb-1">رقم الفاتورة / السند</label>
-                            <input type="text" id="transDoc" class="input-std bg-white" placeholder="مثال: INV-1001">
+                            <label class="text-xs font-bold text-gray-600 block mb-1">رقم الفاتورة (تلقائي)</label>
+                            <input type="text" id="transDoc" class="input-std bg-gray-100 text-gray-500 cursor-not-allowed" readonly placeholder="سيتم إنشاؤه بعد الحفظ">
+                            <p class="text-[10px] text-gray-400 mt-1">Format: 20026-XXXX</p>
                         </div>
                         <div class="flex items-center gap-2 pt-6">
-                            <input type="checkbox" id="transTax" class="w-4 h-4 text-purple-600 rounded">
+                            <input type="checkbox" id="transTax" class="w-4 h-4 text-purple-600 rounded" checked>
                             <label for="transTax" class="text-sm font-bold text-gray-700">فاتورة ضريبية (15%)</label>
                         </div>
                     </div>
@@ -204,7 +212,8 @@
                         <table class="w-full text-right text-xs">
                             <thead class="bg-gray-100">
                                 <tr>
-                                    <th class="p-2 w-1/3">الصنف</th>
+                                    <th class="p-2 w-1/4">المنتج (الأب)</th>
+                                    <th class="p-2 w-1/4">المقاس / الصنف (الابن)</th>
                                     <th class="p-2 w-20">الكمية</th>
                                     <th class="p-2 w-24">السعر</th>
                                     <th class="p-2 w-24">الإجمالي</th>
@@ -214,18 +223,18 @@
                             <tbody id="transItemsBody"></tbody>
                             <tfoot class="bg-gray-50 font-bold">
                                 <tr>
-                                    <td colspan="3" class="p-2 text-left">الإجمالي قبل الضريبة:</td>
-                                    <td class="p-2" id="transSubtotal">0</td>
+                                    <td colspan="4" class="p-2 text-left">الإجمالي قبل الضريبة:</td>
+                                    <td class="p-2" id="transSubtotal">0.00</td>
                                     <td></td>
                                 </tr>
-                                <tr id="taxRow" class="hidden text-red-600">
-                                    <td colspan="3" class="p-2 text-left">الضريبة (15%):</td>
-                                    <td class="p-2" id="transTaxVal">0</td>
+                                <tr id="taxRow" class="text-red-600">
+                                    <td colspan="4" class="p-2 text-left">الضريبة (15%):</td>
+                                    <td class="p-2" id="transTaxVal">0.00</td>
                                     <td></td>
                                 </tr>
                                 <tr class="text-lg text-purple-900">
-                                    <td colspan="3" class="p-2 text-left">الإجمالي النهائي:</td>
-                                    <td class="p-2" id="transTotal">0</td>
+                                    <td colspan="4" class="p-2 text-left">الإجمالي النهائي:</td>
+                                    <td class="p-2" id="transTotal">0.00</td>
                                     <td></td>
                                 </tr>
                             </tfoot>
@@ -238,19 +247,19 @@
                     </div>
 
                     <div>
-                        <label class="text-xs font-bold text-gray-600 block mb-1">ملاحظات</label>
+                        <label class="text-xs font-bold text-gray-600 block mb-1">ملاحظات / شروط الدفع</label>
                         <textarea id="transDesc" rows="2" class="input-std"></textarea>
                     </div>
                 </form>
             </div>
 
             <div class="p-4 bg-gray-50 border-t rounded-b-xl flex justify-between items-center">
-                <button type="button" id="printTransBtn" onclick="printCurrentTransaction()" class="hidden text-gray-600 hover:text-purple-700 font-bold text-sm">
-                    <i class="fas fa-print"></i> طباعة السند
+                <button type="button" id="printTransBtn" onclick="printCurrentTransaction()" class="hidden text-gray-600 hover:text-purple-700 font-bold text-sm bg-white border border-gray-300 px-4 py-2 rounded shadow-sm">
+                    <i class="fas fa-print"></i> طباعة المستند
                 </button>
                 <div class="flex gap-2">
                     <button type="button" onclick="toggleModal('transModal')" class="bg-gray-200 px-6 py-2 rounded text-gray-700 font-bold hover:bg-gray-300">إغلاق</button>
-                    <button type="button" onclick="submitTransaction()" id="saveTransBtn" class="gpack-btn px-8 py-2 rounded font-bold shadow-lg">حفظ</button>
+                    <button type="button" onclick="submitTransaction()" id="saveTransBtn" class="gpack-btn px-8 py-2 rounded font-bold shadow-lg">حفظ وترحيل</button>
                 </div>
             </div>
         </div>
@@ -298,6 +307,8 @@
                 <div class="flex-1 flex flex-col bg-white">
                     <div class="border-b border-gray-200 px-4 flex gap-4 overflow-x-auto bg-gray-50/50">
                         <button onclick="switchTab('finance')" id="tab-finance-btn" class="tab-btn active"><i class="fas fa-coins text-yellow-500"></i> كشف الحساب</button>
+                        <button onclick="switchTab('current')" id="tab-current-btn" class="tab-btn"><i class="fas fa-industry text-blue-500"></i> أوامر التشغيل (الحالية)</button>
+                        <button onclick="switchTab('completed')" id="tab-completed-btn" class="tab-btn"><i class="fas fa-check-circle text-green-500"></i> الأرشيف (المنتهية)</button>
                     </div>
                     
                     <div class="p-6 overflow-y-auto flex-1 bg-white relative">
@@ -316,61 +327,95 @@
                                 <tbody id="financeTable" class="divide-y divide-gray-100 cursor-pointer"></tbody>
                             </table>
                         </div>
+
+                        <div id="tab-current" class="profile-tab hidden">
+                            <h3 class="font-bold mb-4">أوامر التشغيل السارية</h3>
+                            <table class="w-full text-right text-sm border">
+                                <thead class="bg-blue-50 text-blue-900"><tr><th class="p-3">رقم الأمر</th><th class="p-3">التاريخ</th><th class="p-3">الحالة</th><th class="p-3">الإجمالي</th></tr></thead>
+                                <tbody id="currentOrdersTable"></tbody>
+                            </table>
+                        </div>
+
+                        <div id="tab-completed" class="profile-tab hidden">
+                            <h3 class="font-bold mb-4">أرشيف الأوامر</h3>
+                            <table class="w-full text-right text-sm border">
+                                <thead class="bg-gray-100"><tr><th class="p-3">رقم الأمر</th><th class="p-3">تاريخ التسليم</th><th class="p-3">الإجمالي</th></tr></thead>
+                                <tbody id="completedOrdersTable"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="printableInvoice" class="hidden bg-white p-8">
-        <div class="border-b-2 border-black pb-4 mb-6 flex justify-between items-end">
-            <div>
-                <h1 class="text-4xl font-bold text-purple-900">G.PACK</h1>
-                <p class="text-sm text-gray-600">Packaging Solutions</p>
+    <div id="printableInvoice" class="hidden">
+        <div class="print-header flex justify-between items-center">
+            <div class="text-right">
+                <h1 class="text-3xl font-bold mb-1">فاتورة مشتريات</h1>
+                <p class="text-sm opacity-80" id="printDocType">Purchase Invoice</p>
+                <div class="mt-4 text-sm">
+                    <p><strong>التاريخ:</strong> <span id="printDate"></span></p>
+                    <p><strong>رقم المستند:</strong> <span id="printRef" class="font-mono text-yellow-400 font-bold text-lg"></span></p>
+                </div>
             </div>
             <div class="text-center">
-                <h2 class="text-2xl font-bold border-2 border-black px-6 py-1 rounded" id="printTitle">سند</h2>
-            </div>
-            <div class="text-left text-sm">
-                <p>التاريخ: <span id="printDate" class="font-bold"></span></p>
-                <p>الرقم المرجعي: <span id="printRef" class="font-bold"></span></p>
+                 <h2 class="text-4xl font-bold text-white tracking-wider"><i class="fas fa-box-open text-yellow-400"></i> G.PACK</h2>
+                 <p class="text-xs text-gray-300 mt-1">Packaging Solutions</p>
+                 <p class="text-xs text-gray-300">CR: 4700121038 | VAT: 310033995300003</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-8 mb-8 bg-gray-50 p-4 border rounded">
-            <div>
-                <p class="text-xs text-gray-500">المورد</p>
-                <p class="font-bold text-lg" id="printSupplier">-</p>
+        <div class="p-8">
+            <div class="bg-gray-100 p-4 rounded border-r-4 border-purple-800 mb-8">
+                <h3 class="text-purple-900 font-bold mb-2">بيانات المورد:</h3>
+                <div class="flex justify-between">
+                    <p class="font-bold text-xl" id="printSupplier">-</p>
+                    <p>المسؤول: <span id="printPerson">-</span></p>
+                </div>
             </div>
-            <div class="text-left">
-                <p class="text-xs text-gray-500">المبلغ الإجمالي</p>
-                <p class="font-bold text-2xl text-purple-900" id="printTotal">-</p>
+
+            <table class="w-full text-right print-table mb-8 border border-gray-200">
+                <thead>
+                    <tr>
+                        <th width="5%">#</th>
+                        <th width="35%">المنتج (الصنف)</th>
+                        <th width="20%">المقاس</th>
+                        <th width="10%">الكمية</th>
+                        <th width="15%">السعر</th>
+                        <th width="15%">الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody id="printItemsBody"></tbody>
+            </table>
+
+            <div class="flex justify-between items-start mt-8">
+                <div class="w-1/2 text-xs text-gray-600 leading-relaxed pr-4">
+                    <h4 class="font-bold text-purple-900 mb-2 border-b pb-1">الشروط والملاحظات:</h4>
+                    <ul class="list-disc pr-4 space-y-1" id="printNotesArea">
+                        <li>تم استلام البضاعة بحالة جيدة وإضافتها للمخزون.</li>
+                        <li>هذه الفاتورة معتمدة إلكترونياً من النظام.</li>
+                    </ul>
+                </div>
+
+                <div class="w-1/3">
+                    <div class="flex justify-between border-b border-gray-300 py-2">
+                        <span class="font-bold text-gray-600">الإجمالي قبل الضريبة</span>
+                        <span id="printSub" class="font-bold">0.00</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-300 py-2">
+                        <span class="font-bold text-gray-600">ضريبة القيمة المضافة (15%)</span>
+                        <span id="printTax" class="font-bold text-red-600">0.00</span>
+                    </div>
+                    <div class="flex justify-between py-2 bg-purple-100 px-2 mt-2 rounded">
+                        <span class="font-bold text-purple-900 text-lg">الإجمالي النهائي</span>
+                        <span id="printNet" class="font-bold text-purple-900 text-lg">0.00</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <table class="w-full text-right text-sm border-collapse mb-8" id="printTable">
-            <thead>
-                <tr class="bg-gray-200 border-b-2 border-black">
-                    <th class="p-2 border">الصنف</th>
-                    <th class="p-2 border w-24 text-center">الكمية</th>
-                    <th class="p-2 border w-32 text-center">السعر</th>
-                    <th class="p-2 border w-32 text-center">الإجمالي</th>
-                </tr>
-            </thead>
-            <tbody id="printItemsBody"></tbody>
-        </table>
-
-        <div class="flex justify-end">
-            <div class="w-64">
-                <div class="flex justify-between border-b p-2"><span>المجموع:</span> <span id="printSub" class="font-bold">0</span></div>
-                <div class="flex justify-between border-b p-2 text-gray-600"><span>الضريبة:</span> <span id="printTax" class="font-bold">0</span></div>
-                <div class="flex justify-between p-2 text-lg font-bold bg-gray-100"><span>الصافي:</span> <span id="printNet">0</span></div>
-            </div>
-        </div>
-        
-        <div class="mt-12 pt-8 border-t text-center text-xs text-gray-400">
-            <p>تم استخراج هذا المستند إلكترونياً من نظام G.PACK</p>
-        </div>
+        <div class="fixed bottom-0 w-full bg-purple-900 h-4"></div>
     </div>
 
     <script>
@@ -379,7 +424,8 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let allSuppliers = [];
-        let allProducts = []; // Flattened variants
+        let allProducts = []; 
+        let uniqueParentProducts = []; // For dropdown Step 1
         let currentProfileId = null;
         let transItems = [];
 
@@ -388,21 +434,29 @@
             await Promise.all([fetchSuppliers(), fetchProducts()]);
         };
 
-        // --- Data Fetching ---
+        // --- Fetch Data ---
         async function fetchSuppliers() {
             const { data } = await supabaseClient.from('suppliers').select('*').order('created_at', {ascending: false});
             allSuppliers = data || [];
             renderSuppliers(allSuppliers);
-            // Populate Dropdown
             const sel = document.getElementById('transSupplierSelect');
             sel.innerHTML = '<option value="">اختر المورد...</option>';
             allSuppliers.forEach(s => sel.innerHTML += `<option value="${s.id}">${s.company_name}</option>`);
         }
 
         async function fetchProducts() {
-            // Get products with variants to use in Invoice items
-            const { data } = await supabaseClient.from('product_variants').select('*, products(name)');
+            // Fetch variants joined with parent products
+            const { data } = await supabaseClient.from('product_variants').select('*, products(id, name)');
             allProducts = data || [];
+            
+            // Extract Unique Parent Products for Step 1 Dropdown
+            const parents = {};
+            allProducts.forEach(v => {
+                if(v.products) {
+                    parents[v.products.id] = v.products.name;
+                }
+            });
+            uniqueParentProducts = Object.entries(parents).map(([id, name]) => ({id, name}));
         }
 
         function renderSuppliers(list) {
@@ -426,15 +480,14 @@
             });
         }
 
-        // --- Transaction Modal Logic ---
+        // --- Transaction Modal & Product Logic ---
         function openGlobalTransaction(type) {
-            currentProfileId = null; // No specific supplier yet
+            currentProfileId = null;
             document.getElementById('supplierSelectDiv').classList.remove('hidden');
             setupTransModal(type);
         }
 
         function openContextTransaction(type) {
-            // Pre-select current supplier and hide dropdown
             document.getElementById('supplierSelectDiv').classList.add('hidden');
             document.getElementById('transSupplierSelect').value = currentProfileId;
             setupTransModal(type);
@@ -446,12 +499,12 @@
             document.getElementById('transDate').valueAsDate = new Date();
             transItems = [];
             
-            // Set UI based on type
             const titles = { 'invoice': 'فاتورة مشتريات', 'return': 'مردود مشتريات', 'payment': 'تسجيل دفعة' };
-            const icons = { 'invoice': 'fa-cart-plus', 'return': 'fa-undo', 'payment': 'fa-money-bill' };
-            
             document.getElementById('transTitle').innerText = titles[type];
-            document.getElementById('transIcon').className = `fas ${icons[type]}`;
+            
+            // Auto Serial Placeholder (Visual Only)
+            const year = new Date().getFullYear().toString().substr(-2);
+            document.getElementById('transDoc').placeholder = `سيتم الإنشاء تلقائياً: 200${year}-XXXX`;
 
             if(type === 'payment') {
                 document.getElementById('productsSection').classList.add('hidden');
@@ -459,100 +512,133 @@
             } else {
                 document.getElementById('productsSection').classList.remove('hidden');
                 document.getElementById('paymentSection').classList.add('hidden');
-                renderTransItems();
+                // Start with one empty item
+                if(transItems.length === 0) addTransItem();
+                else renderTransItems();
             }
 
             document.getElementById('saveTransBtn').classList.remove('hidden');
-            document.getElementById('printTransBtn').classList.add('hidden'); // Only show print after save or in view mode
+            document.getElementById('printTransBtn').classList.add('hidden');
             toggleModal('transModal');
         }
 
         function addTransItem() {
-            // Create options for product select
-            let opts = '<option value="">اختر الصنف...</option>';
-            allProducts.forEach(p => {
-                opts += `<option value="${p.id}" data-name="${p.products.name} - ${p.size_name}">${p.products.name} - ${p.size_name}</option>`;
+            // Parent Product Options
+            let parentOpts = '<option value="">اختر المنتج...</option>';
+            uniqueParentProducts.forEach(p => {
+                parentOpts += `<option value="${p.id}">${p.name}</option>`;
             });
 
-            transItems.push({ variant_id: '', qty: 1, price: 0 });
-            renderTransItems();
+            transItems.push({ 
+                parentId: '', 
+                variantId: '', 
+                parentName: '',
+                variantName: '',
+                qty: 1, 
+                price: 0 
+            });
+            renderTransItems(parentOpts);
         }
 
-        function renderTransItems() {
+        function renderTransItems(parentOpts = null) {
             const tbody = document.getElementById('transItemsBody');
             tbody.innerHTML = '';
             let subtotal = 0;
 
+            // Cache parent options to avoid regenerating loop if not passed
+            if(!parentOpts) {
+                parentOpts = '<option value="">اختر المنتج...</option>';
+                uniqueParentProducts.forEach(p => { parentOpts += `<option value="${p.id}">${p.name}</option>`; });
+            }
+
             transItems.forEach((item, index) => {
                 const rowTotal = item.qty * item.price;
                 subtotal += rowTotal;
-                
-                // Build Options
-                let opts = '<option value="">اختر...</option>';
-                allProducts.forEach(p => {
-                    const selected = p.id === item.variant_id ? 'selected' : '';
-                    opts += `<option value="${p.id}" ${selected}>${p.products.name} - ${p.size_name}</option>`;
-                });
+
+                // Filter variants based on selected parent
+                let variantOpts = '<option value="">اختر المقاس...</option>';
+                if(item.parentId) {
+                    const filtered = allProducts.filter(p => p.products.id === item.parentId);
+                    filtered.forEach(v => {
+                        const sel = v.id === item.variantId ? 'selected' : '';
+                        variantOpts += `<option value="${v.id}" ${sel}>${v.size_name}</option>`;
+                    });
+                } else {
+                    variantOpts = '<option value="" disabled>اختر المنتج أولاً</option>';
+                }
+
+                // Re-select parent
+                let currentParentOpts = parentOpts.replace(`value="${item.parentId}"`, `value="${item.parentId}" selected`);
 
                 tbody.innerHTML += `
                     <tr class="border-b">
                         <td class="p-1">
-                            <select onchange="updateItem(${index}, 'variant_id', this.value, this)" class="input-std text-xs">${opts}</select>
+                            <select onchange="updateItemParent(${index}, this)" class="input-std text-xs bg-gray-50 border-purple-200 font-bold">${currentParentOpts}</select>
                         </td>
-                        <td class="p-1"><input type="number" value="${item.qty}" onchange="updateItem(${index}, 'qty', this.value)" class="input-std text-center"></td>
-                        <td class="p-1"><input type="number" value="${item.price}" onchange="updateItem(${index}, 'price', this.value)" class="input-std text-center"></td>
+                        <td class="p-1">
+                            <select onchange="updateItemVariant(${index}, this)" class="input-std text-xs">${variantOpts}</select>
+                        </td>
+                        <td class="p-1"><input type="number" value="${item.qty}" onchange="updateItemData(${index}, 'qty', this.value)" class="input-std text-center"></td>
+                        <td class="p-1"><input type="number" value="${item.price}" onchange="updateItemData(${index}, 'price', this.value)" class="input-std text-center"></td>
                         <td class="p-1 font-bold text-gray-700">${rowTotal.toFixed(2)}</td>
                         <td class="p-1 text-center"><button onclick="transItems.splice(${index},1); renderTransItems()" class="text-red-500">×</button></td>
                     </tr>
                 `;
             });
 
-            // Calc Totals
             const taxRate = document.getElementById('transTax').checked ? 0.15 : 0;
             const taxVal = subtotal * taxRate;
-            const total = subtotal + taxVal;
-
             document.getElementById('transSubtotal').innerText = subtotal.toFixed(2);
             document.getElementById('transTaxVal').innerText = taxVal.toFixed(2);
-            document.getElementById('transTotal').innerText = total.toFixed(2);
+            document.getElementById('transTotal').innerText = (subtotal + taxVal).toFixed(2);
             
-            if(taxRate > 0) document.getElementById('taxRow').classList.remove('hidden');
-            else document.getElementById('taxRow').classList.add('hidden');
+            document.getElementById('taxRow').style.visibility = taxRate > 0 ? 'visible' : 'hidden';
         }
 
-        function updateItem(index, field, value, el) {
-            if(field === 'variant_id' && el) {
-                transItems[index].name = el.options[el.selectedIndex].text;
-            }
-            transItems[index][field] = field === 'variant_id' ? value : parseFloat(value);
+        // --- Item Updates ---
+        function updateItemParent(index, el) {
+            const pId = el.value;
+            transItems[index].parentId = pId;
+            transItems[index].parentName = el.options[el.selectedIndex].text;
+            transItems[index].variantId = ''; // Reset variant
+            transItems[index].variantName = '';
             renderTransItems();
         }
 
-        document.getElementById('transTax').addEventListener('change', renderTransItems);
+        function updateItemVariant(index, el) {
+            transItems[index].variantId = el.value;
+            transItems[index].variantName = el.options[el.selectedIndex].text;
+        }
 
-        // --- SUBMIT TRANSACTION (INVENTORY LOGIC) ---
+        function updateItemData(index, field, val) {
+            transItems[index][field] = parseFloat(val);
+            renderTransItems();
+        }
+
+        // --- SUBMIT WITH SMART SERIAL & INVENTORY ---
         async function submitTransaction() {
             const type = document.getElementById('transType').value;
             const supplierId = document.getElementById('transSupplierSelect').value || currentProfileId;
-            const docNum = document.getElementById('transDoc').value;
             const date = document.getElementById('transDate').value;
             const desc = document.getElementById('transDesc').value;
             
-            if(!supplierId) return alert("اختر المورد");
-
+            if(!supplierId) return alert("الرجاء اختيار المورد");
+            
             let amount = 0;
-            let itemsPayload = [];
-
-            if(type === 'payment') {
-                amount = parseFloat(document.getElementById('paymentAmount').value);
-            } else {
-                amount = parseFloat(document.getElementById('transTotal').innerText);
-                itemsPayload = transItems;
-            }
+            if(type === 'payment') amount = parseFloat(document.getElementById('paymentAmount').value);
+            else amount = parseFloat(document.getElementById('transTotal').innerText);
 
             if(amount <= 0) return alert("المبلغ يجب أن يكون أكبر من صفر");
 
-            // 1. Save Transaction
+            // 1. Generate Serial (Logic: 200 + YY + Sequence)
+            // Fetch count of existing transactions to determine next sequence
+            const { count } = await supabaseClient.from('supplier_transactions').select('*', { count: 'exact', head: true });
+            const nextSeq = (count || 0) + 1;
+            const year = new Date().getFullYear().toString().substr(-2);
+            const serialPrefix = type === 'payment' ? 'PAY' : '200'; // 200 for Purchase Invoice/Return
+            const docNum = `${serialPrefix}${year}-${String(nextSeq).padStart(4, '0')}`;
+
+            // 2. Insert Transaction
             const { data: transData, error } = await supabaseClient.from('supplier_transactions').insert([{
                 supplier_id: supplierId,
                 type: type,
@@ -560,40 +646,45 @@
                 description: desc,
                 document_number: docNum,
                 created_at: date,
-                items: itemsPayload,
+                items: transItems,
                 is_taxable: document.getElementById('transTax').checked
-            }]).select();
+            }]).select().single();
 
-            if(error) return alert("خطأ: " + error.message);
+            if(error) return alert("خطأ في الحفظ: " + error.message);
 
-            // 2. Update Inventory (Client-Side Logic)
-            if(type === 'invoice' || type === 'return') {
-                for (const item of itemsPayload) {
-                    if(!item.variant_id) continue;
-                    
-                    // Get current stock
-                    const { data: curr } = await supabaseClient.from('product_variants').select('stock_quantity').eq('id', item.variant_id).single();
-                    if(curr) {
-                        let newStock = curr.stock_quantity;
-                        if(type === 'invoice') newStock += item.qty; // Increase Stock
-                        else if (type === 'return') newStock -= item.qty; // Decrease Stock (Purchase Return)
+            // 3. Update Inventory (If Invoice or Return)
+            if(type !== 'payment') {
+                for(const item of transItems) {
+                    if(!item.variantId) continue;
+                    const { data: v } = await supabaseClient.from('product_variants').select('stock_quantity').eq('id', item.variantId).single();
+                    if(v) {
+                        let newStock = v.stock_quantity;
+                        // Invoice = Increase Stock, Return = Decrease Stock
+                        if(type === 'invoice') newStock += item.qty;
+                        else if(type === 'return') newStock -= item.qty;
                         
-                        await supabaseClient.from('product_variants').update({stock_quantity: newStock}).eq('id', item.variant_id);
+                        await supabaseClient.from('product_variants').update({stock_quantity: newStock}).eq('id', item.variantId);
                     }
                 }
             }
 
-            alert("تم الحفظ بنجاح وتحديث المخزون");
-            toggleModal('transModal');
+            alert(`تم الحفظ بنجاح رقم السند: ${docNum}`);
+            
+            // 4. Switch to View Mode & Allow Print
+            viewTransaction(transData); 
+            // Optional: Auto open print
+            if(confirm("هل تريد طباعة السند الآن؟")) printCurrentTransaction();
+
             if(currentProfileId) loadSupplierFinancials(currentProfileId);
         }
 
-        // --- VIEW & PRINT Logic ---
+        // --- VIEW & PRINT ---
         function viewTransaction(t) {
+            toggleModal('transModal'); // Close to reset if needed, or just update UI
             setupTransModal(t.type);
             document.getElementById('transSupplierSelect').value = t.supplier_id;
             document.getElementById('transDate').value = t.created_at.split('T')[0];
-            document.getElementById('transDoc').value = t.document_number;
+            document.getElementById('transDoc').value = t.document_number; // Show generated ID
             document.getElementById('transDesc').value = t.description;
             document.getElementById('transTax').checked = t.is_taxable;
 
@@ -604,12 +695,12 @@
                 renderTransItems();
             }
 
-            // Lock inputs for view mode
+            // Lock UI
             document.getElementById('saveTransBtn').classList.add('hidden');
-            document.getElementById('printTransBtn').classList.remove('hidden');
-            document.getElementById('transTitle').innerText += " (عرض)";
+            document.getElementById('printTransBtn').classList.remove('hidden'); // Show Print Button
+            document.getElementById('transTitle').innerText += " (محفوظ)";
             
-            // Store current T for print
+            // Store for printing
             window.currentViewingTrans = t;
         }
 
@@ -617,31 +708,40 @@
             const t = window.currentViewingTrans;
             if(!t) return;
 
-            document.getElementById('printTitle').innerText = t.type === 'invoice' ? 'فاتورة مشتريات' : (t.type === 'return' ? 'مردود مشتريات' : 'سند صرف');
-            document.getElementById('printDate').innerText = new Date(t.created_at).toLocaleDateString('ar-EG');
-            document.getElementById('printRef').innerText = t.document_number || t.id.split('-')[0];
-            document.getElementById('printSupplier').innerText = document.getElementById('pNameDisplay').innerText;
-            document.getElementById('printTotal').innerText = t.amount.toLocaleString();
+            // Fill Print Template
+            const typeAr = t.type === 'invoice' ? 'فاتورة مشتريات' : (t.type === 'return' ? 'مردود مشتريات' : 'سند صرف نقدية');
+            document.getElementById('printDocType').innerText = typeAr;
+            document.getElementById('printDate').innerText = t.created_at.split('T')[0];
+            document.getElementById('printRef').innerText = t.document_number;
+            
+            // Supplier Info
+            // Find supplier details (might need to fetch if not in current view)
+            const s = allSuppliers.find(x => x.id === t.supplier_id);
+            document.getElementById('printSupplier').innerText = s ? s.company_name : 'N/A';
+            document.getElementById('printPerson').innerText = s ? (s.contact_person || '-') : '-';
 
+            // Items
             const tbody = document.getElementById('printItemsBody');
             tbody.innerHTML = '';
             
             if(t.type === 'payment') {
-                 tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center font-bold">دفعة نقدية - ${t.description}</td></tr>`;
-                 document.getElementById('printSub').innerText = t.amount;
-                 document.getElementById('printTax').innerText = 0;
-                 document.getElementById('printNet').innerText = t.amount;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center font-bold text-xl border-b">دفعة نقدية مسددة للمورد<br><span class="text-sm font-normal">${t.description}</span></td></tr>`;
+                document.getElementById('printSub').innerText = t.amount;
+                document.getElementById('printTax').innerText = "0.00";
+                document.getElementById('printNet').innerText = t.amount;
             } else {
                 let sub = 0;
-                (t.items || []).forEach(i => {
+                (t.items || []).forEach((i, idx) => {
                     const tot = i.qty * i.price;
                     sub += tot;
                     tbody.innerHTML += `
-                        <tr class="border-b">
-                            <td class="p-2">${i.name || '-'}</td>
-                            <td class="p-2 text-center">${i.qty}</td>
-                            <td class="p-2 text-center">${i.price}</td>
-                            <td class="p-2 text-center font-bold">${tot}</td>
+                        <tr class="${idx % 2 === 0 ? 'print-row-even' : ''}">
+                            <td>${idx + 1}</td>
+                            <td class="font-bold text-purple-900">${i.parentName || '-'}</td>
+                            <td>${i.variantName || '-'}</td>
+                            <td class="text-center">${i.qty}</td>
+                            <td class="text-center">${i.price}</td>
+                            <td class="text-center font-bold">${tot.toFixed(2)}</td>
                         </tr>`;
                 });
                 
@@ -651,10 +751,16 @@
                 document.getElementById('printNet').innerText = (sub + tax).toFixed(2);
             }
 
+            // Add Notes
+            const notes = document.getElementById('printNotesArea');
+            if(t.description) {
+                notes.innerHTML += `<li>ملاحظات: ${t.description}</li>`;
+            }
+
             window.print();
         }
 
-        // --- Profile Financials Logic ---
+        // --- Profile & Tabs ---
         async function openProfile(id) {
             currentProfileId = id;
             const s = allSuppliers.find(x => x.id === id);
@@ -663,57 +769,73 @@
             document.getElementById('pPhone').innerText = s.phone;
             document.getElementById('pCity').innerText = s.city;
             toggleModal('profileModal');
-            loadSupplierFinancials(id);
+            
+            await Promise.all([
+                loadSupplierFinancials(id),
+                loadSupplierOrders(id) // Load Restored Tabs Data
+            ]);
+        }
+
+        function switchTab(name) {
+            document.querySelectorAll('.profile-tab').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${name}`).classList.remove('hidden');
+            document.getElementById(`tab-${name}-btn`).classList.add('active');
         }
 
         async function loadSupplierFinancials(supplierId) {
             const tbody = document.getElementById('financeTable');
             tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4">تحميل...</td></tr>';
-            
-            const { data } = await supabaseClient.from('supplier_transactions')
-                .select('*').eq('supplier_id', supplierId).order('created_at', {ascending: true});
-            
+            const { data } = await supabaseClient.from('supplier_transactions').select('*').eq('supplier_id', supplierId).order('created_at', {ascending: true});
             tbody.innerHTML = '';
-            let balance = 0;
-            let debitSum = 0;
-            let creditSum = 0;
-
-            if(data && data.length > 0) {
-                data.forEach(t => {
-                    let debit = 0, credit = 0;
-                    // Invoice = Credit (له), Payment/Return = Debit (لنا/دفعنا)
-                    if(t.type === 'invoice') credit = t.amount;
-                    else debit = t.amount;
-
-                    balance = balance + credit - debit;
-                    debitSum += debit; creditSum += credit;
-
-                    const typeNames = {'invoice': 'فاتورة', 'return': 'مردود', 'payment': 'دفعة'};
-                    const color = t.type === 'invoice' ? 'text-red-700' : 'text-green-700';
-
-                    // Make row clickable
-                    const row = document.createElement('tr');
-                    row.className = 'border-b hover:bg-yellow-50 transition';
-                    row.innerHTML = `
-                        <td class="p-3 text-gray-500">${new Date(t.created_at).toLocaleDateString()}</td>
-                        <td class="p-3 font-mono text-gray-600">${t.document_number || '-'}</td>
-                        <td class="p-3 text-gray-800 font-bold ${color}">${typeNames[t.type]} - ${t.description || ''}</td>
-                        <td class="p-3 text-green-700 bg-green-50/30">${debit || '-'}</td>
-                        <td class="p-3 text-red-700 bg-red-50/30">${credit || '-'}</td>
-                        <td class="p-3 font-bold bg-gray-100">${balance.toLocaleString()}</td>
-                    `;
-                    row.onclick = () => viewTransaction(t);
-                    tbody.appendChild(row);
-                });
-            }
-
-            document.getElementById('pTotalPurchases').innerText = creditSum.toLocaleString();
-            document.getElementById('pTotalPaid').innerText = debitSum.toLocaleString();
-            document.getElementById('pBalance').innerText = balance.toLocaleString();
+            let bal = 0, cred = 0, deb = 0;
+            if(data) data.forEach(t => {
+                let credit = t.type === 'invoice' ? t.amount : 0;
+                let debit = t.type !== 'invoice' ? t.amount : 0;
+                bal = bal + credit - debit;
+                cred += credit; deb += debit;
+                
+                const typeNames = {'invoice': 'فاتورة', 'return': 'مردود', 'payment': 'دفعة'};
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-yellow-50 transition';
+                row.innerHTML = `
+                    <td class="p-3 text-gray-500">${new Date(t.created_at).toLocaleDateString()}</td>
+                    <td class="p-3 font-mono text-gray-600 font-bold">${t.document_number || '-'}</td>
+                    <td class="p-3 font-bold text-gray-800">${typeNames[t.type]}</td>
+                    <td class="p-3 text-green-700 bg-green-50/30">${debit || '-'}</td>
+                    <td class="p-3 text-red-700 bg-red-50/30">${credit || '-'}</td>
+                    <td class="p-3 font-bold bg-gray-100">${bal.toFixed(2)}</td>
+                `;
+                row.onclick = () => viewTransaction(t);
+                tbody.appendChild(row);
+            });
+            document.getElementById('pTotalPurchases').innerText = cred.toFixed(2);
+            document.getElementById('pTotalPaid').innerText = deb.toFixed(2);
+            document.getElementById('pBalance').innerText = bal.toFixed(2);
         }
-        
-        // --- Helpers ---
-        function switchTab(name) { /* Keep existing */ }
+
+        // --- Load Production Orders (Restored Feature) ---
+        async function loadSupplierOrders(supplierId) {
+            const currentTbody = document.getElementById('currentOrdersTable');
+            const completedTbody = document.getElementById('completedOrdersTable');
+            currentTbody.innerHTML = ''; completedTbody.innerHTML = '';
+
+            const { data } = await supabaseClient.from('supplier_orders').select('*').eq('supplier_id', supplierId);
+            if(data) data.forEach(o => {
+                const row = `
+                    <tr class="border-b">
+                        <td class="p-3 font-bold">#${o.order_number || 'N/A'}</td>
+                        <td class="p-3">${new Date(o.created_at).toLocaleDateString()}</td>
+                        <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${o.status}</span></td>
+                        <td class="p-3 font-bold">${o.total_amount}</td>
+                    </tr>`;
+                
+                if(o.status === 'completed') completedTbody.innerHTML += row.replace('bg-blue-100', 'bg-green-100').replace('text-blue-800', 'text-green-800');
+                else currentTbody.innerHTML += row;
+            });
+        }
+
+        // --- Modal Helpers ---
         function toggleModal(id) {
             const el = document.getElementById(id);
             const container = el.querySelector('.modal-container');
