@@ -18,16 +18,18 @@
         .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
         
+        /* Modal Transitions */
+        .modal { transition: opacity 0.2s ease-in-out; }
+        body.modal-active { overflow: hidden; }
+        
         /* Helpers */
-        .modal { transition: opacity 0.25s ease; }
-        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; cursor: pointer; padding: 10px 15px; white-space: nowrap; }
         .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background-color: #f9fafb; }
         .supply-tag { background-color: #ede9fe; color: #5b21b6; border-color: #ddd6fe; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 2px; display: inline-block; }
         .input-std { width: 100%; border: 1px solid #d1d5db; padding: 8px; border-radius: 6px; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }
         .input-std:focus { border-color: #3e206d; ring: 1px; }
-
-        /* Force LTR for Serial Numbers to ensure 20026 is on left */
+        
+        /* Serial Number LTR Force */
         .serial-num { direction: ltr; unicode-bidi: embed; display: inline-block; }
 
         /* --- PRINT STYLES --- */
@@ -131,11 +133,11 @@
     </main>
 
     <div id="supplierModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
-        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('supplierModal')"></div>
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="closeModal('supplierModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <div class="flex justify-between items-center pb-3 border-b mb-4">
                 <p class="text-xl font-bold text-purple-800" id="modalTitle">إضافة مورد جديد</p>
-                <button onclick="toggleModal('supplierModal')"><i class="fas fa-times text-gray-500"></i></button>
+                <button onclick="closeModal('supplierModal')"><i class="fas fa-times text-gray-500"></i></button>
             </div>
             <form id="supplierForm" class="space-y-4">
                 <input type="hidden" id="sId">
@@ -165,7 +167,7 @@
                     <div id="locationsContainer" class="flex flex-wrap gap-2"></div>
                 </div>
                 <div class="pt-4 flex justify-end gap-2 border-t mt-4">
-                    <button type="button" onclick="toggleModal('supplierModal')" class="bg-gray-100 px-4 py-2 rounded text-gray-600 hover:bg-gray-200">إلغاء</button>
+                    <button type="button" onclick="closeModal('supplierModal')" class="bg-gray-100 px-4 py-2 rounded text-gray-600 hover:bg-gray-200">إلغاء</button>
                     <button type="submit" id="saveBtn" class="gpack-btn px-6 py-2 rounded font-bold">حفظ البيانات</button>
                 </div>
             </form>
@@ -173,14 +175,14 @@
     </div>
 
     <div id="transModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[70]">
-        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-60" onclick="toggleModal('transModal')"></div>
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-60" onclick="closeModal('transModal')"></div>
         <div class="modal-container bg-white w-full max-w-4xl mx-auto rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[90vh]">
             
             <div class="bg-purple-900 text-white p-4 flex justify-between items-center rounded-t-xl">
                 <h3 class="text-lg font-bold flex items-center gap-2">
                     <i id="transIcon" class="fas"></i> <span id="transTitle">...</span>
                 </h3>
-                <button onclick="toggleModal('transModal')" class="text-white hover:text-red-300"><i class="fas fa-times text-xl"></i></button>
+                <button onclick="closeModal('transModal')" class="text-white hover:text-red-300"><i class="fas fa-times text-xl"></i></button>
             </div>
 
             <div class="p-6 overflow-y-auto flex-1">
@@ -205,11 +207,10 @@
                                 <input type="checkbox" id="transTax" class="w-4 h-4 text-purple-600 rounded" checked>
                                 <label for="transTax" class="text-sm font-bold text-gray-700">فاتورة ضريبية (15%)</label>
                             </div>
-                            <div class="flex items-center gap-2 border-r pr-4 mr-4">
-                                <label class="text-xs font-bold text-gray-600">توجيه البضاعة إلي:</label>
-                                <select id="transWarehouse" class="input-std text-xs w-40">
-                                    <option value="main">المستودع الرئيسي</option>
-                                    <option value="client">مخزون عميل (تحت الطباعة)</option>
+                            <div class="flex items-center gap-2 border-r pr-4 mr-4 flex-1">
+                                <label class="text-xs font-bold text-gray-600 whitespace-nowrap">توجيه البضاعة إلي:</label>
+                                <select id="transWarehouse" class="input-std text-xs w-full">
+                                    <option value="">جاري التحميل...</option>
                                 </select>
                             </div>
                         </div>
@@ -269,7 +270,7 @@
                     <i class="fas fa-print"></i> طباعة المستند
                 </button>
                 <div class="flex gap-2">
-                    <button type="button" onclick="toggleModal('transModal')" class="bg-gray-200 px-6 py-2 rounded text-gray-700 font-bold hover:bg-gray-300">إغلاق</button>
+                    <button type="button" onclick="closeModal('transModal')" class="bg-gray-200 px-6 py-2 rounded text-gray-700 font-bold hover:bg-gray-300">إغلاق</button>
                     <button type="button" onclick="submitTransaction()" id="saveTransBtn" class="gpack-btn px-8 py-2 rounded font-bold shadow-lg">حفظ وترحيل</button>
                 </div>
             </div>
@@ -277,7 +278,7 @@
     </div>
 
     <div id="profileModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
-        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-80" onclick="toggleModal('profileModal')"></div>
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-80" onclick="closeModal('profileModal')"></div>
         <div class="modal-container bg-white w-full h-full md:w-11/12 md:h-[95vh] mx-auto rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col transform transition-all scale-95">
             
             <div class="bg-purple-900 text-white p-4 flex justify-between items-center shrink-0">
@@ -294,7 +295,7 @@
                     <button onclick="openContextTransaction('invoice')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm font-bold"><i class="fas fa-plus"></i> فاتورة</button>
                     <button onclick="openContextTransaction('return')" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm font-bold"><i class="fas fa-undo"></i> مردود</button>
                     <button onclick="openContextTransaction('payment')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-bold"><i class="fas fa-money-bill"></i> دفعة</button>
-                    <button onclick="toggleModal('profileModal')" class="text-white hover:text-red-300 text-2xl ml-4"><i class="fas fa-times"></i></button>
+                    <button onclick="closeModal('profileModal')" class="text-white hover:text-red-300 text-2xl ml-4"><i class="fas fa-times"></i></button>
                 </div>
             </div>
 
@@ -378,10 +379,14 @@
         </div>
 
         <div class="p-8">
-            <div class="bg-gray-100 p-4 rounded border-r-4 border-purple-800 mb-8">
-                <h3 class="text-purple-900 font-bold mb-2">بيانات المورد:</h3>
-                <div class="flex justify-between">
+            <div class="bg-gray-100 p-4 rounded border-r-4 border-purple-800 mb-8 flex justify-between">
+                <div>
+                    <h3 class="text-purple-900 font-bold mb-2">بيانات المورد:</h3>
                     <p class="font-bold text-xl" id="printSupplier">-</p>
+                </div>
+                <div class="text-left" id="printWarehouseDiv">
+                     <p class="text-xs text-gray-500">تم التوريد إلى مستودع:</p>
+                     <p class="font-bold" id="printWarehouseName">-</p>
                 </div>
             </div>
 
@@ -435,12 +440,13 @@
         let allSuppliers = [];
         let allProducts = []; 
         let uniqueParentProducts = []; 
+        let allWarehouses = []; // New
         let currentProfileId = null;
         let transItems = [];
 
         window.onload = async () => {
             document.getElementById('transDate').valueAsDate = new Date();
-            await Promise.all([fetchSuppliers(), fetchProducts()]);
+            await Promise.all([fetchSuppliers(), fetchProducts(), fetchWarehouses()]);
         };
 
         // --- Fetch Data ---
@@ -459,6 +465,18 @@
             const parents = {};
             allProducts.forEach(v => { if(v.products) parents[v.products.id] = v.products.name; });
             uniqueParentProducts = Object.entries(parents).map(([id, name]) => ({id, name}));
+        }
+        
+        async function fetchWarehouses() {
+            // FIX: Dynamic fetching from warehouses table
+            const { data } = await supabaseClient.from('warehouses').select('*').order('created_at');
+            allWarehouses = data || [];
+            
+            const sel = document.getElementById('transWarehouse');
+            sel.innerHTML = '<option value="">اختر المستودع...</option>';
+            allWarehouses.forEach(w => {
+                sel.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+            });
         }
 
         function renderSuppliers(list) {
@@ -504,7 +522,6 @@
             const titles = { 'invoice': 'فاتورة مشتريات', 'return': 'مردود مشتريات', 'payment': 'تسجيل دفعة' };
             document.getElementById('transTitle').innerText = titles[type];
             
-            // Auto Serial Placeholder
             const year = new Date().getFullYear().toString().substr(-2);
             document.getElementById('transDoc').placeholder = `سيتم الإنشاء تلقائياً: 200${year}-XXXX`;
 
@@ -520,13 +537,12 @@
 
             document.getElementById('saveTransBtn').classList.remove('hidden');
             document.getElementById('printTransBtn').classList.add('hidden');
-            toggleModal('transModal');
+            openModal('transModal');
         }
 
         function addTransItem() {
             let parentOpts = '<option value="">اختر المنتج...</option>';
             uniqueParentProducts.forEach(p => { parentOpts += `<option value="${p.id}">${p.name}</option>`; });
-
             transItems.push({ parentId: '', variantId: '', parentName: '', variantName: '', qty: 1, price: 0 });
             renderTransItems(parentOpts);
         }
@@ -606,9 +622,11 @@
             const supplierId = document.getElementById('transSupplierSelect').value || currentProfileId;
             const date = document.getElementById('transDate').value;
             const desc = document.getElementById('transDesc').value;
-            const targetWarehouse = document.getElementById('transWarehouse').value; // Just storing intent for now
+            const warehouseId = document.getElementById('transWarehouse').value; 
             
             if(!supplierId) return alert("الرجاء اختيار المورد");
+            // Warehouse is mandatory for product movements (Invoice/Return)
+            if(type !== 'payment' && !warehouseId) return alert("الرجاء اختيار المستودع الذي سيتم التوريد إليه");
             
             let amount = 0;
             if(type === 'payment') amount = parseFloat(document.getElementById('paymentAmount').value);
@@ -616,7 +634,6 @@
 
             if(amount <= 0) return alert("المبلغ يجب أن يكون أكبر من صفر");
 
-            // Smart Serial
             const { count } = await supabaseClient.from('supplier_transactions').select('*', { count: 'exact', head: true });
             const nextSeq = (count || 0) + 1;
             const year = new Date().getFullYear().toString().substr(-2);
@@ -628,10 +645,11 @@
                 supplier_id: supplierId,
                 type: type,
                 amount: amount,
-                description: desc + (type !== 'payment' ? ` [توجيه: ${targetWarehouse}]` : ''),
+                description: desc,
                 document_number: docNum,
                 created_at: date,
                 items: transItems,
+                warehouse_id: warehouseId || null, // Saving Warehouse ID
                 is_taxable: document.getElementById('transTax').checked
             }]).select().single();
 
@@ -658,18 +676,14 @@
 
         // --- VIEW & PRINT ---
         function viewTransaction(t) {
-            // Force modal open logic
-            const el = document.getElementById('transModal');
-            el.classList.remove('opacity-0', 'pointer-events-none');
-            el.querySelector('.modal-container').classList.remove('scale-95');
-            el.querySelector('.modal-container').classList.add('scale-100');
+            setupTransModal(t.type); // Opens modal clean
             
-            setupTransModal(t.type);
             document.getElementById('transSupplierSelect').value = t.supplier_id;
             document.getElementById('transDate').value = t.created_at.split('T')[0];
             document.getElementById('transDoc').value = t.document_number;
             document.getElementById('transDesc').value = t.description;
             document.getElementById('transTax').checked = t.is_taxable;
+            if(t.warehouse_id) document.getElementById('transWarehouse').value = t.warehouse_id;
 
             if(t.type === 'payment') {
                 document.getElementById('paymentAmount').value = t.amount;
@@ -691,10 +705,15 @@
             const typeAr = t.type === 'invoice' ? 'فاتورة مشتريات' : (t.type === 'return' ? 'مردود مشتريات' : 'سند صرف نقدية');
             document.getElementById('printDocType').innerText = typeAr;
             document.getElementById('printDate').innerText = t.created_at.split('T')[0];
-            document.getElementById('printRef').innerText = t.document_number; // LTR class will fix direction
+            document.getElementById('printRef').innerText = t.document_number; 
             
             const s = allSuppliers.find(x => x.id === t.supplier_id);
             document.getElementById('printSupplier').innerText = s ? s.company_name : 'N/A';
+            
+            // Print Warehouse Name
+            const wh = allWarehouses.find(w => w.id === t.warehouse_id);
+            document.getElementById('printWarehouseName').innerText = wh ? wh.name : '-';
+            document.getElementById('printWarehouseDiv').style.display = t.type === 'payment' ? 'none' : 'block';
 
             const tbody = document.getElementById('printItemsBody');
             tbody.innerHTML = '';
@@ -739,7 +758,7 @@
             document.getElementById('pPersonDisplay').innerText = s.contact_person || '-';
             document.getElementById('pPhone').innerText = s.phone;
             document.getElementById('pCity').innerText = s.city;
-            toggleModal('profileModal');
+            openModal('profileModal');
             await Promise.all([loadSupplierFinancials(id), loadSupplierOrders(id)]);
         }
 
@@ -773,17 +792,20 @@
                     <td class="p-3 text-red-700 bg-red-50/30">${credit || '-'}</td>
                     <td class="p-3 font-bold bg-gray-100">${bal.toFixed(2)}</td>
                 `;
-                // FIX: Stop propagation to prevent immediate close
-                row.onclick = (e) => { e.stopPropagation(); viewTransaction(t); };
+                // FIX: BLINKING ISSUE SOLVED (No toggle, just explicit view)
+                row.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    viewTransaction(t); 
+                };
                 tbody.appendChild(row);
             });
             document.getElementById('pTotalPurchases').innerText = cred.toFixed(2);
             document.getElementById('pTotalPaid').innerText = deb.toFixed(2);
             document.getElementById('pBalance').innerText = bal.toFixed(2);
         }
-
+        
         async function loadSupplierOrders(supplierId) {
-            const currentTbody = document.getElementById('currentOrdersTable');
+             const currentTbody = document.getElementById('currentOrdersTable');
             const completedTbody = document.getElementById('completedOrdersTable');
             currentTbody.innerHTML = ''; completedTbody.innerHTML = '';
             const { data } = await supabaseClient.from('supplier_orders').select('*').eq('supplier_id', supplierId);
@@ -794,25 +816,31 @@
             });
         }
 
-        // --- Common ---
-        function toggleModal(id) {
+        // --- FIXED MODAL HELPERS (THE CORE FIX) ---
+        function openModal(id) {
             const el = document.getElementById(id);
             const container = el.querySelector('.modal-container');
-            if(el.classList.contains('opacity-0')) {
-                el.classList.remove('opacity-0', 'pointer-events-none');
-                container.classList.remove('scale-95'); container.classList.add('scale-100');
-            } else {
-                container.classList.remove('scale-100'); container.classList.add('scale-95');
-                setTimeout(() => el.classList.add('opacity-0', 'pointer-events-none'), 200);
-            }
+            el.classList.remove('opacity-0', 'pointer-events-none');
+            container.classList.remove('scale-95');
+            container.classList.add('scale-100');
         }
         
-        // --- Add/Edit Supplier CRUD (Abbreviated, same logic as before) ---
-        function openAddModal() { document.getElementById('supplierForm').reset(); document.getElementById('sId').value=''; toggleModal('supplierModal'); }
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            const container = el.querySelector('.modal-container');
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            setTimeout(() => {
+                el.classList.add('opacity-0', 'pointer-events-none');
+            }, 200);
+        }
+        
+        // --- CRUD ---
+        function openAddModal() { document.getElementById('supplierForm').reset(); document.getElementById('sId').value=''; openModal('supplierModal'); }
         async function editSupplier(id) { 
             const s = allSuppliers.find(x => x.id === id); document.getElementById('sId').value = s.id; document.getElementById('sName').value = s.company_name;
             document.getElementById('sPerson').value = s.contact_person; document.getElementById('sPhone').value = s.phone; document.getElementById('sCity').value = s.city;
-            toggleModal('supplierModal'); 
+            openModal('supplierModal'); 
         }
         document.getElementById('supplierForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -820,7 +848,7 @@
             const id = document.getElementById('sId').value;
             if(id) await supabaseClient.from('suppliers').update(payload).eq('id', id);
             else await supabaseClient.from('suppliers').insert([payload]);
-            toggleModal('supplierModal'); fetchSuppliers();
+            closeModal('supplierModal'); fetchSuppliers();
         });
         async function deleteSupplier(id) { if(confirm('حذف؟')) { await supabaseClient.from('suppliers').delete().eq('id', id); fetchSuppliers(); } }
     </script>
