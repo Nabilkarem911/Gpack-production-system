@@ -217,7 +217,7 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
+const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -230,28 +230,15 @@
             switchTab('stock');
         };
 
-        // --- Sidebar Toggle (Fixed for Mobile & Desktop) ---
+        // --- Sidebar Logic ---
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
-            
-            // Check current view mode (Mobile check)
             if (window.innerWidth < 768) {
-                // Mobile Logic
-                if (sidebar.classList.contains('sidebar-mobile-hidden')) {
-                    sidebar.classList.remove('sidebar-mobile-hidden');
-                    overlay.classList.remove('hidden');
-                } else {
-                    sidebar.classList.add('sidebar-mobile-hidden');
-                    overlay.classList.add('hidden');
-                }
+                sidebar.classList.toggle('sidebar-mobile-hidden');
+                overlay.classList.toggle('hidden');
             } else {
-                // Desktop Logic (Collapse)
-                if (sidebar.classList.contains('sidebar-collapsed')) {
-                    sidebar.classList.remove('sidebar-collapsed');
-                } else {
-                    sidebar.classList.add('sidebar-collapsed');
-                }
+                sidebar.classList.toggle('sidebar-collapsed');
             }
         }
 
@@ -265,7 +252,7 @@
             if(tabName === 'stock') fetchStock();
             if(tabName === 'deliveries') fetchDeliveries();
             if(tabName === 'movements') fetchMovements();
-            if(tabName === 'warehouses') fetchWarehouses();
+            if(tabName === 'warehouses') fetchWarehouses(); 
         }
 
         // --- Fetch Data ---
@@ -275,7 +262,6 @@
             
             if(document.getElementById('warehousesGrid')) renderWarehousesGrid();
             
-            // Populate Dropdowns (Clear First!)
             const filters = document.getElementById('warehouseFilter');
             const moveSelect = document.getElementById('mWarehouse');
             
@@ -312,7 +298,9 @@
             allClients = data || [];
             const sel = document.getElementById('mClient');
             sel.innerHTML = '<option value="">-- مخزون عام (بدون تخصيص) --</option>';
-            allClients.forEach(c => { sel.innerHTML += `<option value="${c.id}">${c.name}</option>`; });
+            allClients.forEach(c => {
+                sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+            });
         }
 
         async function fetchProductsList() {
@@ -385,7 +373,7 @@
             const tbody = document.getElementById('deliveriesTableBody');
             tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4">جاري التحميل...</td></tr>';
             const { data } = await supabaseClient.from('inventory_transactions')
-                .select(`id, created_at, transaction_type, quantity, product_variants(size_name, products(name)), warehouses(name), clients(name), suppliers(company_name)`)
+                .select(`id, created_at, transaction_type, quantity, product_variants(size_name, products(name)), clients(name), suppliers(company_name), to_wh:warehouses!warehouse_to(name), from_wh:warehouses!warehouse_from(name)`)
                 .eq('delivery_status', 'pending').order('created_at');
 
             tbody.innerHTML = '';
@@ -394,6 +382,8 @@
             data.forEach(d => {
                 const typeLabel = d.transaction_type === 'dispense' ? 'بيع / صرف' : 'مردود / توريد';
                 const party = d.clients ? d.clients.name : (d.suppliers ? d.suppliers.company_name : 'غير محدد');
+                const whName = d.transaction_type === 'dispense' ? (d.from_wh?.name || '-') : (d.to_wh?.name || '-');
+                
                 tbody.innerHTML += `
                     <tr class="border-b bg-orange-50/50">
                         <td class="p-3 text-sm">${new Date(d.created_at).toLocaleDateString()}</td>
@@ -401,7 +391,7 @@
                         <td class="p-3">${party}</td>
                         <td class="p-3">${d.product_variants?.products?.name}</td>
                         <td class="p-3 font-bold text-red-600">${d.quantity}</td>
-                        <td class="p-3 text-gray-500">${d.warehouses?.name || '-'}</td>
+                        <td class="p-3 text-gray-500">${whName}</td>
                         <td class="p-3 text-center"><button onclick="confirmDelivery('${d.id}')" class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 shadow"><i class="fas fa-check"></i> تأكيد</button></td>
                     </tr>`;
             });
@@ -413,17 +403,52 @@
             if(error) alert('خطأ: ' + error.message); else { alert('تم التأكيد ✅'); fetchDeliveries(); }
         }
 
-        // --- MOVEMENTS LOG ---
+        // --- MOVEMENTS LOG (FIXED TO READ to_wh and from_wh) ---
         async function fetchMovements() {
-            const { data } = await supabaseClient.from('inventory_transactions')
-                .select(`*, product_variants(size_name, products(name)), warehouses(name), clients(name)`)
-                .neq('delivery_status', 'pending').order('created_at', {ascending: false}).limit(50);
+            const { data, error } = await supabaseClient.from('inventory_transactions')
+                .select(`
+                    id, created_at, transaction_type, quantity, notes, delivery_status,
+                    product_variants(size_name, products(name)), 
+                    clients(name),
+                    to_wh:warehouses!warehouse_to(name),
+                    from_wh:warehouses!warehouse_from(name)
+                `)
+                .neq('delivery_status', 'pending')
+                .order('created_at', {ascending: false})
+                .limit(50);
+                
             const tbody = document.getElementById('movementsTableBody');
             tbody.innerHTML = '';
-            data.forEach(m => {
-                let badge = m.transaction_type === 'supply' ? '<span class="text-green-600 font-bold">📥 توريد</span>' : '<span class="text-red-600 font-bold">📤 صرف</span>';
-                tbody.innerHTML += `<tr class="border-b text-xs hover:bg-gray-50"><td class="p-3">${new Date(m.created_at).toLocaleDateString()}</td><td class="p-3">${badge}</td><td class="p-3 font-bold">${m.product_variants?.products?.name}</td><td class="p-3">${m.notes || '-'}</td><td class="p-3 font-mono font-bold text-lg">${m.quantity}</td><td class="p-3"><span class="bg-gray-100 px-2 rounded text-gray-600">${m.delivery_status}</span></td></tr>`;
-            });
+            
+            if (data) {
+                data.forEach(m => {
+                    let badge = '';
+                    let whName = '';
+                    
+                    if (m.transaction_type === 'supply') {
+                        badge = '<span class="text-green-600 font-bold">📥 توريد</span>';
+                        whName = m.to_wh ? m.to_wh.name : 'غير محدد';
+                    } else if (m.transaction_type === 'dispense') {
+                        badge = '<span class="text-red-600 font-bold">📤 صرف</span>';
+                        whName = m.from_wh ? m.from_wh.name : 'غير محدد';
+                    } else {
+                         badge = '<span class="text-blue-600 font-bold">🔄 نقل</span>';
+                         whName = `${m.from_wh?.name} ➡️ ${m.to_wh?.name}`;
+                    }
+
+                    let clientInfo = m.clients ? `<span class="text-xs text-gray-500 block">(${m.clients.name})</span>` : '<span class="text-[10px] text-blue-400 block">مخزون عام</span>';
+
+                    tbody.innerHTML += `
+                        <tr class="border-b text-xs hover:bg-gray-50">
+                            <td class="p-3">${new Date(m.created_at).toLocaleDateString()}</td>
+                            <td class="p-3">${badge}</td>
+                            <td class="p-3 font-bold">${m.product_variants?.products?.name || ''} ${clientInfo}</td>
+                            <td class="p-3 text-gray-600">${whName}</td>
+                            <td class="p-3 font-mono font-bold text-lg dir-ltr text-center">${m.quantity}</td>
+                            <td class="p-3"><span class="bg-gray-100 px-2 rounded text-gray-600">${m.delivery_status === 'delivered' ? 'مكتمل' : m.delivery_status}</span></td>
+                        </tr>`;
+                });
+            }
         }
 
         // --- Modals ---
@@ -432,7 +457,7 @@
         function openModal(id) { document.getElementById(id).classList.remove('opacity-0', 'pointer-events-none'); document.getElementById(id).querySelector('.modal-container').classList.remove('scale-95'); document.getElementById(id).querySelector('.modal-container').classList.add('scale-100'); }
         function closeModal(id) { document.getElementById(id).querySelector('.modal-container').classList.add('scale-95'); document.getElementById(id).querySelector('.modal-container').classList.remove('scale-100'); setTimeout(() => document.getElementById(id).classList.add('opacity-0', 'pointer-events-none'), 200); }
 
-        // --- Manual Move Submit ---
+        // --- Manual Move Submit (FIXED FOR to_wh and from_wh) ---
         document.getElementById('moveForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const type = document.querySelector('input[name="moveType"]:checked').value;
@@ -450,10 +475,8 @@
             if(type === 'dispense' && currentQty < qty) return alert(`الرصيد غير كافي! المتوفر: ${currentQty}`);
 
             const newQty = type === 'supply' ? currentQty + qty : currentQty - qty;
-            const match = { warehouse_id: whId, variant_id: varId };
-            if(clientId) match.client_id = clientId; 
             
-            // Manual upsert logic
+            // Handle Upsert
             if(stockData) {
                 await supabaseClient.from('warehouse_stock').update({ quantity: newQty }).eq('id', stockData.id);
             } else {
@@ -461,8 +484,16 @@
                 await supabaseClient.from('warehouse_stock').insert([{ warehouse_id: whId, variant_id: varId, client_id: clientId, quantity: newQty }]);
             }
 
+            // Log Transaction (FIXED)
             await supabaseClient.from('inventory_transactions').insert([{
-                variant_id: varId, warehouse_id: whId, client_id: clientId, quantity: qty, transaction_type: type, notes, delivery_status: 'delivered'
+                variant_id: varId, 
+                warehouse_to: type === 'supply' ? whId : null, 
+                warehouse_from: type === 'dispense' ? whId : null, 
+                client_id: clientId, 
+                quantity: qty, 
+                transaction_type: type, 
+                notes, 
+                delivery_status: 'delivered'
             }]);
 
             closeModal('moveModal'); fetchStock(); alert('تم ✅');
