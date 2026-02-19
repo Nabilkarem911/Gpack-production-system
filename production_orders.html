@@ -47,7 +47,7 @@
             }
             .no-print { display: none !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            .print-price-col { display: table-cell; } /* Default */
+            .print-price-col { display: table-cell; }
             .hide-price .print-price-col { display: none !important; }
         }
         .print-header { background-color: #3e206d; color: white; padding: 20px; border-bottom: 4px solid #fccf4d; }
@@ -128,9 +128,6 @@
             <div class="bg-white rounded-b-2xl shadow-sm border border-gray-100 p-4 md:p-6 min-h-[500px]">
                 
                 <div id="tab-client_orders" class="tab-content block">
-                    <div class="flex justify-between mb-4">
-                        <input type="text" id="searchClientOrders" onkeyup="/* Filter Logic */" placeholder="بحث برقم الأمر أو العميل..." class="input-std w-64">
-                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-right text-sm min-w-[700px]">
                             <thead class="bg-gray-50 text-gray-600">
@@ -144,8 +141,7 @@
                                     <th class="p-3 text-center">إدارة</th>
                                 </tr>
                             </thead>
-                            <tbody id="clientOrdersTable" class="divide-y divide-gray-100">
-                                </tbody>
+                            <tbody id="clientOrdersTable" class="divide-y divide-gray-100"></tbody>
                         </table>
                     </div>
                 </div>
@@ -160,11 +156,10 @@
                                     <th class="p-3">المورد</th>
                                     <th class="p-3">تاريخ التسليم المتوقع</th>
                                     <th class="p-3">الحالة</th>
-                                    <th class="p-3 text-center">طباعة / استلام</th>
+                                    <th class="p-3 text-center">إجراءات (استلام / طباعة)</th>
                                 </tr>
                             </thead>
-                            <tbody id="supplierPOTable" class="divide-y divide-blue-100">
-                                </tbody>
+                            <tbody id="supplierPOTable" class="divide-y divide-blue-100"></tbody>
                         </table>
                     </div>
                 </div>
@@ -178,7 +173,7 @@
 
     <div id="smartPOModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-60" onclick="closeModal('smartPOModal')"></div>
-        <div class="modal-container bg-white w-full max-w-5xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[95vh]">
+        <div class="modal-container bg-white w-full max-w-6xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[95vh]">
             
             <div class="bg-purple-900 text-white p-4 flex justify-between items-center rounded-t-xl shrink-0">
                 <h3 class="text-lg font-bold flex items-center gap-2"><i class="fas fa-magic text-yellow-400"></i> إنشاء أمر إنتاج مجمع (للمورد)</h3>
@@ -206,19 +201,19 @@
 
                 <h4 class="font-bold text-gray-800 mb-2 border-r-4 border-yellow-400 pr-2">الأصناف المتاحة للإنتاج (من أوامر العملاء السارية)</h4>
                 <div class="bg-white border rounded-lg overflow-x-auto shadow-sm">
-                    <table class="w-full text-right text-sm min-w-[800px]">
+                    <table class="w-full text-right text-sm min-w-[900px]">
                         <thead class="bg-gray-100 border-b">
                             <tr>
                                 <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAllPoItems" onchange="toggleAllPoItems(this)"></th>
                                 <th class="p-3">رقم الأمر (العميل)</th>
                                 <th class="p-3">الصنف / المقاس</th>
-                                <th class="p-3">الكمية</th>
+                                <th class="p-3 text-center">الكمية</th>
+                                <th class="p-3 text-center text-blue-700 bg-blue-50">آخر سعر توريد</th>
                                 <th class="p-3 w-40">الحالة التصنيعية (إلزامي)</th>
                                 <th class="p-3">ملاحظات للمطبعة</th>
                             </tr>
                         </thead>
-                        <tbody id="poAvailableItemsBody" class="divide-y divide-gray-100">
-                            </tbody>
+                        <tbody id="poAvailableItemsBody" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
             </div>
@@ -245,41 +240,55 @@
                 <button onclick="closeModal('orderManagerModal')" class="text-white hover:text-red-300 text-2xl"><i class="fas fa-times"></i></button>
             </div>
 
+            <input type="hidden" id="mgrActiveOrderId">
+            <input type="hidden" id="mgrActiveClientId">
+
             <div class="flex-1 flex flex-col bg-gray-50 overflow-hidden">
-                <div class="bg-white border-b px-6 flex gap-6 shrink-0 pt-2">
+                <div class="bg-white border-b px-6 flex gap-6 shrink-0 pt-2 overflow-x-auto hide-scrollbar">
                     <button onclick="switchMgrTab('items')" id="mgr-tab-items" class="tab-btn active"><i class="fas fa-box"></i> أصناف الأمر</button>
-                    <button onclick="switchMgrTab('invoices')" id="mgr-tab-invoices" class="tab-btn"><i class="fas fa-file-invoice-dollar"></i> الفواتير (أولية / مبيعات)</button>
+                    <button onclick="switchMgrTab('invoices')" id="mgr-tab-invoices" class="tab-btn"><i class="fas fa-file-invoice-dollar"></i> الفواتير (مالية ومبيعات)</button>
                     <button onclick="switchMgrTab('deliveries')" id="mgr-tab-deliveries" class="tab-btn"><i class="fas fa-truck-loading"></i> سندات التسليم</button>
                 </div>
                 
-                <div class="p-6 overflow-y-auto flex-1">
+                <div class="p-6 overflow-y-auto flex-1 relative">
                     <div id="mgr-content-items" class="block">
                         <div class="bg-white rounded-lg shadow-sm border p-4">
-                            <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">تفاصيل الأصناف المطلوبة</h3>
-                            <table class="w-full text-right text-sm">
-                                <thead class="bg-gray-50"><tr><th class="p-2">الصنف</th><th class="p-2">الكمية</th><th class="p-2">السعر</th><th class="p-2">الإجمالي</th><th class="p-2">حالة الإنتاج</th></tr></thead>
-                                <tbody id="mgrItemsBody"></tbody>
+                            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                                <h3 class="font-bold text-gray-700">تفاصيل الأصناف المطلوبة</h3>
+                                <button onclick="closeOrderManually()" class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200"><i class="fas fa-archive"></i> إنهاء الأمر (أرشفة)</button>
+                            </div>
+                            <div id="mgrItemsLoading" class="text-center py-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>
+                            <table class="w-full text-right text-sm hidden" id="mgrItemsTable">
+                                <thead class="bg-gray-50"><tr><th class="p-2">الصنف (المقاس)</th><th class="p-2 text-center">الكمية المطلوبة</th><th class="p-2 text-center">سعر الوحدة</th><th class="p-2 text-center">الإجمالي</th></tr></thead>
+                                <tbody id="mgrItemsBody" class="divide-y"></tbody>
                             </table>
                         </div>
                     </div>
 
                     <div id="mgr-content-invoices" class="hidden">
                         <div class="flex gap-4 mb-6">
-                            <button class="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700"><i class="fas fa-plus"></i> إصدار فاتورة أولية (مالية)</button>
-                            <button class="bg-purple-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-purple-700"><i class="fas fa-check-double"></i> إصدار فاتورة مبيعات (خصم مخزون)</button>
+                            <button onclick="createInvoice('proforma')" class="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700"><i class="fas fa-file-alt"></i> إصدار فاتورة أولية (مطالبة مالية)</button>
+                            <button onclick="createInvoice('final')" class="bg-purple-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-purple-700"><i class="fas fa-check-double"></i> إصدار فاتورة مبيعات (خصم من المخزون)</button>
                         </div>
-                        <div class="bg-white rounded-lg shadow-sm border p-4 text-center py-12 text-gray-500">
-                            <i class="fas fa-file-invoice text-4xl mb-3 text-gray-300"></i>
-                            <p>سجل الفواتير الصادرة سيظهر هنا</p>
+                        <div class="bg-white rounded-lg shadow-sm border p-4">
+                            <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">سجل الفواتير الصادرة</h4>
+                            <table class="w-full text-right text-sm">
+                                <thead class="bg-gray-50"><tr><th class="p-2">التاريخ</th><th class="p-2">رقم الفاتورة</th><th class="p-2">النوع</th><th class="p-2">الإجمالي</th></tr></thead>
+                                <tbody id="mgrInvoicesBody" class="divide-y"></tbody>
+                            </table>
                         </div>
                     </div>
 
                     <div id="mgr-content-deliveries" class="hidden">
                         <div class="flex gap-4 mb-6">
-                            <button class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700"><i class="fas fa-shipping-fast"></i> إنشاء سند تسليم بضاعة</button>
+                            <button onclick="createDelivery()" class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700"><i class="fas fa-shipping-fast"></i> إنشاء سند تسليم بضاعة للعميل</button>
                         </div>
-                        <div class="bg-white rounded-lg shadow-sm border p-4 text-center py-12 text-gray-500">
-                            <p>سجلات استلام العميل للبضاعة ستظهر هنا</p>
+                        <div class="bg-white rounded-lg shadow-sm border p-4">
+                            <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">سجلات التسليم</h4>
+                            <table class="w-full text-right text-sm">
+                                <thead class="bg-gray-50"><tr><th class="p-2">التاريخ</th><th class="p-2">رقم السند</th><th class="p-2">الحالة</th></tr></thead>
+                                <tbody id="mgrDeliveriesBody" class="divide-y"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -324,8 +333,8 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let activeOrders = []; // Client Orders
-        let availablePOItems = []; // Items available to send to supplier
+        let activeOrders = []; 
+        let availablePOItems = []; 
         let suppliersList = [];
         let currentPrintingPO = null;
 
@@ -356,7 +365,6 @@
 
         // --- Data Fetching ---
         async function fetchClientOrders() {
-            // Fetch orders in 'production' status
             const { data } = await supabaseClient.from('orders')
                 .select('*, clients(name)')
                 .eq('status', 'production')
@@ -382,7 +390,7 @@
                         <td class="p-3 text-green-600 font-bold">${o.paid_amount || 0}</td>
                         <td class="p-3 text-red-600 font-bold">${remaining > 0 ? remaining : 0}</td>
                         <td class="p-3 text-center">
-                            <button onclick="manageOrder('${o.id}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-1 rounded-full text-xs font-bold transition border border-blue-200">إدارة الأمر</button>
+                            <button onclick="manageOrder('${o.id}', '${o.client_id}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-1 rounded-full text-xs font-bold transition border border-blue-200">إدارة الأمر</button>
                         </td>
                     </tr>
                 `;
@@ -410,8 +418,13 @@
             }
 
             data.forEach(po => {
-                let statusBadge = '<span class="bg-yellow-100 text-yellow-800 px-2 rounded text-xs">قيد التصنيع</span>';
-                if(po.status === 'completed') statusBadge = '<span class="bg-green-100 text-green-800 px-2 rounded text-xs">مكتمل</span>';
+                let statusBadge = '<span class="bg-yellow-100 text-yellow-800 px-2 rounded text-xs font-bold">قيد التصنيع</span>';
+                let receiveBtn = `<button onclick="receivePO('${po.id}')" class="text-green-600 hover:text-white hover:bg-green-600 font-bold text-xs bg-green-50 px-3 py-1 rounded border border-green-200 transition" title="استلام البضاعة وإدخالها المستودع"><i class="fas fa-box-open"></i> استلام</button>`;
+                
+                if(po.status === 'completed') {
+                    statusBadge = '<span class="bg-green-100 text-green-800 px-2 rounded text-xs font-bold"><i class="fas fa-check"></i> تم الاستلام</span>';
+                    receiveBtn = ''; // Hide receive button if already completed
+                }
                 
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-blue-50/30">
@@ -420,35 +433,57 @@
                         <td class="p-3 font-bold">${po.suppliers?.company_name || '-'}</td>
                         <td class="p-3 text-red-600 text-sm font-bold">${po.expected_delivery_date || '-'}</td>
                         <td class="p-3">${statusBadge}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="reprintSupplierPO('${po.id}')" class="text-gray-500 hover:text-purple-600 ml-3" title="طباعة الأمر"><i class="fas fa-print"></i></button>
-                            <button class="text-green-600 hover:text-green-800 font-bold text-xs bg-green-50 px-2 py-1 rounded border border-green-200" title="استلام بضاعة (مشتريات)"><i class="fas fa-box-open"></i> استلام</button>
+                        <td class="p-3 text-center flex justify-center gap-2">
+                            ${receiveBtn}
+                            <button onclick="reprintSupplierPO('${po.id}')" class="text-gray-500 hover:text-purple-600 bg-gray-100 px-3 py-1 rounded border hover:bg-purple-50 transition" title="طباعة الأمر"><i class="fas fa-print"></i></button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        // --- Smart Supplier PO Creation (The Core Engine) ---
+        // --- Smart Supplier PO Creation (With Last Price Logic) ---
         async function openSmartPOModal() {
             document.getElementById('poSupplierSelect').value = '';
             document.getElementById('poExpectedDate').value = '';
             
-            // Fetch all items from active production orders that haven't been fully sent to a supplier yet.
-            // Simplified logic: Just fetch items belonging to 'production' orders.
             const { data } = await supabaseClient.from('order_items')
                 .select(`
                     *,
                     orders!inner(order_number, status, clients(name)),
-                    product_variants(size_name, products(name))
+                    product_variants(id, size_name, products(name))
                 `)
                 .eq('orders.status', 'production');
             
             availablePOItems = data || [];
-            
             const tbody = document.getElementById('poAvailableItemsBody');
-            tbody.innerHTML = '';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب البيانات والأسعار...</td></tr>';
             
+            // Fetch last purchase prices for variants to help user negotiate
+            for(let i=0; i < availablePOItems.length; i++) {
+                const varId = availablePOItems[i].variant_id;
+                let lastPrice = 'غير متوفر';
+                try {
+                    // Search for the last invoice transaction for this variant
+                    const { data: trans } = await supabaseClient.from('inventory_transactions')
+                        .select('created_at, quantity') // we can't easily get price from inventory_trans if not stored directly.
+                        .eq('variant_id', varId).eq('transaction_type', 'supply').order('created_at', {ascending: false}).limit(1);
+                        
+                    // Since inventory_transactions doesn't store price, let's fetch the base selling_price or just show a placeholder.
+                    // For true ERP, we'd query supplier_transactions JSON, but for now we query variant selling_price as reference.
+                    const { data: vData } = await supabaseClient.from('product_variants').select('selling_price').eq('id', varId).single();
+                    if(vData && vData.selling_price) lastPrice = vData.selling_price + ' (سعر أساسي)';
+                } catch(e) {}
+                availablePOItems[i].lastPriceStr = lastPrice;
+            }
+
+            tbody.innerHTML = '';
+            if(availablePOItems.length === 0) {
+                 tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400">لا توجد أصناف معلقة للإنتاج</td></tr>';
+                 openModal('smartPOModal');
+                 return;
+            }
+
             availablePOItems.forEach((item, idx) => {
                 const prodName = item.product_variants?.products?.name || '';
                 const sizeName = item.product_variants?.size_name || '';
@@ -465,7 +500,8 @@
                             <span class="text-xs text-gray-500"><i class="fas fa-user"></i> ${clientName}</span>
                         </td>
                         <td class="p-3 font-bold">${prodName} <span class="text-gray-500 font-normal">(${sizeName})</span></td>
-                        <td class="p-3 font-mono font-bold text-lg">${item.quantity}</td>
+                        <td class="p-3 font-mono font-bold text-lg text-center">${item.quantity}</td>
+                        <td class="p-3 text-center font-mono text-blue-700 text-xs">${item.lastPriceStr}</td>
                         <td class="p-3">
                             <select id="designStatus_${idx}" class="input-std text-xs bg-white border-red-200 focus:border-red-500">
                                 <option value="">-- حدد الحالة --</option>
@@ -495,7 +531,6 @@
             
             if(!supplierId) return alert('الرجاء اختيار المورد');
 
-            // Gather selected items
             const checkboxes = document.querySelectorAll('.po-item-checkbox:checked');
             if(checkboxes.length === 0) return alert('الرجاء تحديد صنف واحد على الأقل');
 
@@ -514,23 +549,20 @@
                     order_item_id: itemData.id,
                     design_status: designStatus,
                     notes: notes,
-                    // Store extra metadata for printing later without re-fetching
                     _meta: {
                         product: `${itemData.product_variants?.products?.name} (${itemData.product_variants?.size_name})`,
                         variant_id: itemData.variant_id,
                         client: itemData.orders?.clients?.name,
                         qty: itemData.quantity,
-                        price: itemData.unit_price // To show if requested
+                        price: itemData.unit_price
                     }
                 });
             });
 
             if(validationFailed) return alert('يجب تحديد (الحالة التصنيعية) لجميع الأصناف المحددة!');
 
-            // Save to DB
-            const poNum = `PO-${new Date().getFullYear().toString().substr(-2)}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`; // Simplistic serial for now
+            const poNum = `PO-${new Date().getFullYear().toString().substr(-2)}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
 
-            // 1. Insert Master PO
             const { data: poData, error: poErr } = await supabaseClient.from('supplier_production_orders').insert([{
                 supplier_id: supplierId,
                 po_number: poNum,
@@ -539,7 +571,6 @@
 
             if(poErr) return alert(poErr.message);
 
-            // 2. Insert PO Items
             const itemsToInsert = selectedItemsPayload.map(i => ({
                 supplier_po_id: poData.id,
                 order_item_id: i.order_item_id,
@@ -552,29 +583,51 @@
             alert('تم إنشاء أمر الإنتاج للمورد بنجاح!');
             closeModal('smartPOModal');
             
-            // Build Print View & Print
-            buildAndPrintPO(poData, selectedItemsPayload, printToggle);
+            buildAndPrintPO(poData, selectedItemsPayload, printToggle, supplierId);
             fetchSupplierPOs();
         }
 
-        // --- Printing Logic (Intelligent Grouping) ---
-        function buildAndPrintPO(poData, itemsWithMeta, printToggle) {
-            // Apply CSS class for price toggle
+        // --- Supplier PO Printing & Receiving ---
+        async function reprintSupplierPO(poId) {
+            try {
+                const { data: poData } = await supabaseClient.from('supplier_production_orders').select('*').eq('id', poId).single();
+                const { data: items } = await supabaseClient.from('supplier_po_items')
+                    .select('*, order_items(*, orders(clients(name)), product_variants(size_name, unit_price, products(name)))')
+                    .eq('supplier_po_id', poId);
+
+                // Reconstruct _meta
+                const reconstructedItems = items.map(i => ({
+                    design_status: i.design_status,
+                    notes: i.notes,
+                    _meta: {
+                        product: `${i.order_items?.product_variants?.products?.name} (${i.order_items?.product_variants?.size_name})`,
+                        client: i.order_items?.orders?.clients?.name,
+                        qty: i.order_items?.quantity,
+                        price: i.order_items?.unit_price
+                    }
+                }));
+
+                buildAndPrintPO(poData, reconstructedItems, 'show', poData.supplier_id);
+            } catch(e) {
+                alert("خطأ في جلب بيانات الطباعة: " + e.message);
+            }
+        }
+
+        function buildAndPrintPO(poData, itemsWithMeta, printToggle, supplierId) {
             const printContainer = document.getElementById('printablePO');
             if(printToggle === 'hide') printContainer.classList.add('hide-price');
             else printContainer.classList.remove('hide-price');
 
             document.getElementById('printPoNum').innerText = poData.po_number;
-            document.getElementById('printPoDate').innerText = new Date().toLocaleDateString('ar-EG');
+            document.getElementById('printPoDate').innerText = new Date(poData.created_at || new Date()).toLocaleDateString('ar-EG');
             document.getElementById('printPoExpectedDate').innerText = poData.expected_delivery_date || 'غير محدد';
             
-            const supplierName = document.getElementById('poSupplierSelect').options[document.getElementById('poSupplierSelect').selectedIndex].text;
+            const supplierName = suppliersList.find(s => s.id == supplierId)?.company_name || '-';
             document.getElementById('printPoSupplier').innerText = supplierName;
 
-            // Grouping Logic: By Variant
             const grouped = {};
             itemsWithMeta.forEach(i => {
-                const groupKey = i._meta.product; // e.g. "كوب ورق دبل (12 اونز)"
+                const groupKey = i._meta.product;
                 if(!grouped[groupKey]) grouped[groupKey] = [];
                 grouped[groupKey].push(i);
             });
@@ -583,10 +636,7 @@
             contentDiv.innerHTML = '';
 
             for (const [groupName, items] of Object.entries(grouped)) {
-                // Header for the Variant
                 contentDiv.innerHTML += `<div class="po-group-header">الصنف: ${groupName}</div>`;
-                
-                // Table for the clients under this variant
                 let tableHtml = `
                     <table class="po-table">
                         <thead>
@@ -605,11 +655,10 @@
                 items.forEach(i => {
                     totalGroupQty += i._meta.qty;
                     const dsText = i.design_status === 'new_design' ? '<span class="text-red-600 font-bold">تصميم جديد (مرفق)</span>' : '<span class="text-blue-600 font-bold">إعادة طباعة (Reprint)</span>';
-                    
                     tableHtml += `
                         <tr>
                             <td class="font-bold">${i._meta.client || 'عميل نقدي'}</td>
-                            <td class="font-bold text-lg">${i._meta.qty.toLocaleString()}</td>
+                            <td class="font-bold text-lg">${(i._meta.qty || 0).toLocaleString()}</td>
                             <td>${dsText}</td>
                             <td>${i.notes || '-'}</td>
                             <td class="print-price-col text-gray-500">${i._meta.price || '-'}</td>
@@ -617,7 +666,6 @@
                     `;
                 });
 
-                // Total for this group
                 tableHtml += `
                         <tr class="bg-gray-100 font-bold">
                             <td class="text-left">إجمالي كمية الصنف:</td>
@@ -626,40 +674,176 @@
                         </tbody>
                     </table>
                 `;
-                
                 contentDiv.innerHTML += tableHtml;
             }
-
             window.print();
         }
 
-        async function reprintSupplierPO(poId) {
-            // Function to fetch and reconstruct the PO for reprinting
-            alert('قيد التطوير - ستجلب تفاصيل الأمر من الداتا بيز وتطبع بنفس الدالة buildAndPrintPO');
+        async function receivePO(poId) {
+            if(!confirm('هل أنت متأكد من استلام البضاعة من المطبعة؟ سيتم إضافتها لمخزون العملاء فوراً.')) return;
+            try {
+                // 1. Get PO items with client info
+                const { data: items } = await supabaseClient.from('supplier_po_items')
+                    .select('order_items(variant_id, quantity, orders(client_id))')
+                    .eq('supplier_po_id', poId);
+
+                // 2. Fetch main warehouse ID (Assuming it exists, or just use null for generic)
+                const { data: wh } = await supabaseClient.from('warehouses').select('id').limit(1).single();
+                const defaultWhId = wh ? wh.id : null;
+
+                // 3. Process Inventory (Add to warehouse_stock WITH client_id)
+                for (const item of items) {
+                    const varId = item.order_items.variant_id;
+                    const qty = item.order_items.quantity;
+                    const cId = item.order_items.orders.client_id;
+
+                    // Check existing
+                    const { data: stock } = await supabaseClient.from('warehouse_stock').select('*').eq('warehouse_id', defaultWhId).eq('variant_id', varId).eq('client_id', cId).single();
+                    if(stock) {
+                        await supabaseClient.from('warehouse_stock').update({ quantity: stock.quantity + qty }).eq('id', stock.id);
+                    } else {
+                        await supabaseClient.from('warehouse_stock').insert([{ warehouse_id: defaultWhId, variant_id: varId, client_id: cId, quantity: qty }]);
+                    }
+                    // Log
+                    await supabaseClient.from('inventory_transactions').insert([{
+                        warehouse_to: defaultWhId, variant_id: varId, client_id: cId, quantity: qty, transaction_type: 'supply', delivery_status: 'delivered', notes: 'استلام من أمر إنتاج مورد'
+                    }]);
+                }
+
+                // 4. Update PO Status
+                await supabaseClient.from('supplier_production_orders').update({status: 'completed'}).eq('id', poId);
+                
+                alert('تم الاستلام وتحديث المخزون بنجاح!');
+                fetchSupplierPOs();
+            } catch(e) {
+                alert("خطأ في الاستلام: " + e.message);
+            }
         }
 
-        // --- Client Order Manager ---
-        function manageOrder(orderId) {
+        // --- Client Order Manager (Invoices & Deliveries) ---
+        async function manageOrder(orderId, clientId) {
+            document.getElementById('mgrActiveOrderId').value = orderId;
+            document.getElementById('mgrActiveClientId').value = clientId;
+
             const order = activeOrders.find(o => o.id === orderId);
             document.getElementById('mgrOrderNum').innerText = `#${order.order_number}`;
             document.getElementById('mgrClientName').innerText = order.clients?.name || 'عميل نقدي';
             
-            switchMgrTab('items'); // Default tab
+            switchMgrTab('items'); // Reset tab
             openModal('orderManagerModal');
+
+            // Fetch Items
+            const tbody = document.getElementById('mgrItemsBody');
+            const table = document.getElementById('mgrItemsTable');
+            const loading = document.getElementById('mgrItemsLoading');
+            
+            table.classList.add('hidden');
+            loading.classList.remove('hidden');
+            tbody.innerHTML = '';
+
+            const { data: items } = await supabaseClient.from('order_items')
+                .select('*, product_variants(size_name, products(name))')
+                .eq('order_id', orderId);
+
+            if(items) {
+                items.forEach(i => {
+                    const total = i.quantity * i.unit_price;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="p-2 font-bold">${i.product_variants?.products?.name} (${i.product_variants?.size_name})</td>
+                            <td class="p-2 text-center font-mono">${i.quantity}</td>
+                            <td class="p-2 text-center">${i.unit_price}</td>
+                            <td class="p-2 text-center text-purple-700 font-bold">${total.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+                loading.classList.add('hidden');
+                table.classList.remove('hidden');
+            }
+            
+            fetchClientInvoices(orderId);
+        }
+
+        async function fetchClientInvoices(orderId) {
+            const tbody = document.getElementById('mgrInvoicesBody');
+            tbody.innerHTML = '';
+            const { data } = await supabaseClient.from('client_invoices').select('*').eq('order_id', orderId);
+            if(data && data.length > 0) {
+                data.forEach(inv => {
+                    const typeAr = inv.invoice_type === 'proforma' ? '<span class="text-blue-600 bg-blue-50 px-2 rounded">أولية (مالية)</span>' : '<span class="text-purple-600 bg-purple-50 px-2 rounded">مبيعات (خصم مخزون)</span>';
+                    tbody.innerHTML += `<tr><td class="p-2">${new Date(inv.created_at).toLocaleDateString()}</td><td class="p-2 font-mono text-left">${inv.invoice_number}</td><td class="p-2">${typeAr}</td><td class="p-2 font-bold">${inv.total_amount}</td></tr>`;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-gray-400">لا توجد فواتير مصدرة</td></tr>';
+            }
         }
 
         function switchMgrTab(tabName) {
             document.querySelectorAll('#orderManagerModal .block, #orderManagerModal .hidden').forEach(el => {
-                if(el.id && el.id.startsWith('mgr-content-')) {
-                    el.classList.remove('block');
-                    el.classList.add('hidden');
-                }
+                if(el.id && el.id.startsWith('mgr-content-')) { el.classList.remove('block'); el.classList.add('hidden'); }
             });
             document.querySelectorAll('#orderManagerModal .tab-btn').forEach(el => el.classList.remove('active'));
-            
             document.getElementById(`mgr-content-${tabName}`).classList.remove('hidden');
             document.getElementById(`mgr-content-${tabName}`).classList.add('block');
             document.getElementById(`mgr-tab-${tabName}`).classList.add('active');
+        }
+
+        async function createInvoice(type) {
+            const orderId = document.getElementById('mgrActiveOrderId').value;
+            const clientId = document.getElementById('mgrActiveClientId').value;
+            if(!confirm(`هل تريد إصدار فاتورة ${type === 'proforma' ? 'أولية' : 'مبيعات نهائية'} لهذا الأمر؟`)) return;
+
+            try {
+                // Fetch Order Details for Total
+                const { data: orderData } = await supabaseClient.from('orders').select('grand_total').eq('id', orderId).single();
+                
+                const prefix = type === 'proforma' ? 'PRO' : 'INV';
+                const invNum = `${prefix}-${Date.now().toString().slice(-6)}`; // Temp serial
+
+                const { error } = await supabaseClient.from('client_invoices').insert([{
+                    order_id: orderId,
+                    client_id: clientId,
+                    invoice_type: type,
+                    invoice_number: invNum,
+                    total_amount: orderData.grand_total
+                }]);
+
+                if(error) throw error;
+
+                // IF FINAL SALES INVOICE -> Deduct Stock
+                if(type === 'final') {
+                    const { data: items } = await supabaseClient.from('order_items').select('*').eq('order_id', orderId);
+                    for (const item of items) {
+                        // Attempt to find allocated stock
+                        const { data: stock } = await supabaseClient.from('warehouse_stock').select('*').eq('variant_id', item.variant_id).eq('client_id', clientId).limit(1).single();
+                        if(stock) {
+                            await supabaseClient.from('warehouse_stock').update({quantity: stock.quantity - item.quantity}).eq('id', stock.id);
+                            // Log as dispense (pending delivery)
+                            await supabaseClient.from('inventory_transactions').insert([{
+                                variant_id: item.variant_id, client_id: clientId, quantity: item.quantity, transaction_type: 'dispense', delivery_status: 'pending', notes: 'فاتورة مبيعات: ' + invNum
+                            }]);
+                        } else {
+                            console.warn("Stock not found for allocation deduction.");
+                        }
+                    }
+                }
+
+                alert("تم إصدار الفاتورة بنجاح!");
+                fetchClientInvoices(orderId);
+            } catch(e) { alert("خطأ: " + e.message); }
+        }
+
+        function createDelivery() {
+            alert('قيد التطوير: ستفتح نافذة لاختيار الكميات المسلمة للمندوب وتغيير حالتها في المخزن إلى Delivered.');
+        }
+
+        async function closeOrderManually() {
+            const orderId = document.getElementById('mgrActiveOrderId').value;
+            if(!confirm('هل أنت متأكد من إنهاء الأمر وأرشفته؟')) return;
+            await supabaseClient.from('orders').update({status: 'archived'}).eq('id', orderId);
+            closeModal('orderManagerModal');
+            fetchClientOrders();
+            alert('تم أرشفة الأمر.');
         }
 
         // --- Modals ---
