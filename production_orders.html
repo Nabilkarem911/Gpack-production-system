@@ -39,7 +39,6 @@
         /* --- PRINT STYLES --- */
         @media print {
             body * { visibility: hidden; }
-            /* Controller to show either PO or Invoice */
             .printing-po #printablePO, .printing-po #printablePO * { visibility: visible; }
             .printing-inv #printableClientInvoice, .printing-inv #printableClientInvoice * { visibility: visible; }
             
@@ -342,9 +341,9 @@
                 <div class="flex justify-end">
                     <div class="w-64 bg-gray-50 p-3 rounded border">
                         <div class="flex justify-between text-sm mb-1"><span>الإجمالي:</span> <span id="invoiceTotalVal" class="font-bold">0.00</span></div>
-                        <div class="flex justify-between text-sm mb-1 text-green-700"><span>الدفعة المقدمة:</span> <span id="invoiceAdvanceVal" class="font-bold">0.00</span></div>
+                        <div class="flex justify-between text-sm mb-1 text-green-700"><span>الدفعة المقدمة (من العرض):</span> <span id="invoiceAdvanceVal" class="font-bold">0.00</span></div>
                         <div class="border-t border-gray-300 my-1"></div>
-                        <div class="flex justify-between text-lg text-purple-900 font-bold"><span>المتبقي:</span> <span id="invoiceRemainingVal">0.00</span></div>
+                        <div class="flex justify-between text-lg text-purple-900 font-bold"><span>المطلوب دفعه:</span> <span id="invoiceRemainingVal">0.00</span></div>
                     </div>
                 </div>
             </div>
@@ -451,7 +450,7 @@
     </div>
 
     <div id="printablePO" class="hidden">
-        <div class="print-header flex justify-between items-center">
+        <div class="print-header flex justify-between items-center" id="poPrintContainer">
             <div class="text-right">
                 <h1 class="text-3xl font-bold mb-1">أمر إنتاج / طلب طباعة</h1>
                 <p class="text-sm opacity-80">Production Order (PO)</p>
@@ -525,7 +524,7 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let allClientOrders = []; // Cached for live search
+        let allClientOrders = []; 
         let availablePOItems = []; 
         let suppliersList = [];
         let invoiceItemsTemp = [];
@@ -565,7 +564,7 @@
                 .order('created_at', {ascending: false});
             
             allClientOrders = data || [];
-            filterClientOrders(); // Render with current filters
+            filterClientOrders(); 
             document.getElementById('loadingIndicator').classList.add('hidden');
         }
 
@@ -576,7 +575,6 @@
 
             let filtered = [...allClientOrders];
 
-            // Search
             if(term) {
                 filtered = filtered.filter(o => 
                     (o.clients?.name && o.clients.name.toLowerCase().includes(term)) || 
@@ -584,7 +582,6 @@
                 );
             }
 
-            // Status Filter (Financial)
             if(statusF !== 'all') {
                 filtered = filtered.filter(o => {
                     const paid = o.paid_amount || 0;
@@ -595,7 +592,6 @@
                 });
             }
 
-            // Sort
             filtered.sort((a, b) => {
                 const dateA = new Date(a.created_at);
                 const dateB = new Date(b.created_at);
@@ -618,7 +614,6 @@
                 const paid = o.paid_amount || 0;
                 const remaining = o.grand_total - paid;
                 
-                // Fix 5: Dynamic Status Badge based on finance for now (since deeply querying POs for every row is slow)
                 let dynStatus = '<span class="bg-yellow-100 text-yellow-800 px-2 rounded text-xs font-bold">قيد التشغيل</span>';
                 if(remaining <= 0) dynStatus += ' <span class="bg-green-100 text-green-800 px-2 rounded text-xs font-bold">خالص مالياً</span>';
                 else dynStatus += ' <span class="bg-red-100 text-red-800 px-2 rounded text-xs font-bold">متبقي دفعة</span>';
@@ -629,8 +624,8 @@
                         <td class="p-3 text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
                         <td class="p-3 font-bold">${o.clients?.name || '-'}</td>
                         <td class="p-3">${o.grand_total}</td>
-                        <td class="p-3 text-green-600 font-bold">${paid}</td>
-                        <td class="p-3 text-red-600 font-bold">${remaining > 0 ? remaining : 0}</td>
+                        <td class="p-3 text-green-700 font-bold">${paid}</td>
+                        <td class="p-3 text-red-700 font-bold">${remaining > 0 ? remaining : 0}</td>
                         <td class="p-3 text-center">${dynStatus}</td>
                         <td class="p-3 text-center">
                             <button onclick="manageOrder('${o.id}', '${o.client_id}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-1 rounded-full text-xs font-bold transition border border-blue-200">إدارة الأمر</button>
@@ -640,7 +635,6 @@
             });
         }
 
-        // Fix 7: Archive Fetch
         async function fetchArchivedOrders() {
             const { data } = await supabaseClient.from('orders')
                 .select('*, clients(name)')
@@ -709,7 +703,7 @@
             });
         }
 
-        // --- Fix 8: PO Details View Modal ---
+        // --- Fix 8: Modal to View PO Details Safely ---
         async function viewPODetails(poId) {
             const tbody = document.getElementById('poDetailsModalBody');
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>';
@@ -718,17 +712,28 @@
             document.getElementById('viewPoNum').innerText = po ? po.po_number : '';
             openModal('poDetailsModal');
 
-            // Fetch safely
-            const { data: items } = await supabaseClient.from('supplier_po_items')
-                .select('*, order_items(quantity, orders(clients(name)), product_variants(size_name, products(name)))')
+            // Safe structured query for details
+            const { data: items, error } = await supabaseClient.from('supplier_po_items')
+                .select(`
+                    id, design_status, notes,
+                    order_items (
+                        quantity,
+                        orders ( clients ( name ) ),
+                        product_variants ( size_name, products ( name ) )
+                    )
+                `)
                 .eq('supplier_po_id', poId);
 
             tbody.innerHTML = '';
             if(items && items.length > 0) {
                 items.forEach(i => {
                     const oi = i.order_items || {};
-                    const clientName = oi.orders?.clients?.name || '-';
-                    const prodName = oi.product_variants ? `${oi.product_variants.products?.name} (${oi.product_variants.size_name})` : '-';
+                    const ordersObj = oi.orders || {};
+                    const variantsObj = oi.product_variants || {};
+                    const productsObj = variantsObj.products || {};
+                    
+                    const clientName = ordersObj.clients?.name || 'غير معروف';
+                    const prodName = productsObj.name ? `${productsObj.name} (${variantsObj.size_name || ''})` : 'صنف غير محدد';
                     const dsText = i.design_status === 'new_design' ? '<span class="text-red-600">تصميم جديد</span>' : '<span class="text-blue-600">إعادة طباعة</span>';
                     
                     tbody.innerHTML += `
@@ -751,12 +756,16 @@
             document.getElementById('poSupplierSelect').value = '';
             document.getElementById('poExpectedDate').value = '';
             
-            // Fix 5: Filter Ordered Items logically
             const { data: poItemsData } = await supabaseClient.from('supplier_po_items').select('order_item_id');
             const orderedItemIds = poItemsData ? poItemsData.map(i => i.order_item_id) : [];
 
+            // Fetch safely
             const { data } = await supabaseClient.from('order_items')
-                .select(`*, orders!inner(order_number, status, clients(name)), product_variants(id, size_name, selling_price, products(name))`)
+                .select(`
+                    id, quantity, unit_price, variant_id,
+                    orders!inner(order_number, status, clients(name)), 
+                    product_variants(id, size_name, selling_price, products(name))
+                `)
                 .eq('orders.status', 'production');
             
             availablePOItems = (data || []).filter(item => !orderedItemIds.includes(item.id));
@@ -845,7 +854,6 @@
 
             if(validationFailed) return alert('يجب تحديد (الحالة التصنيعية) لجميع الأصناف المحددة!');
 
-            // Fix 1: Accurate Serial Format 0001-PO-30026
             const { count } = await supabaseClient.from('supplier_production_orders').select('*', { count: 'exact', head: true });
             const nextSeq = (count || 0) + 1;
             const year = new Date().getFullYear().toString().substr(-2);
@@ -872,20 +880,34 @@
         async function reprintSupplierPO(poId) {
             try {
                 const { data: poData } = await supabaseClient.from('supplier_production_orders').select('*').eq('id', poId).single();
-                const { data: items } = await supabaseClient.from('supplier_po_items')
-                    .select('*, order_items(quantity, unit_price, orders(clients(name)), product_variants(size_name, products(name)))')
+                
+                // Safe query replacing strict structure
+                const { data: items, error } = await supabaseClient.from('supplier_po_items')
+                    .select(`
+                        id, design_status, notes,
+                        order_items (
+                            quantity, unit_price,
+                            orders ( clients ( name ) ),
+                            product_variants ( size_name, products ( name ) )
+                        )
+                    `)
                     .eq('supplier_po_id', poId);
 
+                if (error) throw error;
                 if (!items || items.length === 0) return alert("لا توجد بيانات للطباعة.");
 
                 const reconstructedItems = items.map(i => {
                     const oi = i.order_items || {};
+                    const ordersObj = oi.orders || {};
+                    const variantsObj = oi.product_variants || {};
+                    const productsObj = variantsObj.products || {};
+                    
                     return {
                         design_status: i.design_status,
                         notes: i.notes,
                         _meta: {
-                            product: oi.product_variants ? `${oi.product_variants.products?.name} (${oi.product_variants.size_name})` : 'غير معروف',
-                            client: oi.orders?.clients?.name || 'عميل نقدي',
+                            product: productsObj.name ? `${productsObj.name} (${variantsObj.size_name || ''})` : 'صنف غير محدد',
+                            client: ordersObj.clients?.name || 'عميل نقدي',
                             qty: oi.quantity || 0,
                             price: oi.unit_price || 0
                         }
@@ -969,21 +991,31 @@
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i></td></tr>';
             openModal('receivePOModal');
 
-            // Safe fetch
             const { data: poData } = await supabaseClient.from('supplier_production_orders').select('supplier_id').eq('id', poId).single();
             document.getElementById('receiveSupplierId').value = poData ? poData.supplier_id : '';
 
+            // Safe Query
             const { data: items } = await supabaseClient.from('supplier_po_items')
-                .select('id, order_item_id, order_items(quantity, unit_price, variant_id, orders(client_id, clients(name)), product_variants(size_name, products(name)))')
+                .select(`
+                    id, 
+                    order_items (
+                        quantity, unit_price, variant_id,
+                        orders ( client_id, clients ( name ) ),
+                        product_variants ( size_name, products ( name ) )
+                    )
+                `)
                 .eq('supplier_po_id', poId);
 
             tbody.innerHTML = '';
             if(items && items.length > 0) {
                 items.forEach(i => {
                     const oi = i.order_items || {};
-                    const orders = oi.orders || {};
-                    const cName = orders.clients?.name || '-';
-                    const pName = oi.product_variants ? `${oi.product_variants.products?.name} (${oi.product_variants.size_name})` : '-';
+                    const ordersObj = oi.orders || {};
+                    const variantsObj = oi.product_variants || {};
+                    
+                    const cName = ordersObj.clients?.name || '-';
+                    const pName = variantsObj.products?.name ? `${variantsObj.products.name} (${variantsObj.size_name || ''})` : '-';
+                    
                     tbody.innerHTML += `
                         <tr class="border-b">
                             <td class="p-2 font-bold text-xs">${cName}</td>
@@ -991,12 +1023,14 @@
                             <td class="p-2 text-center font-bold">${oi.quantity || 0}</td>
                             <td class="p-2 text-center bg-green-50">
                                 <input type="number" id="recQty_${i.id}" value="${oi.quantity || 0}" class="w-20 border rounded p-1 text-center font-bold text-green-700" 
-                                data-var="${oi.variant_id}" data-client="${orders.client_id}" data-price="${oi.unit_price}">
+                                data-var="${oi.variant_id}" data-client="${ordersObj.client_id}" data-price="${oi.unit_price}">
                             </td>
-                            <td class="p-2 text-center text-xs text-gray-500">${oi.unit_price}</td>
+                            <td class="p-2 text-center text-xs text-gray-500">${oi.unit_price || 0}</td>
                         </tr>
                     `;
                 });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">لا توجد بيانات</td></tr>';
             }
         }
 
@@ -1009,7 +1043,7 @@
             const defaultWhId = wh ? wh.id : null;
 
             document.getElementById('btnConfirmReceive').disabled = true;
-            document.getElementById('btnConfirmReceive').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الاستلام والفوترة...';
+            document.getElementById('btnConfirmReceive').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الاستلام...';
 
             let totalInvoiceAmount = 0;
 
@@ -1022,32 +1056,28 @@
                     
                     totalInvoiceAmount += (qty * price);
 
-                    // 1. Update Stock
                     const { data: stock } = await supabaseClient.from('warehouse_stock').select('*').eq('warehouse_id', defaultWhId).eq('variant_id', varId).eq('client_id', cId).single();
                     if(stock) {
                         await supabaseClient.from('warehouse_stock').update({ quantity: stock.quantity + qty }).eq('id', stock.id);
                     } else {
                         await supabaseClient.from('warehouse_stock').insert([{ warehouse_id: defaultWhId, variant_id: varId, client_id: cId, quantity: qty }]);
                     }
-                    
-                    // 2. Log Inventory Transaction
                     await supabaseClient.from('inventory_transactions').insert([{
                         warehouse_to: defaultWhId, variant_id: varId, client_id: cId, quantity: qty, transaction_type: 'supply', delivery_status: 'delivered', notes: 'استلام من أمر إنتاج مورد'
                     }]);
                 }
             }
 
-            // 3. Create Purchase Invoice Automatically
             if(totalInvoiceAmount > 0) {
                 const docNum = `PINV-${Date.now().toString().slice(-6)}`;
                 await supabaseClient.from('supplier_transactions').insert([{
                     supplier_id: supplierId,
                     type: 'invoice',
                     amount: totalInvoiceAmount,
-                    description: `استلام آلي من طلب إنتاج رقم ` + document.getElementById('printPoNum').innerText,
+                    description: `استلام آلي من طلب إنتاج`,
                     document_number: docNum,
                     warehouse_id: defaultWhId,
-                    is_taxable: false // Assuming defaults, can be enhanced later
+                    is_taxable: false 
                 }]);
             }
 
@@ -1069,7 +1099,7 @@
             if(order) {
                 document.getElementById('mgrOrderNum').innerText = `#${order.order_number}`;
                 document.getElementById('mgrClientName').innerText = order.clients?.name || 'عميل نقدي';
-                document.getElementById('invAdvancePayment').value = order.paid_amount || 0; // Store for invoice math
+                document.getElementById('invAdvancePayment').value = order.paid_amount || 0; 
             }
 
             switchMgrTab('items'); 
@@ -1080,19 +1110,33 @@
             const loading = document.getElementById('mgrItemsLoading');
             table.classList.add('hidden'); loading.classList.remove('hidden'); tbody.innerHTML = '';
 
-            const { data: items } = await supabaseClient.from('order_items').select('*, product_variants(size_name, products(name))').eq('order_id', orderId);
-            if(items) {
+            // Safe Query
+            const { data: items } = await supabaseClient.from('order_items')
+                .select(`
+                    id, quantity, unit_price, variant_id,
+                    product_variants ( size_name, products ( name ) )
+                `)
+                .eq('order_id', orderId);
+
+            if(items && items.length > 0) {
                 items.forEach(i => {
                     const total = i.quantity * i.unit_price;
+                    const vObj = i.product_variants || {};
+                    const pName = vObj.products?.name ? `${vObj.products.name} (${vObj.size_name || ''})` : '-';
+                    
                     tbody.innerHTML += `
                         <tr>
-                            <td class="p-2 font-bold">${i.product_variants?.products?.name} (${i.product_variants?.size_name})</td>
+                            <td class="p-2 font-bold">${pName}</td>
                             <td class="p-2 text-center font-mono">${i.quantity}</td>
                             <td class="p-2 text-center">${i.unit_price}</td>
                             <td class="p-2 text-center text-purple-700 font-bold">${total.toFixed(2)}</td>
                         </tr>`;
                 });
                 loading.classList.add('hidden'); table.classList.remove('hidden');
+            } else {
+                loading.classList.add('hidden');
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">لا توجد أصناف</td></tr>';
+                table.classList.remove('hidden');
             }
             fetchClientInvoices(orderId);
             fetchDeliveriesLog(clientId);
@@ -1106,6 +1150,8 @@
             if(data && data.length > 0) {
                 data.forEach(inv => {
                     const typeAr = inv.invoice_type === 'proforma' ? '<span class="text-blue-600 bg-blue-50 px-2 rounded">أولية (مالية)</span>' : '<span class="text-purple-600 bg-purple-50 px-2 rounded">مبيعات (نهائية)</span>';
+                    // Escape json for onclick
+                    const safeInvData = JSON.stringify(inv).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
                     tbody.innerHTML += `
                         <tr class="border-b hover:bg-gray-50">
                             <td class="p-2">${new Date(inv.created_at).toLocaleDateString()}</td>
@@ -1113,14 +1159,13 @@
                             <td class="p-2">${typeAr}</td>
                             <td class="p-2 font-bold">${inv.total_amount}</td>
                             <td class="p-2 text-center">
-                                <button onclick='printClientInvoice(${JSON.stringify(inv)})' class="text-gray-500 hover:text-purple-600 p-1 border rounded bg-white" title="طباعة"><i class="fas fa-print"></i></button>
+                                <button onclick="printClientInvoice(${safeInvData})" class="text-gray-500 hover:text-purple-600 p-1 border rounded bg-white" title="طباعة"><i class="fas fa-print"></i></button>
                             </td>
                         </tr>`;
                 });
             } else { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد فواتير مصدرة</td></tr>'; }
         }
 
-        // Fix 3: Logic to print Client Invoices
         function printClientInvoice(invData) {
             document.body.classList.remove('printing-po');
             document.body.classList.add('printing-inv');
@@ -1152,7 +1197,6 @@
 
             const tax = sub * 0.15;
             const grand = sub + tax;
-            // The logic implies the invoice JSON should have stored downpayment. If not, use standard math.
             const paid = invData.down_payment || 0; 
 
             document.getElementById('printInvSub').innerText = sub.toFixed(2);
@@ -1180,15 +1224,19 @@
             document.getElementById('invoiceModalTitle').innerText = type === 'proforma' ? 'إصدار فاتورة أولية (مالية)' : 'إصدار فاتورة مبيعات (خصم من المخزون)';
             
             const orderId = document.getElementById('mgrActiveOrderId').value;
-            const { data: items } = await supabaseClient.from('order_items').select('*, product_variants(size_name, products(name))').eq('order_id', orderId);
+            
+            const { data: items } = await supabaseClient.from('order_items')
+                .select('*, product_variants(size_name, products(name))')
+                .eq('order_id', orderId);
             
             invoiceItemsTemp = items || [];
             const tbody = document.getElementById('invoiceItemsBody');
             tbody.innerHTML = '';
             
             invoiceItemsTemp.forEach((item, idx) => {
-                const pName = `${item.product_variants?.products?.name} (${item.product_variants?.size_name})`;
-                invoiceItemsTemp[idx].fullName = pName; // save for json snapshot
+                const vObj = item.product_variants || {};
+                const pName = vObj.products?.name ? `${vObj.products.name} (${vObj.size_name || ''})` : '-';
+                invoiceItemsTemp[idx].fullName = pName; 
                 tbody.innerHTML += `
                     <tr>
                         <td class="p-2 font-bold">${pName}</td>
@@ -1268,11 +1316,21 @@
         // --- Fix 4: Delivery Note Modal Active ---
         async function fetchDeliveriesLog(clientId) {
             const tbody = document.getElementById('mgrDeliveriesBody');
-            const { data } = await supabaseClient.from('inventory_transactions').select('*, product_variants(products(name))').eq('client_id', clientId).eq('delivery_status', 'delivered').order('created_at', {ascending: false});
+            
+            const { data } = await supabaseClient.from('inventory_transactions')
+                .select(`
+                    *, 
+                    product_variants ( products ( name ) )
+                `)
+                .eq('client_id', clientId)
+                .eq('delivery_status', 'delivered')
+                .order('created_at', {ascending: false});
+                
             tbody.innerHTML = '';
             if(data && data.length > 0) {
                 data.forEach(d => {
-                    tbody.innerHTML += `<tr><td class="p-2">${new Date(d.created_at).toLocaleDateString()}</td><td class="p-2 font-bold text-green-600">${d.quantity}</td><td class="p-2">${d.product_variants?.products?.name || '-'}</td></tr>`;
+                    const pName = d.product_variants?.products?.name || '-';
+                    tbody.innerHTML += `<tr><td class="p-2">${new Date(d.created_at).toLocaleDateString()}</td><td class="p-2 font-bold text-green-600">${d.quantity}</td><td class="p-2">${pName}</td></tr>`;
                 });
             } else { tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-400">لا توجد تسليمات سابقة</td></tr>'; }
         }
@@ -1284,15 +1342,20 @@
             openModal('deliveryModal');
 
             const { data: pending } = await supabaseClient.from('inventory_transactions')
-                .select('id, variant_id, quantity, product_variants(size_name, products(name))')
+                .select(`
+                    id, variant_id, quantity, 
+                    product_variants ( size_name, products ( name ) )
+                `)
                 .eq('client_id', clientId).eq('delivery_status', 'pending');
             
             tbody.innerHTML = '';
             if(pending && pending.length > 0) {
                 pending.forEach(p => {
+                    const vObj = p.product_variants || {};
+                    const pName = vObj.products?.name ? `${vObj.products.name} (${vObj.size_name || ''})` : '-';
                     tbody.innerHTML += `
                         <tr class="border-b">
-                            <td class="p-2 font-bold">${p.product_variants?.products?.name} (${p.product_variants?.size_name})</td>
+                            <td class="p-2 font-bold">${pName}</td>
                             <td class="p-2 text-center font-bold text-red-600">${p.quantity}</td>
                             <td class="p-2 text-center bg-blue-50">
                                 <input type="number" id="delQty_${p.id}" value="${p.quantity}" max="${p.quantity}" min="1" class="w-20 border rounded p-1 text-center font-bold text-blue-800">
