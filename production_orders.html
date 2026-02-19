@@ -528,6 +528,7 @@
         let availablePOItems = []; 
         let suppliersList = [];
         let invoiceItemsTemp = [];
+        let currentInvoicesList = []; // Global for safe printing
 
         window.onload = async () => {
             await Promise.all([fetchClientOrders(), fetchSuppliers()]);
@@ -558,10 +559,15 @@
         // --- Fetch Data & Filters ---
         async function fetchClientOrders() {
             document.getElementById('loadingIndicator').classList.remove('hidden');
-            const { data } = await supabaseClient.from('orders')
-                .select('*, clients(name)')
+            const { data, error } = await supabaseClient.from('orders')
+                .select('*, clients(*)')
                 .eq('status', 'production')
                 .order('created_at', {ascending: false});
+            
+            if(error) {
+                alert("خطأ في جلب أوامر العملاء: " + error.message);
+                return;
+            }
             
             allClientOrders = data || [];
             filterClientOrders(); 
@@ -636,10 +642,12 @@
         }
 
         async function fetchArchivedOrders() {
-            const { data } = await supabaseClient.from('orders')
-                .select('*, clients(name)')
+            const { data, error } = await supabaseClient.from('orders')
+                .select('*, clients(*)')
                 .in('status', ['archived', 'completed'])
                 .order('created_at', {ascending: false});
+            
+            if(error) alert("خطأ في جلب الأرشيف: " + error.message);
             
             const tbody = document.getElementById('archivedOrdersTable');
             tbody.innerHTML = '';
@@ -661,7 +669,9 @@
         }
 
         async function fetchSuppliers() {
-            const { data } = await supabaseClient.from('suppliers').select('id, company_name');
+            const { data, error } = await supabaseClient.from('suppliers').select('id, company_name');
+            if(error) alert("خطأ في جلب الموردين: " + error.message);
+            
             suppliersList = data || [];
             const sel = document.getElementById('poSupplierSelect');
             sel.innerHTML = '<option value="">-- اختر المطبعة / المورد --</option>';
@@ -669,7 +679,9 @@
         }
 
         async function fetchSupplierPOs() {
-            const { data } = await supabaseClient.from('supplier_production_orders').select('*, suppliers(company_name)').order('created_at', {ascending: false});
+            const { data, error } = await supabaseClient.from('supplier_production_orders').select('*, suppliers(*)').order('created_at', {ascending: false});
+            if(error) alert("خطأ في جلب أوامر الموردين: " + error.message);
+
             const tbody = document.getElementById('supplierPOTable');
             tbody.innerHTML = '';
             if(!data || data.length === 0) {
@@ -703,7 +715,7 @@
             });
         }
 
-        // --- Fix 8: Modal to View PO Details Safely ---
+        // --- Fix 8: Safe Modal to View PO Details ---
         async function viewPODetails(poId) {
             const tbody = document.getElementById('poDetailsModalBody');
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>';
@@ -712,28 +724,22 @@
             document.getElementById('viewPoNum').innerText = po ? po.po_number : '';
             openModal('poDetailsModal');
 
-            // Safe structured query for details
+            // Robust flattened query
             const { data: items, error } = await supabaseClient.from('supplier_po_items')
-                .select(`
-                    id, design_status, notes,
-                    order_items (
-                        quantity,
-                        orders ( clients ( name ) ),
-                        product_variants ( size_name, products ( name ) )
-                    )
-                `)
+                .select('*, order_items(*, orders(*, clients(*)), product_variants(*, products(*)))')
                 .eq('supplier_po_id', poId);
+
+            if(error) {
+                alert("خطأ في جلب التفاصيل: " + error.message);
+                return;
+            }
 
             tbody.innerHTML = '';
             if(items && items.length > 0) {
                 items.forEach(i => {
                     const oi = i.order_items || {};
-                    const ordersObj = oi.orders || {};
-                    const variantsObj = oi.product_variants || {};
-                    const productsObj = variantsObj.products || {};
-                    
-                    const clientName = ordersObj.clients?.name || 'غير معروف';
-                    const prodName = productsObj.name ? `${productsObj.name} (${variantsObj.size_name || ''})` : 'صنف غير محدد';
+                    const clientName = oi.orders?.clients?.name || 'غير معروف';
+                    const prodName = oi.product_variants?.products?.name ? `${oi.product_variants.products.name} (${oi.product_variants.size_name || ''})` : 'صنف غير محدد';
                     const dsText = i.design_status === 'new_design' ? '<span class="text-red-600">تصميم جديد</span>' : '<span class="text-blue-600">إعادة طباعة</span>';
                     
                     tbody.innerHTML += `
@@ -755,23 +761,23 @@
         async function openSmartPOModal() {
             document.getElementById('poSupplierSelect').value = '';
             document.getElementById('poExpectedDate').value = '';
-            
-            const { data: poItemsData } = await supabaseClient.from('supplier_po_items').select('order_item_id');
-            const orderedItemIds = poItemsData ? poItemsData.map(i => i.order_item_id) : [];
-
-            // Fetch safely
-            const { data } = await supabaseClient.from('order_items')
-                .select(`
-                    id, quantity, unit_price, variant_id,
-                    orders!inner(order_number, status, clients(name)), 
-                    product_variants(id, size_name, selling_price, products(name))
-                `)
-                .eq('orders.status', 'production');
-            
-            availablePOItems = (data || []).filter(item => !orderedItemIds.includes(item.id));
-            
             const tbody = document.getElementById('poAvailableItemsBody');
             tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب البيانات...</td></tr>';
+            openModal('smartPOModal');
+
+            // 1. Get already ordered item IDs to filter them out
+            const { data: poItemsData, error: err1 } = await supabaseClient.from('supplier_po_items').select('order_item_id');
+            if (err1) { alert("خطأ 1: " + err1.message); return; }
+            const orderedItemIds = poItemsData ? poItemsData.map(i => i.order_item_id) : [];
+
+            // 2. Fetch all order items from 'production' orders
+            const { data, error: err2 } = await supabaseClient.from('order_items')
+                .select('*, orders(*, clients(*)), product_variants(*, products(*))')
+                .eq('orders.status', 'production');
+            if (err2) { alert("خطأ 2: " + err2.message); return; }
+            
+            // 3. Filter
+            availablePOItems = (data || []).filter(item => !orderedItemIds.includes(item.id));
             
             for(let i=0; i < availablePOItems.length; i++) {
                 const varId = availablePOItems[i].variant_id;
@@ -786,12 +792,11 @@
             tbody.innerHTML = '';
             if(availablePOItems.length === 0) {
                  tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400">جميع الأصناف تم طلبها من الموردين ولا يوجد معلق.</td></tr>';
-                 openModal('smartPOModal');
                  return;
             }
 
             availablePOItems.forEach((item, idx) => {
-                const prodName = item.product_variants?.products?.name || '';
+                const prodName = item.product_variants?.products?.name || 'غير معروف';
                 const sizeName = item.product_variants?.size_name || '';
                 const clientName = item.orders?.clients?.name || 'عميل نقدي';
                 const orderNum = item.orders?.order_number;
@@ -814,7 +819,6 @@
                     </tr>
                 `;
             });
-            openModal('smartPOModal');
         }
 
         function toggleAllPoItems(el) { document.querySelectorAll('.po-item-checkbox').forEach(cb => cb.checked = el.checked); }
@@ -854,21 +858,24 @@
 
             if(validationFailed) return alert('يجب تحديد (الحالة التصنيعية) لجميع الأصناف المحددة!');
 
+            // Fix 1: Accurate Serial Format 0001-PO-30026
             const { count } = await supabaseClient.from('supplier_production_orders').select('*', { count: 'exact', head: true });
             const nextSeq = (count || 0) + 1;
             const year = new Date().getFullYear().toString().substr(-2);
+            // Example format: 0001-PO-30026
             const poNum = `${String(nextSeq).padStart(4, '0')}-PO-300${year}`;
 
             const { data: poData, error: poErr } = await supabaseClient.from('supplier_production_orders').insert([{
                 supplier_id: supplierId, po_number: poNum, expected_delivery_date: expectedDate || null
             }]).select().single();
 
-            if(poErr) return alert(poErr.message);
+            if(poErr) return alert("خطأ في إنشاء أمر المورد: " + poErr.message);
 
             const itemsToInsert = selectedItemsPayload.map(i => ({
                 supplier_po_id: poData.id, order_item_id: i.order_item_id, design_status: i.design_status, notes: i.notes
             }));
-            await supabaseClient.from('supplier_po_items').insert(itemsToInsert);
+            const { error: insertErr } = await supabaseClient.from('supplier_po_items').insert(itemsToInsert);
+            if(insertErr) return alert("خطأ في ربط الأصناف: " + insertErr.message);
 
             alert('تم إنشاء أمر الإنتاج للمورد بنجاح!');
             closeModal('smartPOModal');
@@ -876,38 +883,31 @@
             fetchSupplierPOs();
         }
 
-        // --- Fix 3: Print Error map ---
+        // --- Fix 3: Print Error map (Secured Fetch) ---
         async function reprintSupplierPO(poId) {
             try {
-                const { data: poData } = await supabaseClient.from('supplier_production_orders').select('*').eq('id', poId).single();
-                
-                // Safe query replacing strict structure
-                const { data: items, error } = await supabaseClient.from('supplier_po_items')
-                    .select(`
-                        id, design_status, notes,
-                        order_items (
-                            quantity, unit_price,
-                            orders ( clients ( name ) ),
-                            product_variants ( size_name, products ( name ) )
-                        )
-                    `)
+                const { data: poData, error: err1 } = await supabaseClient.from('supplier_production_orders').select('*').eq('id', poId).single();
+                if (err1) throw err1;
+
+                // Safest query possible
+                const { data: items, error: err2 } = await supabaseClient.from('supplier_po_items')
+                    .select('*, order_items(*, orders(*, clients(*)), product_variants(*, products(*)))')
                     .eq('supplier_po_id', poId);
 
-                if (error) throw error;
+                if (err2) throw err2;
                 if (!items || items.length === 0) return alert("لا توجد بيانات للطباعة.");
 
                 const reconstructedItems = items.map(i => {
                     const oi = i.order_items || {};
-                    const ordersObj = oi.orders || {};
-                    const variantsObj = oi.product_variants || {};
-                    const productsObj = variantsObj.products || {};
+                    const clientName = oi.orders?.clients?.name || 'عميل نقدي';
+                    const prodName = oi.product_variants?.products?.name ? `${oi.product_variants.products.name} (${oi.product_variants.size_name || ''})` : 'صنف غير محدد';
                     
                     return {
                         design_status: i.design_status,
                         notes: i.notes,
                         _meta: {
-                            product: productsObj.name ? `${productsObj.name} (${variantsObj.size_name || ''})` : 'صنف غير محدد',
-                            client: ordersObj.clients?.name || 'عميل نقدي',
+                            product: prodName,
+                            client: clientName,
                             qty: oi.quantity || 0,
                             price: oi.unit_price || 0
                         }
@@ -982,39 +982,32 @@
                 contentDiv.innerHTML += tableHtml;
             }
             window.print();
+            setTimeout(() => document.body.classList.remove('printing-po'), 1000);
         }
 
         // --- Fix 4 & 6: Flexible Receive PO & Purchase Invoice Auto-Creation ---
         async function openReceivePOModal(poId) {
             document.getElementById('receivePoId').value = poId;
             const tbody = document.getElementById('receivePOItemsBody');
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>';
             openModal('receivePOModal');
 
             const { data: poData } = await supabaseClient.from('supplier_production_orders').select('supplier_id').eq('id', poId).single();
             document.getElementById('receiveSupplierId').value = poData ? poData.supplier_id : '';
 
-            // Safe Query
-            const { data: items } = await supabaseClient.from('supplier_po_items')
-                .select(`
-                    id, 
-                    order_items (
-                        quantity, unit_price, variant_id,
-                        orders ( client_id, clients ( name ) ),
-                        product_variants ( size_name, products ( name ) )
-                    )
-                `)
+            // Safe robust query
+            const { data: items, error } = await supabaseClient.from('supplier_po_items')
+                .select('*, order_items(*, orders(*, clients(*)), product_variants(*, products(*)))')
                 .eq('supplier_po_id', poId);
+
+            if(error) { alert("خطأ استلام: " + error.message); return; }
 
             tbody.innerHTML = '';
             if(items && items.length > 0) {
                 items.forEach(i => {
                     const oi = i.order_items || {};
-                    const ordersObj = oi.orders || {};
-                    const variantsObj = oi.product_variants || {};
-                    
-                    const cName = ordersObj.clients?.name || '-';
-                    const pName = variantsObj.products?.name ? `${variantsObj.products.name} (${variantsObj.size_name || ''})` : '-';
+                    const cName = oi.orders?.clients?.name || '-';
+                    const pName = oi.product_variants?.products?.name ? `${oi.product_variants.products.name} (${oi.product_variants.size_name || ''})` : '-';
                     
                     tbody.innerHTML += `
                         <tr class="border-b">
@@ -1023,7 +1016,7 @@
                             <td class="p-2 text-center font-bold">${oi.quantity || 0}</td>
                             <td class="p-2 text-center bg-green-50">
                                 <input type="number" id="recQty_${i.id}" value="${oi.quantity || 0}" class="w-20 border rounded p-1 text-center font-bold text-green-700" 
-                                data-var="${oi.variant_id}" data-client="${ordersObj.client_id}" data-price="${oi.unit_price}">
+                                data-var="${oi.variant_id}" data-client="${oi.orders?.client_id}" data-price="${oi.unit_price}">
                             </td>
                             <td class="p-2 text-center text-xs text-gray-500">${oi.unit_price || 0}</td>
                         </tr>
@@ -1051,7 +1044,7 @@
                 const qty = parseInt(inp.value);
                 if(qty > 0) {
                     const varId = inp.getAttribute('data-var');
-                    const cId = inp.getAttribute('data-client');
+                    const cId = inp.getAttribute('data-client') !== 'undefined' ? inp.getAttribute('data-client') : null;
                     const price = parseFloat(inp.getAttribute('data-price')) || 0;
                     
                     totalInvoiceAmount += (qty * price);
@@ -1095,11 +1088,23 @@
             document.getElementById('mgrActiveOrderId').value = orderId;
             document.getElementById('mgrActiveClientId').value = clientId;
 
-            const order = activeOrders.find(o => o.id === orderId) || (await supabaseClient.from('orders').select('*, clients(name)').eq('id', orderId).single()).data;
+            let order = activeOrders.find(o => o.id === orderId);
+            if(!order) {
+                const { data } = await supabaseClient.from('orders').select('*, clients(*)').eq('id', orderId).single();
+                order = data;
+            }
+
             if(order) {
                 document.getElementById('mgrOrderNum').innerText = `#${order.order_number}`;
                 document.getElementById('mgrClientName').innerText = order.clients?.name || 'عميل نقدي';
-                document.getElementById('invAdvancePayment').value = order.paid_amount || 0; 
+                
+                // Parse Downpayment carefully
+                let advance = parseFloat(order.paid_amount) || 0;
+                try {
+                    const meta = JSON.parse(order.snapshotted_terms || '{}');
+                    if(meta.downPayment) advance = parseFloat(meta.downPayment);
+                } catch(e) {}
+                document.getElementById('invAdvancePayment').value = advance; 
             }
 
             switchMgrTab('items'); 
@@ -1110,19 +1115,19 @@
             const loading = document.getElementById('mgrItemsLoading');
             table.classList.add('hidden'); loading.classList.remove('hidden'); tbody.innerHTML = '';
 
-            // Safe Query
-            const { data: items } = await supabaseClient.from('order_items')
-                .select(`
-                    id, quantity, unit_price, variant_id,
-                    product_variants ( size_name, products ( name ) )
-                `)
+            const { data: items, error } = await supabaseClient.from('order_items')
+                .select('*, product_variants(*, products(*))')
                 .eq('order_id', orderId);
+
+            if(error) {
+                alert("خطأ في جلب أصناف الأمر: " + error.message);
+                return;
+            }
 
             if(items && items.length > 0) {
                 items.forEach(i => {
                     const total = i.quantity * i.unit_price;
-                    const vObj = i.product_variants || {};
-                    const pName = vObj.products?.name ? `${vObj.products.name} (${vObj.size_name || ''})` : '-';
+                    const pName = i.product_variants?.products?.name ? `${i.product_variants.products.name} (${i.product_variants.size_name || ''})` : '-';
                     
                     tbody.innerHTML += `
                         <tr>
@@ -1142,16 +1147,19 @@
             fetchDeliveriesLog(clientId);
         }
 
-        // Fix 3: Print Action in Invoice list
+        // Fix 3: Print Action in Invoice list securely
         async function fetchClientInvoices(orderId) {
             const tbody = document.getElementById('mgrInvoicesBody');
             tbody.innerHTML = '';
-            const { data } = await supabaseClient.from('client_invoices').select('*').eq('order_id', orderId).order('created_at', {ascending: false});
+            const { data, error } = await supabaseClient.from('client_invoices').select('*').eq('order_id', orderId).order('created_at', {ascending: false});
+            
+            if(error) { alert("خطأ الفواتير: " + error.message); return; }
+            
+            currentInvoicesList = data || [];
+
             if(data && data.length > 0) {
                 data.forEach(inv => {
                     const typeAr = inv.invoice_type === 'proforma' ? '<span class="text-blue-600 bg-blue-50 px-2 rounded">أولية (مالية)</span>' : '<span class="text-purple-600 bg-purple-50 px-2 rounded">مبيعات (نهائية)</span>';
-                    // Escape json for onclick
-                    const safeInvData = JSON.stringify(inv).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
                     tbody.innerHTML += `
                         <tr class="border-b hover:bg-gray-50">
                             <td class="p-2">${new Date(inv.created_at).toLocaleDateString()}</td>
@@ -1159,14 +1167,18 @@
                             <td class="p-2">${typeAr}</td>
                             <td class="p-2 font-bold">${inv.total_amount}</td>
                             <td class="p-2 text-center">
-                                <button onclick="printClientInvoice(${safeInvData})" class="text-gray-500 hover:text-purple-600 p-1 border rounded bg-white" title="طباعة"><i class="fas fa-print"></i></button>
+                                <button onclick="printClientInvoice('${inv.id}')" class="text-gray-500 hover:text-purple-600 p-1 border rounded bg-white" title="طباعة"><i class="fas fa-print"></i></button>
                             </td>
                         </tr>`;
                 });
             } else { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد فواتير مصدرة</td></tr>'; }
         }
 
-        function printClientInvoice(invData) {
+        // Fix 3: Secure Invoice Print
+        function printClientInvoice(invId) {
+            const invData = currentInvoicesList.find(i => i.id === invId);
+            if(!invData) return alert("حدث خطأ في قراءة الفاتورة");
+
             document.body.classList.remove('printing-po');
             document.body.classList.add('printing-inv');
 
@@ -1180,7 +1192,8 @@
             tbody.innerHTML = '';
             
             let sub = 0;
-            const items = invData.items_snapshot || [];
+            const items = typeof invData.items_snapshot === 'string' ? JSON.parse(invData.items_snapshot) : (invData.items_snapshot || []);
+            
             items.forEach((i, idx) => {
                 const rowTotal = i.qty * i.price;
                 sub += rowTotal;
@@ -1197,7 +1210,7 @@
 
             const tax = sub * 0.15;
             const grand = sub + tax;
-            const paid = invData.down_payment || 0; 
+            const paid = invData.down_payment || parseFloat(document.getElementById('invAdvancePayment').value) || 0; 
 
             document.getElementById('printInvSub').innerText = sub.toFixed(2);
             document.getElementById('printInvTax').innerText = tax.toFixed(2);
@@ -1206,6 +1219,7 @@
             document.getElementById('printInvRem').innerText = (grand - paid).toFixed(2);
 
             window.print();
+            setTimeout(() => document.body.classList.remove('printing-inv'), 1000);
         }
 
         function switchMgrTab(tabName) {
@@ -1225,17 +1239,18 @@
             
             const orderId = document.getElementById('mgrActiveOrderId').value;
             
-            const { data: items } = await supabaseClient.from('order_items')
-                .select('*, product_variants(size_name, products(name))')
+            const { data: items, error } = await supabaseClient.from('order_items')
+                .select('*, product_variants(*, products(*))')
                 .eq('order_id', orderId);
             
+            if(error) return alert(error.message);
+
             invoiceItemsTemp = items || [];
             const tbody = document.getElementById('invoiceItemsBody');
             tbody.innerHTML = '';
             
             invoiceItemsTemp.forEach((item, idx) => {
-                const vObj = item.product_variants || {};
-                const pName = vObj.products?.name ? `${vObj.products.name} (${vObj.size_name || ''})` : '-';
+                const pName = item.product_variants?.products?.name ? `${item.product_variants.products.name} (${item.product_variants.size_name || ''})` : 'غير معروف';
                 invoiceItemsTemp[idx].fullName = pName; 
                 tbody.innerHTML += `
                     <tr>
@@ -1317,15 +1332,14 @@
         async function fetchDeliveriesLog(clientId) {
             const tbody = document.getElementById('mgrDeliveriesBody');
             
-            const { data } = await supabaseClient.from('inventory_transactions')
-                .select(`
-                    *, 
-                    product_variants ( products ( name ) )
-                `)
+            const { data, error } = await supabaseClient.from('inventory_transactions')
+                .select('*, product_variants(*, products(*))')
                 .eq('client_id', clientId)
                 .eq('delivery_status', 'delivered')
                 .order('created_at', {ascending: false});
                 
+            if(error) { alert("Delivery Log Error: " + error.message); return; }
+
             tbody.innerHTML = '';
             if(data && data.length > 0) {
                 data.forEach(d => {
@@ -1341,18 +1355,16 @@
             tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري البحث عن البضاعة المعلقة...</td></tr>';
             openModal('deliveryModal');
 
-            const { data: pending } = await supabaseClient.from('inventory_transactions')
-                .select(`
-                    id, variant_id, quantity, 
-                    product_variants ( size_name, products ( name ) )
-                `)
+            const { data: pending, error } = await supabaseClient.from('inventory_transactions')
+                .select('id, variant_id, quantity, product_variants(*, products(*))')
                 .eq('client_id', clientId).eq('delivery_status', 'pending');
             
+            if (error) { alert(error.message); return; }
+
             tbody.innerHTML = '';
             if(pending && pending.length > 0) {
                 pending.forEach(p => {
-                    const vObj = p.product_variants || {};
-                    const pName = vObj.products?.name ? `${vObj.products.name} (${vObj.size_name || ''})` : '-';
+                    const pName = p.product_variants?.products?.name ? `${p.product_variants.products.name} (${p.product_variants.size_name || ''})` : '-';
                     tbody.innerHTML += `
                         <tr class="border-b">
                             <td class="p-2 font-bold">${pName}</td>
