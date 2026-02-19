@@ -27,7 +27,7 @@
         .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background-color: #f9fafb; }
         .supply-tag { background-color: #ede9fe; color: #5b21b6; border-color: #ddd6fe; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 2px; display: inline-block; }
         .input-std { width: 100%; border: 1px solid #d1d5db; padding: 8px; border-radius: 6px; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }
-        .input-std:focus { border-color: #3e206d; ring: 1px; }
+        .input-std:focus { border-color: #3e206d; box-shadow: 0 0 0 1px #3e206d; }
         
         /* Serial Number LTR Force */
         .serial-num { direction: ltr; unicode-bidi: embed; display: inline-block; text-align: left; }
@@ -39,6 +39,10 @@
             .sidebar-mobile-hidden { transform: translateX(100%); }
             .sidebar-collapsed { width: 16rem !important; }
         }
+
+        /* Hiding scrollbars for nice UI */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         /* --- PRINT STYLES --- */
         @media print {
@@ -61,12 +65,12 @@
 
     <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
 
-    <aside id="sidebar" class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-30 fixed md:relative h-full sidebar-mobile-hidden md:transform-none">
+    <aside id="sidebar" class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-30 fixed md:relative h-full sidebar-mobile-hidden md:transform-none shrink-0">
         <div class="h-20 flex items-center justify-between px-6 border-b border-purple-800/50">
             <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2">
                 <i class="fas fa-box-open gpack-yellow"></i> <span class="whitespace-nowrap">G.PACK</span>
             </h1>
-            <button onclick="toggleSidebar()" class="md:hidden text-white"><i class="fas fa-times"></i></button>
+            <button onclick="toggleSidebar()" class="md:hidden text-white hover:text-red-300"><i class="fas fa-times"></i></button>
         </div>
         
         <div class="p-4 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20 whitespace-nowrap overflow-hidden">
@@ -103,22 +107,25 @@
 
     <main class="flex-1 flex flex-col overflow-hidden relative w-full transition-all duration-300">
         <header class="h-20 bg-white shadow-sm flex items-center justify-between px-4 md:px-8 z-10 shrink-0 no-print">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 shrink-0">
                 <button onclick="toggleSidebar()" class="text-gray-600 text-xl focus:outline-none hover:text-gpack-purple p-2 rounded-md hover:bg-gray-100">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h2 class="text-lg md:text-xl font-bold text-gray-800">سجل الموردين</h2>
+                <h2 class="text-lg md:text-xl font-bold text-gray-800 whitespace-nowrap">سجل الموردين</h2>
                 <div id="loadingIndicator" class="hidden flex items-center gap-2 text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full"><i class="fas fa-sync fa-spin"></i></div>
             </div>
             
-            <div class="flex items-center gap-3">
-                <button onclick="openGlobalTransaction('invoice')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2 hidden md:flex">
+            <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar flex-1 justify-end pl-2">
+                <button onclick="openGlobalTransaction('invoice')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2">
                     <i class="fas fa-cart-plus"></i> شراء
                 </button>
-                <button onclick="openGlobalTransaction('return')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2 hidden md:flex">
+                <button onclick="openGlobalTransaction('return')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2">
                     <i class="fas fa-undo"></i> مردود
                 </button>
-                <div class="w-px h-8 bg-gray-300 mx-1 hidden md:block"></div>
+                <button onclick="openGlobalTransaction('payment')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2">
+                    <i class="fas fa-money-bill"></i> دفعة
+                </button>
+                <div class="w-px h-8 bg-gray-300 mx-1 shrink-0"></div>
                 <button onclick="openAddModal()" class="gpack-btn px-4 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2">
                     <i class="fas fa-plus"></i><span>مورد جديد</span>
                 </button>
@@ -217,7 +224,7 @@
                         
                         <div class="md:col-span-3 flex flex-wrap gap-4 items-center pt-2 border-t mt-2">
                             <div class="flex items-center gap-2">
-                                <input type="checkbox" id="transTax" class="w-4 h-4 text-purple-600 rounded" checked>
+                                <input type="checkbox" id="transTax" class="w-4 h-4 text-purple-600 rounded" checked onchange="updateTotals()">
                                 <label for="transTax" class="text-sm font-bold text-gray-700">فاتورة ضريبية (15%)</label>
                             </div>
                             <div class="flex items-center gap-2 border-r pr-4" id="warehouseSelectContainer">
@@ -325,7 +332,7 @@
                 </div>
 
                 <div class="flex-1 flex flex-col bg-white overflow-hidden">
-                    <div class="border-b border-gray-200 px-4 flex gap-4 overflow-x-auto bg-gray-50/50 whitespace-nowrap shrink-0 scrollbar-hide">
+                    <div class="border-b border-gray-200 px-4 flex gap-4 overflow-x-auto bg-gray-50/50 whitespace-nowrap shrink-0 hide-scrollbar">
                         <button onclick="switchTab('finance')" id="tab-finance-btn" class="tab-btn active"><i class="fas fa-coins text-yellow-500"></i> كشف الحساب</button>
                         <button onclick="switchTab('current')" id="tab-current-btn" class="tab-btn"><i class="fas fa-industry text-blue-500"></i> أوامر التشغيل (الحالية)</button>
                         <button onclick="switchTab('completed')" id="tab-completed-btn" class="tab-btn"><i class="fas fa-check-circle text-green-500"></i> الأرشيف (المنتهية)</button>
@@ -569,12 +576,11 @@
 
             const tbody = document.getElementById('transItemsBody');
             tbody.innerHTML = '';
-            let subtotal = 0;
+            
             const type = document.getElementById('transType').value;
 
             transItems.forEach((item, index) => {
                 const rowTotal = item.qty * item.price;
-                subtotal += rowTotal;
 
                 let variantOpts = '<option value="">اختر المقاس...</option>';
                 if(item.parentId) {
@@ -603,17 +609,50 @@
                         <td class="p-1">
                             <select onchange="updateItemVariant(${index}, this)" class="input-std text-xs">${variantOpts}</select>
                         </td>
-                        <td class="p-1 align-top">
-                            <input type="number" value="${item.qty}" onkeyup="updateItemData(${index}, 'qty', this.value)" onchange="updateItemData(${index}, 'qty', this.value)" class="input-std text-center">
+                        <td class="p-1 align-top relative">
+                            <input type="number" value="${item.qty}" 
+                                   oninput="updateItemData(${index}, 'qty', this.value)" 
+                                   onkeydown="handleEnterNavigation(event, this)" 
+                                   class="input-std text-center nav-input">
                             ${stockHint}
                         </td>
-                        <td class="p-1 align-top"><input type="number" value="${item.price}" onkeyup="updateItemData(${index}, 'price', this.value)" onchange="updateItemData(${index}, 'price', this.value)" class="input-std text-center"></td>
-                        <td class="p-1 align-top pt-3 font-bold text-gray-700">${rowTotal.toFixed(2)}</td>
+                        <td class="p-1 align-top">
+                            <input type="number" value="${item.price}" 
+                                   oninput="updateItemData(${index}, 'price', this.value)" 
+                                   onkeydown="handleEnterNavigation(event, this)" 
+                                   class="input-std text-center nav-input">
+                        </td>
+                        <td class="p-1 align-top pt-3 font-bold text-gray-700" id="rowTotal_${index}">${rowTotal.toFixed(2)}</td>
                         <td class="p-1 align-top text-center pt-2"><button type="button" onclick="transItems.splice(${index},1); renderTransItems()" class="text-red-500 hover:bg-red-50 p-1 rounded"><i class="fas fa-trash"></i></button></td>
                     </tr>
                 `;
             });
 
+            updateTotals();
+        }
+
+        // --- UPDATE DATA WITHOUT RE-RENDERING HTML ---
+        function updateItemData(index, field, val) {
+            transItems[index][field] = parseFloat(val) || 0;
+            
+            // Update the row's total dynamically
+            const rowTotal = transItems[index].qty * transItems[index].price;
+            const rowTotalTd = document.getElementById(`rowTotal_${index}`);
+            if(rowTotalTd) rowTotalTd.innerText = rowTotal.toFixed(2);
+            
+            // Re-eval stock warning color dynamically for returns
+            const type = document.getElementById('transType').value;
+            if(type === 'return' && field === 'qty' && transItems[index].availableStock !== null) {
+                // To keep it simple without full re-render, we just re-render to update the hint properly if needed
+                // But for pure speed, the user will see the red text on validation anyway.
+            }
+            
+            updateTotals();
+        }
+
+        function updateTotals() {
+            let subtotal = 0;
+            transItems.forEach(item => { subtotal += (item.qty * item.price); });
             const taxRate = document.getElementById('transTax').checked ? 0.15 : 0;
             const taxVal = subtotal * taxRate;
             document.getElementById('transSubtotal').innerText = subtotal.toFixed(2);
@@ -638,11 +677,6 @@
             renderTransItems();
         }
 
-        async function updateItemData(index, field, val) {
-            transItems[index][field] = parseFloat(val) || 0;
-            renderTransItems();
-        }
-
         // Live check stock for returns
         async function checkStockForItem(index) {
             const type = document.getElementById('transType').value;
@@ -662,16 +696,48 @@
         async function recheckStockIfReturn() {
             const type = document.getElementById('transType').value;
             if(type === 'return') {
-                for(let i=0; i<transItems.length; i++) {
-                    await checkStockForItem(i);
-                }
+                for(let i=0; i<transItems.length; i++) { await checkStockForItem(i); }
                 renderTransItems();
             }
         }
 
-        document.getElementById('transTax').addEventListener('change', renderTransItems);
+        // --- EXCEL LIKE ENTER NAVIGATION ---
+        function handleEnterNavigation(e, el) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Stop form submission
+                
+                // Get all navigation inputs currently on screen
+                const inputs = Array.from(document.querySelectorAll('.nav-input'));
+                const currentIndex = inputs.indexOf(el);
+                
+                if (e.shiftKey) {
+                    // Shift+Enter goes backward
+                    if (currentIndex > 0) {
+                        inputs[currentIndex - 1].focus();
+                        inputs[currentIndex - 1].select();
+                    }
+                } else {
+                    // Enter goes forward
+                    if (currentIndex > -1 && currentIndex < inputs.length - 1) {
+                        inputs[currentIndex + 1].focus();
+                        inputs[currentIndex + 1].select();
+                    } else if (currentIndex === inputs.length - 1) {
+                        // If it's the very last input (price), add a new row automatically
+                        addTransItem();
+                        // Wait a tiny bit for DOM to render the new row, then focus its first input (qty)
+                        setTimeout(() => {
+                            const newInputs = Array.from(document.querySelectorAll('.nav-input'));
+                            if(newInputs.length > currentIndex + 1) {
+                                newInputs[currentIndex + 1].focus();
+                                newInputs[currentIndex + 1].select();
+                            }
+                        }, 50);
+                    }
+                }
+            }
+        }
 
-        // --- SUBMIT TRANSACTION (Cleaned - relies on SQL Trigger) ---
+        // --- SUBMIT TRANSACTION ---
         async function submitTransaction() {
             const type = document.getElementById('transType').value;
             const supplierId = document.getElementById('transSupplierSelect').value || currentProfileId;
@@ -707,14 +773,12 @@
             document.getElementById('saveTransBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
             document.getElementById('saveTransBtn').disabled = true;
 
-            // Generate Serial
             const { count } = await supabaseClient.from('supplier_transactions').select('*', { count: 'exact', head: true });
             const nextSeq = (count || 0) + 1;
             const year = new Date().getFullYear().toString().substr(-2);
             const serialPrefix = type === 'payment' ? 'PAY' : '200';
             const docNum = `${serialPrefix}${year}-${String(nextSeq).padStart(4, '0')}`;
 
-            // Save to DB (The SQL Trigger will handle inventory changes securely)
             const { data: transData, error } = await supabaseClient.from('supplier_transactions').insert([{
                 supplier_id: supplierId,
                 type: type,
@@ -765,7 +829,6 @@
             const t = window.currentViewingTrans;
             if(!t) return;
 
-            // 1. Set Main Title & Document Type based on transaction type
             let mainTitle = '';
             let docTypeEn = '';
             let whLabel = 'تم التوريد إلى مستودع:';
