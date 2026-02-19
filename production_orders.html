@@ -520,7 +520,7 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
+const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -724,7 +724,7 @@
             document.getElementById('viewPoNum').innerText = po ? po.po_number : '';
             openModal('poDetailsModal');
 
-            // Robust flattened query
+            // Robust flattened query with deep error protection
             const { data: items, error } = await supabaseClient.from('supplier_po_items')
                 .select('*, order_items(*, orders(*, clients(*)), product_variants(*, products(*)))')
                 .eq('supplier_po_id', poId);
@@ -765,18 +765,15 @@
             tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب البيانات...</td></tr>';
             openModal('smartPOModal');
 
-            // 1. Get already ordered item IDs to filter them out
             const { data: poItemsData, error: err1 } = await supabaseClient.from('supplier_po_items').select('order_item_id');
             if (err1) { alert("خطأ 1: " + err1.message); return; }
             const orderedItemIds = poItemsData ? poItemsData.map(i => i.order_item_id) : [];
 
-            // 2. Fetch all order items from 'production' orders
             const { data, error: err2 } = await supabaseClient.from('order_items')
                 .select('*, orders(*, clients(*)), product_variants(*, products(*))')
                 .eq('orders.status', 'production');
             if (err2) { alert("خطأ 2: " + err2.message); return; }
             
-            // 3. Filter
             availablePOItems = (data || []).filter(item => !orderedItemIds.includes(item.id));
             
             for(let i=0; i < availablePOItems.length; i++) {
@@ -842,27 +839,30 @@
                 const notes = document.getElementById(`poNotes_${idx}`).value;
                 if(!designStatus) validationFailed = true;
 
+                // Protect meta payload construction
+                const pName = itemData.product_variants?.products?.name || 'صنف مجهول';
+                const sName = itemData.product_variants?.size_name || '';
+                const cName = itemData.orders?.clients?.name || 'عميل نقدي';
+
                 selectedItemsPayload.push({
                     order_item_id: itemData.id,
                     design_status: designStatus,
                     notes: notes,
                     _meta: {
-                        product: `${itemData.product_variants?.products?.name} (${itemData.product_variants?.size_name})`,
+                        product: `${pName} (${sName})`,
                         variant_id: itemData.variant_id,
-                        client: itemData.orders?.clients?.name,
-                        qty: itemData.quantity,
-                        price: itemData.unit_price
+                        client: cName,
+                        qty: itemData.quantity || 0,
+                        price: itemData.unit_price || 0
                     }
                 });
             });
 
             if(validationFailed) return alert('يجب تحديد (الحالة التصنيعية) لجميع الأصناف المحددة!');
 
-            // Fix 1: Accurate Serial Format 0001-PO-30026
             const { count } = await supabaseClient.from('supplier_production_orders').select('*', { count: 'exact', head: true });
             const nextSeq = (count || 0) + 1;
             const year = new Date().getFullYear().toString().substr(-2);
-            // Example format: 0001-PO-30026
             const poNum = `${String(nextSeq).padStart(4, '0')}-PO-300${year}`;
 
             const { data: poData, error: poErr } = await supabaseClient.from('supplier_production_orders').insert([{
@@ -883,7 +883,7 @@
             fetchSupplierPOs();
         }
 
-        // --- Fix 3: Print Error map (Secured Fetch) ---
+        // --- Fix 3: Print Error map (Secured Fetch & Processing) ---
         async function reprintSupplierPO(poId) {
             try {
                 const { data: poData, error: err1 } = await supabaseClient.from('supplier_production_orders').select('*').eq('id', poId).single();
@@ -897,7 +897,8 @@
                 if (err2) throw err2;
                 if (!items || items.length === 0) return alert("لا توجد بيانات للطباعة.");
 
-                const reconstructedItems = items.map(i => {
+                // Add protection against null mapped items
+                const reconstructedItems = (items || []).map(i => {
                     const oi = i.order_items || {};
                     const clientName = oi.orders?.clients?.name || 'عميل نقدي';
                     const prodName = oi.product_variants?.products?.name ? `${oi.product_variants.products.name} (${oi.product_variants.size_name || ''})` : 'صنف غير محدد';
@@ -925,7 +926,7 @@
             if(printToggle === 'hide') printContainer.classList.add('hide-price');
             else printContainer.classList.remove('hide-price');
 
-            document.getElementById('printPoNum').innerText = poData.po_number;
+            document.getElementById('printPoNum').innerText = poData.po_number || '-';
             document.getElementById('printPoDate').innerText = new Date(poData.created_at || new Date()).toLocaleDateString('ar-EG');
             document.getElementById('printPoExpectedDate').innerText = poData.expected_delivery_date || 'غير محدد';
             
@@ -933,8 +934,8 @@
             document.getElementById('printPoSupplier').innerText = supplierName;
 
             const grouped = {};
-            itemsWithMeta.forEach(i => {
-                const groupKey = i._meta.product;
+            (itemsWithMeta || []).forEach(i => {
+                const groupKey = i._meta?.product || 'غير محدد';
                 if(!grouped[groupKey]) grouped[groupKey] = [];
                 grouped[groupKey].push(i);
             });
@@ -959,7 +960,7 @@
                 `;
                 let totalGroupQty = 0;
                 items.forEach(i => {
-                    totalGroupQty += i._meta.qty;
+                    totalGroupQty += i._meta.qty || 0;
                     const dsText = i.design_status === 'new_design' ? '<span class="text-red-600 font-bold">تصميم جديد (مرفق)</span>' : '<span class="text-blue-600 font-bold">إعادة طباعة (Reprint)</span>';
                     tableHtml += `
                         <tr>
@@ -985,7 +986,7 @@
             setTimeout(() => document.body.classList.remove('printing-po'), 1000);
         }
 
-        // --- Fix 4 & 6: Flexible Receive PO & Purchase Invoice Auto-Creation ---
+        // --- Fix 4 & 6: Flexible Receive PO & Safe Objects ---
         async function openReceivePOModal(poId) {
             document.getElementById('receivePoId').value = poId;
             const tbody = document.getElementById('receivePOItemsBody');
@@ -1083,12 +1084,13 @@
             fetchSupplierPOs();
         }
 
-        // --- Client Order Manager ---
+        // --- Client Order Manager (Crucial Fix here) ---
         async function manageOrder(orderId, clientId) {
             document.getElementById('mgrActiveOrderId').value = orderId;
             document.getElementById('mgrActiveClientId').value = clientId;
 
-            let order = activeOrders.find(o => o.id === orderId);
+            // FIX: Changed undefined 'activeOrders' to 'allClientOrders' to prevent JS crash
+            let order = allClientOrders.find(o => o.id === orderId);
             if(!order) {
                 const { data } = await supabaseClient.from('orders').select('*, clients(*)').eq('id', orderId).single();
                 order = data;
@@ -1147,7 +1149,6 @@
             fetchDeliveriesLog(clientId);
         }
 
-        // Fix 3: Print Action in Invoice list securely
         async function fetchClientInvoices(orderId) {
             const tbody = document.getElementById('mgrInvoicesBody');
             tbody.innerHTML = '';
@@ -1174,7 +1175,6 @@
             } else { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد فواتير مصدرة</td></tr>'; }
         }
 
-        // Fix 3: Secure Invoice Print
         function printClientInvoice(invId) {
             const invData = currentInvoicesList.find(i => i.id === invId);
             if(!invData) return alert("حدث خطأ في قراءة الفاتورة");
@@ -1232,7 +1232,6 @@
             document.getElementById(`mgr-tab-${tabName}`).classList.add('active');
         }
 
-        // --- Fix 2: Flexible Invoice Modal & Advance Payment ---
         async function openInvoiceModal(type) {
             document.getElementById('invModalType').value = type;
             document.getElementById('invoiceModalTitle').innerText = type === 'proforma' ? 'إصدار فاتورة أولية (مالية)' : 'إصدار فاتورة مبيعات (خصم من المخزون)';
@@ -1328,7 +1327,6 @@
             fetchClientInvoices(orderId);
         }
 
-        // --- Fix 4: Delivery Note Modal Active ---
         async function fetchDeliveriesLog(clientId) {
             const tbody = document.getElementById('mgrDeliveriesBody');
             
