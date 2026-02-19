@@ -29,7 +29,6 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Sidebar Transition */
         #sidebar { transition: width 0.3s ease, transform 0.3s ease; }
         .sidebar-collapsed { width: 0 !important; overflow: hidden; }
         @media (max-width: 768px) {
@@ -37,7 +36,6 @@
             .sidebar-collapsed { width: 16rem !important; }
         }
 
-        /* --- PRINT STYLES FOR SUPPLIER PO --- */
         @media print {
             body * { visibility: hidden; }
             #printablePO, #printablePO * { visibility: visible; }
@@ -165,7 +163,20 @@
                 </div>
 
                 <div id="tab-archive" class="tab-content hidden">
-                    <p class="text-gray-500 text-center py-8">لا توجد أوامر منتهية حالياً.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm min-w-[700px]">
+                            <thead class="bg-gray-100 text-gray-600">
+                                <tr>
+                                    <th class="p-3">رقم الأمر</th>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">اسم العميل</th>
+                                    <th class="p-3">قيمة الأمر</th>
+                                    <th class="p-3 text-center">عرض</th>
+                                </tr>
+                            </thead>
+                            <tbody id="archivedOrdersTable" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -174,12 +185,10 @@
     <div id="smartPOModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-60" onclick="closeModal('smartPOModal')"></div>
         <div class="modal-container bg-white w-full max-w-6xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[95vh]">
-            
             <div class="bg-purple-900 text-white p-4 flex justify-between items-center rounded-t-xl shrink-0">
                 <h3 class="text-lg font-bold flex items-center gap-2"><i class="fas fa-magic text-yellow-400"></i> إنشاء أمر إنتاج مجمع (للمورد)</h3>
                 <button onclick="closeModal('smartPOModal')" class="text-white hover:text-red-300"><i class="fas fa-times text-xl"></i></button>
             </div>
-
             <div class="p-4 md:p-6 overflow-y-auto flex-1 bg-gray-50">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-lg shadow-sm border mb-6">
                     <div>
@@ -198,7 +207,6 @@
                         </select>
                     </div>
                 </div>
-
                 <h4 class="font-bold text-gray-800 mb-2 border-r-4 border-yellow-400 pr-2">الأصناف المتاحة للإنتاج (من أوامر العملاء السارية)</h4>
                 <div class="bg-white border rounded-lg overflow-x-auto shadow-sm">
                     <table class="w-full text-right text-sm min-w-[900px]">
@@ -217,13 +225,98 @@
                     </table>
                 </div>
             </div>
-
             <div class="p-4 bg-white border-t rounded-b-xl flex justify-between items-center shrink-0">
                 <p class="text-xs text-gray-500"><i class="fas fa-info-circle text-blue-500"></i> سيتم تجميع الأصناف المتشابهة تلقائياً في ورقة الطباعة.</p>
                 <div class="flex gap-2">
                     <button type="button" onclick="closeModal('smartPOModal')" class="bg-gray-200 px-6 py-2 rounded font-bold hover:bg-gray-300">إلغاء</button>
                     <button type="button" onclick="submitSupplierPO()" class="gpack-btn px-8 py-2 rounded font-bold shadow-lg">حفظ وإنشاء أمر الطباعة</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="receivePOModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[80]">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-80" onclick="closeModal('receivePOModal')"></div>
+        <div class="modal-container bg-white w-full max-w-4xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[90vh]">
+            <div class="bg-green-700 text-white p-4 flex justify-between items-center rounded-t-xl shrink-0">
+                <h3 class="text-lg font-bold"><i class="fas fa-box-open"></i> استلام بضاعة من المورد (توريد مخزني)</h3>
+                <button onclick="closeModal('receivePOModal')" class="text-white hover:text-red-300"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <input type="hidden" id="receivePoId">
+            <div class="p-6 overflow-y-auto flex-1">
+                <p class="text-sm text-gray-600 mb-4">أدخل الكمية المستلمة فعلياً. سيتم ترحيلها مباشرة لمستودع العميل.</p>
+                <table class="w-full text-right text-sm border">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-2 border">العميل</th>
+                            <th class="p-2 border">الصنف</th>
+                            <th class="p-2 border text-center">الكمية المطلوبة</th>
+                            <th class="p-2 border text-center bg-green-50 text-green-800">الكمية المستلمة فعلياً</th>
+                        </tr>
+                    </thead>
+                    <tbody id="receivePOItemsBody"></tbody>
+                </table>
+            </div>
+            <div class="p-4 bg-gray-50 border-t rounded-b-xl flex justify-end gap-2 shrink-0">
+                <button type="button" onclick="closeModal('receivePOModal')" class="bg-gray-200 px-6 py-2 rounded font-bold">إلغاء</button>
+                <button type="button" onclick="submitReceivePO()" class="bg-green-600 text-white px-8 py-2 rounded font-bold shadow-lg hover:bg-green-700">تأكيد الاستلام</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="invoiceModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[80]">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-80" onclick="closeModal('invoiceModal')"></div>
+        <div class="modal-container bg-white w-full max-w-4xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[90vh]">
+            <div class="bg-purple-900 text-white p-4 flex justify-between items-center rounded-t-xl shrink-0">
+                <h3 class="text-lg font-bold" id="invoiceModalTitle">إصدار فاتورة</h3>
+                <button onclick="closeModal('invoiceModal')" class="text-white hover:text-red-300"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <input type="hidden" id="invModalType">
+            <div class="p-6 overflow-y-auto flex-1">
+                <p class="text-sm text-gray-600 mb-4">يمكنك تعديل الكميات والأسعار قبل إصدار الفاتورة.</p>
+                <table class="w-full text-right text-sm border">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-2 border">الصنف</th>
+                            <th class="p-2 border text-center w-24">الكمية</th>
+                            <th class="p-2 border text-center w-32">السعر</th>
+                            <th class="p-2 border text-center w-32">الإجمالي</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoiceItemsBody"></tbody>
+                </table>
+                <div class="mt-4 text-left font-bold text-lg text-purple-900">الإجمالي: <span id="invoiceTotalVal">0.00</span></div>
+            </div>
+            <div class="p-4 bg-gray-50 border-t rounded-b-xl flex justify-end gap-2 shrink-0">
+                <button type="button" onclick="closeModal('invoiceModal')" class="bg-gray-200 px-6 py-2 rounded font-bold">إلغاء</button>
+                <button type="button" onclick="submitInvoice()" class="gpack-btn px-8 py-2 rounded font-bold shadow-lg">إصدار الفاتورة</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deliveryModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[80]">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-80" onclick="closeModal('deliveryModal')"></div>
+        <div class="modal-container bg-white w-full max-w-4xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[90vh]">
+            <div class="bg-blue-800 text-white p-4 flex justify-between items-center rounded-t-xl shrink-0">
+                <h3 class="text-lg font-bold"><i class="fas fa-shipping-fast"></i> إصدار سند تسليم بضاعة</h3>
+                <button onclick="closeModal('deliveryModal')" class="text-white hover:text-red-300"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <p class="text-sm text-gray-600 mb-4">أدخل الكمية المراد تسليمها للمندوب لخصمها نهائياً (إخلاء عهدة).</p>
+                <table class="w-full text-right text-sm border">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-2 border">الصنف</th>
+                            <th class="p-2 border text-center text-red-600">البضاعة المعلقة (لم تسلم)</th>
+                            <th class="p-2 border text-center text-blue-700 bg-blue-50">الكمية المُراد تسليمها الآن</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deliveryItemsBody"></tbody>
+                </table>
+            </div>
+            <div class="p-4 bg-gray-50 border-t rounded-b-xl flex justify-end gap-2 shrink-0">
+                <button type="button" onclick="closeModal('deliveryModal')" class="bg-gray-200 px-6 py-2 rounded font-bold">إلغاء</button>
+                <button type="button" onclick="submitDelivery()" class="bg-blue-600 text-white px-8 py-2 rounded font-bold shadow-lg hover:bg-blue-700">تأكيد التسليم</button>
             </div>
         </div>
     </div>
@@ -255,7 +348,7 @@
                         <div class="bg-white rounded-lg shadow-sm border p-4">
                             <div class="flex justify-between items-center mb-4 border-b pb-2">
                                 <h3 class="font-bold text-gray-700">تفاصيل الأصناف المطلوبة</h3>
-                                <button onclick="closeOrderManually()" class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200"><i class="fas fa-archive"></i> إنهاء الأمر (أرشفة)</button>
+                                <button onclick="closeOrderManually()" class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200 font-bold"><i class="fas fa-archive"></i> إنهاء الأمر (أرشفة)</button>
                             </div>
                             <div id="mgrItemsLoading" class="text-center py-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>
                             <table class="w-full text-right text-sm hidden" id="mgrItemsTable">
@@ -267,8 +360,8 @@
 
                     <div id="mgr-content-invoices" class="hidden">
                         <div class="flex gap-4 mb-6">
-                            <button onclick="createInvoice('proforma')" class="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700"><i class="fas fa-file-alt"></i> إصدار فاتورة أولية (مطالبة مالية)</button>
-                            <button onclick="createInvoice('final')" class="bg-purple-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-purple-700"><i class="fas fa-check-double"></i> إصدار فاتورة مبيعات (خصم من المخزون)</button>
+                            <button onclick="openInvoiceModal('proforma')" class="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700"><i class="fas fa-file-alt"></i> إصدار فاتورة أولية (مطالبة مالية)</button>
+                            <button onclick="openInvoiceModal('final')" class="bg-purple-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-purple-700"><i class="fas fa-check-double"></i> إصدار فاتورة مبيعات (خصم من المخزون)</button>
                         </div>
                         <div class="bg-white rounded-lg shadow-sm border p-4">
                             <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">سجل الفواتير الصادرة</h4>
@@ -281,12 +374,12 @@
 
                     <div id="mgr-content-deliveries" class="hidden">
                         <div class="flex gap-4 mb-6">
-                            <button onclick="createDelivery()" class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700"><i class="fas fa-shipping-fast"></i> إنشاء سند تسليم بضاعة للعميل</button>
+                            <button onclick="openDeliveryModal()" class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700"><i class="fas fa-shipping-fast"></i> إنشاء سند تسليم بضاعة للعميل</button>
                         </div>
                         <div class="bg-white rounded-lg shadow-sm border p-4">
                             <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">سجلات التسليم</h4>
                             <table class="w-full text-right text-sm">
-                                <thead class="bg-gray-50"><tr><th class="p-2">التاريخ</th><th class="p-2">رقم السند</th><th class="p-2">الحالة</th></tr></thead>
+                                <thead class="bg-gray-50"><tr><th class="p-2">التاريخ</th><th class="p-2">الكمية المسلمة</th><th class="p-2">الصنف</th></tr></thead>
                                 <tbody id="mgrDeliveriesBody" class="divide-y"></tbody>
                             </table>
                         </div>
@@ -318,9 +411,7 @@
                 <p class="font-bold text-2xl" id="printPoSupplier">-</p>
                 <p class="text-sm text-gray-600 mt-2">نرجو منكم التكرم بتنفيذ أمر الطباعة المرفق أدناه حسب المواصفات والتصاميم المعتمدة، على أن يكون موعد التسليم المتوقع في: <span id="printPoExpectedDate" class="font-bold text-red-600"></span>.</p>
             </div>
-
             <div id="printPoContent"></div>
-
             <div class="mt-12 pt-8 border-t border-gray-300 flex justify-between text-center text-sm font-bold text-gray-600">
                 <div class="w-1/3">توقيع مسؤول الإنتاج<br><br>_________________</div>
                 <div class="w-1/3">توقيع وتوجيه المورد<br><br>_________________</div>
@@ -336,14 +427,13 @@
         let activeOrders = []; 
         let availablePOItems = []; 
         let suppliersList = [];
-        let currentPrintingPO = null;
+        let invoiceItemsTemp = [];
 
         window.onload = async () => {
             await Promise.all([fetchClientOrders(), fetchSuppliers()]);
             switchTab('client_orders');
         };
 
-        // --- Sidebar & Tabs ---
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -360,16 +450,14 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             document.getElementById(`tab-${tabName}-btn`).classList.add('active');
+            
             if(tabName === 'supplier_pos') fetchSupplierPOs();
+            // Fix 7: Call archive fetch
+            if(tabName === 'archive') fetchArchivedOrders();
         }
 
-        // --- Data Fetching ---
         async function fetchClientOrders() {
-            const { data } = await supabaseClient.from('orders')
-                .select('*, clients(name)')
-                .eq('status', 'production')
-                .order('created_at', {ascending: false});
-            
+            const { data } = await supabaseClient.from('orders').select('*, clients(name)').eq('status', 'production').order('created_at', {ascending: false});
             activeOrders = data || [];
             const tbody = document.getElementById('clientOrdersTable');
             tbody.innerHTML = '';
@@ -397,6 +485,32 @@
             });
         }
 
+        // Fix 7: Archive Fetch
+        async function fetchArchivedOrders() {
+            const { data } = await supabaseClient.from('orders')
+                .select('*, clients(name)')
+                .in('status', ['archived', 'completed'])
+                .order('created_at', {ascending: false});
+            
+            const tbody = document.getElementById('archivedOrdersTable');
+            tbody.innerHTML = '';
+            if(!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">لا توجد أوامر منتهية</td></tr>';
+                return;
+            }
+            data.forEach(o => {
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 font-bold text-gray-600 serial-num">#${o.order_number}</td>
+                        <td class="p-3 text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
+                        <td class="p-3 font-bold">${o.clients?.name || '-'}</td>
+                        <td class="p-3">${o.grand_total}</td>
+                        <td class="p-3 text-center"><button class="text-blue-500 hover:underline text-xs" onclick="manageOrder('${o.id}', '${o.client_id}')">عرض</button></td>
+                    </tr>
+                `;
+            });
+        }
+
         async function fetchSuppliers() {
             const { data } = await supabaseClient.from('suppliers').select('id, company_name');
             suppliersList = data || [];
@@ -406,10 +520,7 @@
         }
 
         async function fetchSupplierPOs() {
-            const { data } = await supabaseClient.from('supplier_production_orders')
-                .select('*, suppliers(company_name)')
-                .order('created_at', {ascending: false});
-            
+            const { data } = await supabaseClient.from('supplier_production_orders').select('*, suppliers(company_name)').order('created_at', {ascending: false});
             const tbody = document.getElementById('supplierPOTable');
             tbody.innerHTML = '';
             if(!data || data.length === 0) {
@@ -419,11 +530,12 @@
 
             data.forEach(po => {
                 let statusBadge = '<span class="bg-yellow-100 text-yellow-800 px-2 rounded text-xs font-bold">قيد التصنيع</span>';
-                let receiveBtn = `<button onclick="receivePO('${po.id}')" class="text-green-600 hover:text-white hover:bg-green-600 font-bold text-xs bg-green-50 px-3 py-1 rounded border border-green-200 transition" title="استلام البضاعة وإدخالها المستودع"><i class="fas fa-box-open"></i> استلام</button>`;
+                // Fix 3 & 6: Call openReceivePOModal
+                let receiveBtn = `<button onclick="openReceivePOModal('${po.id}')" class="text-green-600 hover:text-white hover:bg-green-600 font-bold text-xs bg-green-50 px-3 py-1 rounded border border-green-200 transition" title="استلام بضاعة (مشتريات)"><i class="fas fa-box-open"></i> استلام</button>`;
                 
                 if(po.status === 'completed') {
                     statusBadge = '<span class="bg-green-100 text-green-800 px-2 rounded text-xs font-bold"><i class="fas fa-check"></i> تم الاستلام</span>';
-                    receiveBtn = ''; // Hide receive button if already completed
+                    receiveBtn = ''; 
                 }
                 
                 tbody.innerHTML += `
@@ -442,35 +554,29 @@
             });
         }
 
-        // --- Smart Supplier PO Creation (With Last Price Logic) ---
+        // --- Fix 5: Filter Ordered Items ---
         async function openSmartPOModal() {
             document.getElementById('poSupplierSelect').value = '';
             document.getElementById('poExpectedDate').value = '';
             
+            // Fetch already ordered items to exclude them
+            const { data: poItemsData } = await supabaseClient.from('supplier_po_items').select('order_item_id');
+            const orderedItemIds = poItemsData ? poItemsData.map(i => i.order_item_id) : [];
+
             const { data } = await supabaseClient.from('order_items')
-                .select(`
-                    *,
-                    orders!inner(order_number, status, clients(name)),
-                    product_variants(id, size_name, products(name))
-                `)
+                .select(`*, orders!inner(order_number, status, clients(name)), product_variants(id, size_name, selling_price, products(name))`)
                 .eq('orders.status', 'production');
             
-            availablePOItems = data || [];
-            const tbody = document.getElementById('poAvailableItemsBody');
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب البيانات والأسعار...</td></tr>';
+            // Filter out items that are already in a supplier PO
+            availablePOItems = (data || []).filter(item => !orderedItemIds.includes(item.id));
             
-            // Fetch last purchase prices for variants to help user negotiate
+            const tbody = document.getElementById('poAvailableItemsBody');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب البيانات...</td></tr>';
+            
             for(let i=0; i < availablePOItems.length; i++) {
                 const varId = availablePOItems[i].variant_id;
                 let lastPrice = 'غير متوفر';
                 try {
-                    // Search for the last invoice transaction for this variant
-                    const { data: trans } = await supabaseClient.from('inventory_transactions')
-                        .select('created_at, quantity') // we can't easily get price from inventory_trans if not stored directly.
-                        .eq('variant_id', varId).eq('transaction_type', 'supply').order('created_at', {ascending: false}).limit(1);
-                        
-                    // Since inventory_transactions doesn't store price, let's fetch the base selling_price or just show a placeholder.
-                    // For true ERP, we'd query supplier_transactions JSON, but for now we query variant selling_price as reference.
                     const { data: vData } = await supabaseClient.from('product_variants').select('selling_price').eq('id', varId).single();
                     if(vData && vData.selling_price) lastPrice = vData.selling_price + ' (سعر أساسي)';
                 } catch(e) {}
@@ -479,7 +585,7 @@
 
             tbody.innerHTML = '';
             if(availablePOItems.length === 0) {
-                 tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400">لا توجد أصناف معلقة للإنتاج</td></tr>';
+                 tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400">جميع الأصناف تم طلبها من الموردين ولا يوجد معلق.</td></tr>';
                  openModal('smartPOModal');
                  return;
             }
@@ -492,13 +598,8 @@
 
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-yellow-50/30 transition">
-                        <td class="p-3 text-center">
-                            <input type="checkbox" class="po-item-checkbox w-4 h-4 text-purple-600 rounded" value="${idx}">
-                        </td>
-                        <td class="p-3">
-                            <span class="font-bold serial-num text-purple-800">#${orderNum}</span><br>
-                            <span class="text-xs text-gray-500"><i class="fas fa-user"></i> ${clientName}</span>
-                        </td>
+                        <td class="p-3 text-center"><input type="checkbox" class="po-item-checkbox w-4 h-4 text-purple-600 rounded" value="${idx}"></td>
+                        <td class="p-3"><span class="font-bold serial-num text-purple-800">#${orderNum}</span><br><span class="text-xs text-gray-500"><i class="fas fa-user"></i> ${clientName}</span></td>
                         <td class="p-3 font-bold">${prodName} <span class="text-gray-500 font-normal">(${sizeName})</span></td>
                         <td class="p-3 font-mono font-bold text-lg text-center">${item.quantity}</td>
                         <td class="p-3 text-center font-mono text-blue-700 text-xs">${item.lastPriceStr}</td>
@@ -509,26 +610,20 @@
                                 <option value="reprint">إعادة طباعة (Reprint)</option>
                             </select>
                         </td>
-                        <td class="p-3">
-                            <input type="text" id="poNotes_${idx}" class="input-std text-xs" placeholder="ملاحظات (ألوان، الخ..)">
-                        </td>
+                        <td class="p-3"><input type="text" id="poNotes_${idx}" class="input-std text-xs" placeholder="ملاحظات (ألوان، الخ..)"></td>
                     </tr>
                 `;
             });
-
             openModal('smartPOModal');
         }
 
-        function toggleAllPoItems(el) {
-            const checkboxes = document.querySelectorAll('.po-item-checkbox');
-            checkboxes.forEach(cb => cb.checked = el.checked);
-        }
+        function toggleAllPoItems(el) { document.querySelectorAll('.po-item-checkbox').forEach(cb => cb.checked = el.checked); }
 
+        // --- Fix 1: Serial Format ---
         async function submitSupplierPO() {
             const supplierId = document.getElementById('poSupplierSelect').value;
             const expectedDate = document.getElementById('poExpectedDate').value;
             const printToggle = document.getElementById('poPrintPriceToggle').value;
-            
             if(!supplierId) return alert('الرجاء اختيار المورد');
 
             const checkboxes = document.querySelectorAll('.po-item-checkbox:checked');
@@ -542,7 +637,6 @@
                 const itemData = availablePOItems[idx];
                 const designStatus = document.getElementById(`designStatus_${idx}`).value;
                 const notes = document.getElementById(`poNotes_${idx}`).value;
-
                 if(!designStatus) validationFailed = true;
 
                 selectedItemsPayload.push({
@@ -561,56 +655,55 @@
 
             if(validationFailed) return alert('يجب تحديد (الحالة التصنيعية) لجميع الأصناف المحددة!');
 
-            const poNum = `PO-${new Date().getFullYear().toString().substr(-2)}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
+            // Accurate Serial Format 0001-PO-30026
+            const { count } = await supabaseClient.from('supplier_production_orders').select('*', { count: 'exact', head: true });
+            const nextSeq = (count || 0) + 1;
+            const year = new Date().getFullYear().toString().substr(-2);
+            const poNum = `${String(nextSeq).padStart(4, '0')}-PO-300${year}`;
 
             const { data: poData, error: poErr } = await supabaseClient.from('supplier_production_orders').insert([{
-                supplier_id: supplierId,
-                po_number: poNum,
-                expected_delivery_date: expectedDate || null
+                supplier_id: supplierId, po_number: poNum, expected_delivery_date: expectedDate || null
             }]).select().single();
 
             if(poErr) return alert(poErr.message);
 
             const itemsToInsert = selectedItemsPayload.map(i => ({
-                supplier_po_id: poData.id,
-                order_item_id: i.order_item_id,
-                design_status: i.design_status,
-                notes: i.notes
+                supplier_po_id: poData.id, order_item_id: i.order_item_id, design_status: i.design_status, notes: i.notes
             }));
-
             await supabaseClient.from('supplier_po_items').insert(itemsToInsert);
 
             alert('تم إنشاء أمر الإنتاج للمورد بنجاح!');
             closeModal('smartPOModal');
-            
             buildAndPrintPO(poData, selectedItemsPayload, printToggle, supplierId);
             fetchSupplierPOs();
         }
 
-        // --- Supplier PO Printing & Receiving ---
+        // --- Fix 3: Print Error map ---
         async function reprintSupplierPO(poId) {
             try {
                 const { data: poData } = await supabaseClient.from('supplier_production_orders').select('*').eq('id', poId).single();
+                // Safely fetch nested data
                 const { data: items } = await supabaseClient.from('supplier_po_items')
-                    .select('*, order_items(*, orders(clients(name)), product_variants(size_name, unit_price, products(name)))')
+                    .select('*, order_items(quantity, unit_price, orders(clients(name)), product_variants(size_name, products(name)))')
                     .eq('supplier_po_id', poId);
 
-                // Reconstruct _meta
-                const reconstructedItems = items.map(i => ({
-                    design_status: i.design_status,
-                    notes: i.notes,
-                    _meta: {
-                        product: `${i.order_items?.product_variants?.products?.name} (${i.order_items?.product_variants?.size_name})`,
-                        client: i.order_items?.orders?.clients?.name,
-                        qty: i.order_items?.quantity,
-                        price: i.order_items?.unit_price
-                    }
-                }));
+                if (!items || items.length === 0) return alert("لا توجد بيانات للطباعة.");
 
+                const reconstructedItems = items.map(i => {
+                    const oi = i.order_items;
+                    return {
+                        design_status: i.design_status,
+                        notes: i.notes,
+                        _meta: {
+                            product: oi?.product_variants ? `${oi.product_variants.products?.name} (${oi.product_variants.size_name})` : 'غير معروف',
+                            client: oi?.orders?.clients?.name || 'عميل نقدي',
+                            qty: oi?.quantity || 0,
+                            price: oi?.unit_price || 0
+                        }
+                    };
+                });
                 buildAndPrintPO(poData, reconstructedItems, 'show', poData.supplier_id);
-            } catch(e) {
-                alert("خطأ في جلب بيانات الطباعة: " + e.message);
-            }
+            } catch(e) { alert("خطأ في جلب بيانات الطباعة: " + e.message); }
         }
 
         function buildAndPrintPO(poData, itemsWithMeta, printToggle, supplierId) {
@@ -650,7 +743,6 @@
                         </thead>
                         <tbody>
                 `;
-
                 let totalGroupQty = 0;
                 items.forEach(i => {
                     totalGroupQty += i._meta.qty;
@@ -665,7 +757,6 @@
                         </tr>
                     `;
                 });
-
                 tableHtml += `
                         <tr class="bg-gray-100 font-bold">
                             <td class="text-left">إجمالي كمية الصنف:</td>
@@ -679,72 +770,88 @@
             window.print();
         }
 
-        async function receivePO(poId) {
-            if(!confirm('هل أنت متأكد من استلام البضاعة من المطبعة؟ سيتم إضافتها لمخزون العملاء فوراً.')) return;
-            try {
-                // 1. Get PO items with client info
-                const { data: items } = await supabaseClient.from('supplier_po_items')
-                    .select('order_items(variant_id, quantity, orders(client_id))')
-                    .eq('supplier_po_id', poId);
+        // --- Fix 3 & 6: Flexible Receive PO Modal ---
+        async function openReceivePOModal(poId) {
+            document.getElementById('receivePoId').value = poId;
+            const tbody = document.getElementById('receivePOItemsBody');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i></td></tr>';
+            openModal('receivePOModal');
 
-                // 2. Fetch main warehouse ID (Assuming it exists, or just use null for generic)
-                const { data: wh } = await supabaseClient.from('warehouses').select('id').limit(1).single();
-                const defaultWhId = wh ? wh.id : null;
+            const { data: items } = await supabaseClient.from('supplier_po_items')
+                .select('id, order_item_id, order_items(quantity, variant_id, orders(client_id, clients(name)), product_variants(size_name, products(name)))')
+                .eq('supplier_po_id', poId);
 
-                // 3. Process Inventory (Add to warehouse_stock WITH client_id)
-                for (const item of items) {
-                    const varId = item.order_items.variant_id;
-                    const qty = item.order_items.quantity;
-                    const cId = item.order_items.orders.client_id;
+            tbody.innerHTML = '';
+            if(items) {
+                items.forEach(i => {
+                    const oi = i.order_items;
+                    const cName = oi.orders?.clients?.name || '-';
+                    const pName = oi.product_variants ? `${oi.product_variants.products?.name} (${oi.product_variants.size_name})` : '-';
+                    tbody.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-2 font-bold text-xs">${cName}</td>
+                            <td class="p-2 text-xs">${pName}</td>
+                            <td class="p-2 text-center font-bold">${oi.quantity}</td>
+                            <td class="p-2 text-center bg-green-50">
+                                <input type="number" id="recQty_${i.id}" value="${oi.quantity}" class="w-20 border rounded p-1 text-center font-bold text-green-700" data-var="${oi.variant_id}" data-client="${oi.orders.client_id}">
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
 
-                    // Check existing
+        async function submitReceivePO() {
+            const poId = document.getElementById('receivePoId').value;
+            const inputs = document.querySelectorAll('input[id^="recQty_"]');
+            
+            const { data: wh } = await supabaseClient.from('warehouses').select('id').limit(1).single();
+            const defaultWhId = wh ? wh.id : null;
+
+            for(const inp of inputs) {
+                const qty = parseInt(inp.value);
+                if(qty > 0) {
+                    const varId = inp.getAttribute('data-var');
+                    const cId = inp.getAttribute('data-client');
+                    
                     const { data: stock } = await supabaseClient.from('warehouse_stock').select('*').eq('warehouse_id', defaultWhId).eq('variant_id', varId).eq('client_id', cId).single();
                     if(stock) {
                         await supabaseClient.from('warehouse_stock').update({ quantity: stock.quantity + qty }).eq('id', stock.id);
                     } else {
                         await supabaseClient.from('warehouse_stock').insert([{ warehouse_id: defaultWhId, variant_id: varId, client_id: cId, quantity: qty }]);
                     }
-                    // Log
                     await supabaseClient.from('inventory_transactions').insert([{
                         warehouse_to: defaultWhId, variant_id: varId, client_id: cId, quantity: qty, transaction_type: 'supply', delivery_status: 'delivered', notes: 'استلام من أمر إنتاج مورد'
                     }]);
                 }
-
-                // 4. Update PO Status
-                await supabaseClient.from('supplier_production_orders').update({status: 'completed'}).eq('id', poId);
-                
-                alert('تم الاستلام وتحديث المخزون بنجاح!');
-                fetchSupplierPOs();
-            } catch(e) {
-                alert("خطأ في الاستلام: " + e.message);
             }
+            await supabaseClient.from('supplier_production_orders').update({status: 'completed'}).eq('id', poId);
+            alert('تم استلام البضاعة وإضافتها للمخزون.');
+            closeModal('receivePOModal');
+            fetchSupplierPOs();
         }
 
-        // --- Client Order Manager (Invoices & Deliveries) ---
+        // --- Client Order Manager ---
         async function manageOrder(orderId, clientId) {
             document.getElementById('mgrActiveOrderId').value = orderId;
             document.getElementById('mgrActiveClientId').value = clientId;
 
             const order = activeOrders.find(o => o.id === orderId);
-            document.getElementById('mgrOrderNum').innerText = `#${order.order_number}`;
-            document.getElementById('mgrClientName').innerText = order.clients?.name || 'عميل نقدي';
-            
-            switchMgrTab('items'); // Reset tab
+            // Fallback for archived orders that might not be in activeOrders array
+            if(order) {
+                document.getElementById('mgrOrderNum').innerText = `#${order.order_number}`;
+                document.getElementById('mgrClientName').innerText = order.clients?.name || 'عميل نقدي';
+            }
+
+            switchMgrTab('items'); 
             openModal('orderManagerModal');
 
-            // Fetch Items
             const tbody = document.getElementById('mgrItemsBody');
             const table = document.getElementById('mgrItemsTable');
             const loading = document.getElementById('mgrItemsLoading');
-            
-            table.classList.add('hidden');
-            loading.classList.remove('hidden');
-            tbody.innerHTML = '';
+            table.classList.add('hidden'); loading.classList.remove('hidden'); tbody.innerHTML = '';
 
-            const { data: items } = await supabaseClient.from('order_items')
-                .select('*, product_variants(size_name, products(name))')
-                .eq('order_id', orderId);
-
+            const { data: items } = await supabaseClient.from('order_items').select('*, product_variants(size_name, products(name))').eq('order_id', orderId);
             if(items) {
                 items.forEach(i => {
                     const total = i.quantity * i.unit_price;
@@ -754,14 +861,12 @@
                             <td class="p-2 text-center font-mono">${i.quantity}</td>
                             <td class="p-2 text-center">${i.unit_price}</td>
                             <td class="p-2 text-center text-purple-700 font-bold">${total.toFixed(2)}</td>
-                        </tr>
-                    `;
+                        </tr>`;
                 });
-                loading.classList.add('hidden');
-                table.classList.remove('hidden');
+                loading.classList.add('hidden'); table.classList.remove('hidden');
             }
-            
             fetchClientInvoices(orderId);
+            fetchDeliveriesLog(clientId);
         }
 
         async function fetchClientInvoices(orderId) {
@@ -773,9 +878,7 @@
                     const typeAr = inv.invoice_type === 'proforma' ? '<span class="text-blue-600 bg-blue-50 px-2 rounded">أولية (مالية)</span>' : '<span class="text-purple-600 bg-purple-50 px-2 rounded">مبيعات (خصم مخزون)</span>';
                     tbody.innerHTML += `<tr><td class="p-2">${new Date(inv.created_at).toLocaleDateString()}</td><td class="p-2 font-mono text-left">${inv.invoice_number}</td><td class="p-2">${typeAr}</td><td class="p-2 font-bold">${inv.total_amount}</td></tr>`;
                 });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-gray-400">لا توجد فواتير مصدرة</td></tr>';
-            }
+            } else { tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-gray-400">لا توجد فواتير مصدرة</td></tr>'; }
         }
 
         function switchMgrTab(tabName) {
@@ -788,53 +891,153 @@
             document.getElementById(`mgr-tab-${tabName}`).classList.add('active');
         }
 
-        async function createInvoice(type) {
+        // --- Fix 2: Flexible Invoice Modal ---
+        async function openInvoiceModal(type) {
+            document.getElementById('invModalType').value = type;
+            document.getElementById('invoiceModalTitle').innerText = type === 'proforma' ? 'إصدار فاتورة أولية (مالية)' : 'إصدار فاتورة مبيعات (خصم من المخزون)';
+            
             const orderId = document.getElementById('mgrActiveOrderId').value;
-            const clientId = document.getElementById('mgrActiveClientId').value;
-            if(!confirm(`هل تريد إصدار فاتورة ${type === 'proforma' ? 'أولية' : 'مبيعات نهائية'} لهذا الأمر؟`)) return;
-
-            try {
-                // Fetch Order Details for Total
-                const { data: orderData } = await supabaseClient.from('orders').select('grand_total').eq('id', orderId).single();
-                
-                const prefix = type === 'proforma' ? 'PRO' : 'INV';
-                const invNum = `${prefix}-${Date.now().toString().slice(-6)}`; // Temp serial
-
-                const { error } = await supabaseClient.from('client_invoices').insert([{
-                    order_id: orderId,
-                    client_id: clientId,
-                    invoice_type: type,
-                    invoice_number: invNum,
-                    total_amount: orderData.grand_total
-                }]);
-
-                if(error) throw error;
-
-                // IF FINAL SALES INVOICE -> Deduct Stock
-                if(type === 'final') {
-                    const { data: items } = await supabaseClient.from('order_items').select('*').eq('order_id', orderId);
-                    for (const item of items) {
-                        // Attempt to find allocated stock
-                        const { data: stock } = await supabaseClient.from('warehouse_stock').select('*').eq('variant_id', item.variant_id).eq('client_id', clientId).limit(1).single();
-                        if(stock) {
-                            await supabaseClient.from('warehouse_stock').update({quantity: stock.quantity - item.quantity}).eq('id', stock.id);
-                            // Log as dispense (pending delivery)
-                            await supabaseClient.from('inventory_transactions').insert([{
-                                variant_id: item.variant_id, client_id: clientId, quantity: item.quantity, transaction_type: 'dispense', delivery_status: 'pending', notes: 'فاتورة مبيعات: ' + invNum
-                            }]);
-                        } else {
-                            console.warn("Stock not found for allocation deduction.");
-                        }
-                    }
-                }
-
-                alert("تم إصدار الفاتورة بنجاح!");
-                fetchClientInvoices(orderId);
-            } catch(e) { alert("خطأ: " + e.message); }
+            const { data: items } = await supabaseClient.from('order_items').select('*, product_variants(size_name, products(name))').eq('order_id', orderId);
+            
+            invoiceItemsTemp = items || [];
+            const tbody = document.getElementById('invoiceItemsBody');
+            tbody.innerHTML = '';
+            
+            invoiceItemsTemp.forEach((item, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-2 font-bold">${item.product_variants?.products?.name} (${item.product_variants?.size_name})</td>
+                        <td class="p-2 text-center"><input type="number" id="invQty_${idx}" value="${item.quantity}" class="w-20 border rounded p-1 text-center font-bold" oninput="calcInvRow(${idx})"></td>
+                        <td class="p-2 text-center"><input type="number" id="invPrice_${idx}" value="${item.unit_price}" class="w-20 border rounded p-1 text-center" oninput="calcInvRow(${idx})"></td>
+                        <td class="p-2 text-center text-purple-700 font-bold" id="invTotal_${idx}">${(item.quantity * item.unit_price).toFixed(2)}</td>
+                    </tr>`;
+            });
+            calcInvTotal();
+            openModal('invoiceModal');
         }
 
-        function createDelivery() {
-            alert('قيد التطوير: ستفتح نافذة لاختيار الكميات المسلمة للمندوب وتغيير حالتها في المخزن إلى Delivered.');
+        function calcInvRow(idx) {
+            const q = parseFloat(document.getElementById(`invQty_${idx}`).value) || 0;
+            const p = parseFloat(document.getElementById(`invPrice_${idx}`).value) || 0;
+            document.getElementById(`invTotal_${idx}`).innerText = (q*p).toFixed(2);
+            calcInvTotal();
+        }
+
+        function calcInvTotal() {
+            let total = 0;
+            invoiceItemsTemp.forEach((_, idx) => { total += parseFloat(document.getElementById(`invTotal_${idx}`).innerText); });
+            document.getElementById('invoiceTotalVal').innerText = total.toFixed(2);
+        }
+
+        async function submitInvoice() {
+            const type = document.getElementById('invModalType').value;
+            const orderId = document.getElementById('mgrActiveOrderId').value;
+            const clientId = document.getElementById('mgrActiveClientId').value;
+            
+            // Read inputs
+            let finalTotal = 0;
+            let finalItems = [];
+            
+            for(let i=0; i<invoiceItemsTemp.length; i++) {
+                const qty = parseFloat(document.getElementById(`invQty_${i}`).value) || 0;
+                const price = parseFloat(document.getElementById(`invPrice_${i}`).value) || 0;
+                if(qty > 0) {
+                    finalItems.push({ variant_id: invoiceItemsTemp[i].variant_id, qty: qty, price: price });
+                    finalTotal += (qty * price);
+                }
+            }
+
+            if(type === 'final') {
+                for(let item of finalItems) {
+                    const { data: stock } = await supabaseClient.from('warehouse_stock').select('*').eq('variant_id', item.variant_id).eq('client_id', clientId).limit(1).single();
+                    if(stock && stock.quantity >= item.qty) {
+                        await supabaseClient.from('warehouse_stock').update({quantity: stock.quantity - item.qty}).eq('id', stock.id);
+                        await supabaseClient.from('inventory_transactions').insert([{
+                            variant_id: item.variant_id, client_id: clientId, quantity: item.qty, transaction_type: 'dispense', delivery_status: 'pending', notes: 'محجوز لفاتورة مبيعات'
+                        }]);
+                    } else {
+                        return alert(`تنبيه: الرصيد المخزني لا يكفي لخصم الكمية المطلوبة من صنف معين!`);
+                    }
+                }
+            }
+
+            const prefix = type === 'proforma' ? 'PRO' : 'INV';
+            const invNum = `${prefix}-${Date.now().toString().slice(-6)}`;
+            await supabaseClient.from('client_invoices').insert([{ order_id: orderId, client_id: clientId, invoice_type: type, invoice_number: invNum, total_amount: finalTotal, items_snapshot: finalItems }]);
+
+            alert("تم الإصدار بنجاح!");
+            closeModal('invoiceModal');
+            fetchClientInvoices(orderId);
+        }
+
+        // --- Fix 4: Delivery Note Modal ---
+        async function fetchDeliveriesLog(clientId) {
+            const tbody = document.getElementById('mgrDeliveriesBody');
+            const { data } = await supabaseClient.from('inventory_transactions').select('*, product_variants(products(name))').eq('client_id', clientId).eq('delivery_status', 'delivered').order('created_at', {ascending: false});
+            tbody.innerHTML = '';
+            if(data && data.length > 0) {
+                data.forEach(d => {
+                    tbody.innerHTML += `<tr><td class="p-2">${new Date(d.created_at).toLocaleDateString()}</td><td class="p-2 font-bold text-green-600">${d.quantity}</td><td class="p-2">${d.product_variants?.products?.name || '-'}</td></tr>`;
+                });
+            } else { tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-400">لا توجد تسليمات سابقة</td></tr>'; }
+        }
+
+        async function openDeliveryModal() {
+            const clientId = document.getElementById('mgrActiveClientId').value;
+            const tbody = document.getElementById('deliveryItemsBody');
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري البحث عن البضاعة المعلقة...</td></tr>';
+            openModal('deliveryModal');
+
+            const { data: pending } = await supabaseClient.from('inventory_transactions')
+                .select('id, variant_id, quantity, product_variants(size_name, products(name))')
+                .eq('client_id', clientId).eq('delivery_status', 'pending');
+            
+            tbody.innerHTML = '';
+            if(pending && pending.length > 0) {
+                pending.forEach(p => {
+                    tbody.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-2 font-bold">${p.product_variants?.products?.name} (${p.product_variants?.size_name})</td>
+                            <td class="p-2 text-center font-bold text-red-600">${p.quantity}</td>
+                            <td class="p-2 text-center bg-blue-50">
+                                <input type="number" id="delQty_${p.id}" value="${p.quantity}" max="${p.quantity}" min="1" class="w-20 border rounded p-1 text-center font-bold text-blue-800">
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-400">لا توجد بضاعة معلقة للتسليم (إما لم تصدر فاتورة مبيعات بعد، أو تم تسليم كل شيء).</td></tr>';
+            }
+        }
+
+        async function submitDelivery() {
+            const inputs = document.querySelectorAll('input[id^="delQty_"]');
+            let deliveredSomething = false;
+            for(const inp of inputs) {
+                const transId = inp.id.split('_')[1];
+                const deliverQty = parseInt(inp.value);
+                const maxQty = parseInt(inp.getAttribute('max'));
+                
+                if(deliverQty > 0) {
+                    if(deliverQty >= maxQty) {
+                        await supabaseClient.from('inventory_transactions').update({delivery_status: 'delivered'}).eq('id', transId);
+                    } else {
+                        // Split it: Update original to delivered qty, insert new pending for remainder
+                        await supabaseClient.from('inventory_transactions').update({delivery_status: 'delivered', quantity: deliverQty}).eq('id', transId);
+                        const { data: orig } = await supabaseClient.from('inventory_transactions').select('*').eq('id', transId).single();
+                        delete orig.id; orig.quantity = maxQty - deliverQty; orig.delivery_status = 'pending';
+                        await supabaseClient.from('inventory_transactions').insert([orig]);
+                    }
+                    deliveredSomething = true;
+                }
+            }
+            if(deliveredSomething) {
+                alert('تم اعتماد التسليم بنجاح.');
+                closeModal('deliveryModal');
+                fetchDeliveriesLog(document.getElementById('mgrActiveClientId').value);
+            } else {
+                alert('الرجاء إدخال كمية للتسليم.');
+            }
         }
 
         async function closeOrderManually() {
@@ -846,7 +1049,6 @@
             alert('تم أرشفة الأمر.');
         }
 
-        // --- Modals ---
         function openModal(id) {
             const el = document.getElementById(id);
             el.classList.remove('opacity-0', 'pointer-events-none');
