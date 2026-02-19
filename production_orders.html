@@ -36,10 +36,14 @@
             .sidebar-collapsed { width: 16rem !important; }
         }
 
+        /* --- PRINT STYLES --- */
         @media print {
             body * { visibility: hidden; }
-            #printablePO, #printablePO * { visibility: visible; }
-            #printablePO { 
+            /* Controller to show either PO or Invoice */
+            .printing-po #printablePO, .printing-po #printablePO * { visibility: visible; }
+            .printing-inv #printableClientInvoice, .printing-inv #printableClientInvoice * { visibility: visible; }
+            
+            #printablePO, #printableClientInvoice { 
                 position: absolute; left: 0; top: 0; width: 100%; min-height: 100%; 
                 background: white; z-index: 99999; padding: 0; display: block !important; 
             }
@@ -50,9 +54,9 @@
         }
         .print-header { background-color: #3e206d; color: white; padding: 20px; border-bottom: 4px solid #fccf4d; }
         .po-group-header { background-color: #f3f4f6; font-weight: bold; color: #3e206d; padding: 10px; border: 1px solid #d1d5db; border-bottom: none; margin-top: 15px; }
-        .po-table { width: 100%; border-collapse: collapse; text-align: right; font-size: 12px; }
-        .po-table th { background-color: #e5e7eb; padding: 8px; border: 1px solid #d1d5db; }
-        .po-table td { padding: 8px; border: 1px solid #d1d5db; }
+        .po-table, .inv-table { width: 100%; border-collapse: collapse; text-align: right; font-size: 12px; }
+        .po-table th, .inv-table th { background-color: #e5e7eb; padding: 8px; border: 1px solid #d1d5db; }
+        .po-table td, .inv-table td { padding: 8px; border: 1px solid #d1d5db; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden bg-gray-100">
@@ -126,35 +130,49 @@
             <div class="bg-white rounded-b-2xl shadow-sm border border-gray-100 p-4 md:p-6 min-h-[500px]">
                 
                 <div id="tab-client_orders" class="tab-content block">
+                    <div class="flex flex-col md:flex-row gap-3 mb-4 bg-gray-50 p-3 rounded-lg border">
+                        <input type="text" id="searchClientOrders" oninput="filterClientOrders()" placeholder="بحث باسم العميل أو رقم الأمر..." class="input-std flex-1">
+                        <select id="sortClientOrders" onchange="filterClientOrders()" class="input-std w-full md:w-48">
+                            <option value="newest">الأحدث أولاً</option>
+                            <option value="oldest">الأقدم أولاً</option>
+                        </select>
+                        <select id="statusClientOrders" onchange="filterClientOrders()" class="input-std w-full md:w-48">
+                            <option value="all">كل الحالات المالية</option>
+                            <option value="paid">خالص (مدفوع بالكامل)</option>
+                            <option value="debt">متبقي دفعة</option>
+                        </select>
+                    </div>
+
                     <div class="overflow-x-auto">
-                        <table class="w-full text-right text-sm min-w-[700px]">
-                            <thead class="bg-gray-50 text-gray-600">
+                        <table class="w-full text-right text-sm min-w-[800px]">
+                            <thead class="bg-gray-100 text-gray-700">
                                 <tr>
                                     <th class="p-3">رقم الأمر</th>
                                     <th class="p-3">التاريخ</th>
                                     <th class="p-3">اسم العميل</th>
                                     <th class="p-3">قيمة الأمر</th>
-                                    <th class="p-3 text-green-600">المدفوع</th>
-                                    <th class="p-3 text-red-600">المتبقي</th>
+                                    <th class="p-3 text-green-700">المدفوع</th>
+                                    <th class="p-3 text-red-700">المتبقي</th>
+                                    <th class="p-3 text-center">الحالة</th>
                                     <th class="p-3 text-center">إدارة</th>
                                 </tr>
                             </thead>
-                            <tbody id="clientOrdersTable" class="divide-y divide-gray-100"></tbody>
+                            <tbody id="clientOrdersTable" class="divide-y divide-gray-200"></tbody>
                         </table>
                     </div>
                 </div>
 
                 <div id="tab-supplier_pos" class="tab-content hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-right text-sm min-w-[700px]">
+                        <table class="w-full text-right text-sm min-w-[800px]">
                             <thead class="bg-blue-50 text-blue-900">
                                 <tr>
                                     <th class="p-3">رقم طلب الإنتاج</th>
                                     <th class="p-3">التاريخ</th>
                                     <th class="p-3">المورد</th>
-                                    <th class="p-3">تاريخ التسليم المتوقع</th>
+                                    <th class="p-3">تاريخ التسليم</th>
                                     <th class="p-3">الحالة</th>
-                                    <th class="p-3 text-center">إجراءات (استلام / طباعة)</th>
+                                    <th class="p-3 text-center">إجراءات</th>
                                 </tr>
                             </thead>
                             <tbody id="supplierPOTable" class="divide-y divide-blue-100"></tbody>
@@ -207,7 +225,7 @@
                         </select>
                     </div>
                 </div>
-                <h4 class="font-bold text-gray-800 mb-2 border-r-4 border-yellow-400 pr-2">الأصناف المتاحة للإنتاج (من أوامر العملاء السارية)</h4>
+                <h4 class="font-bold text-gray-800 mb-2 border-r-4 border-yellow-400 pr-2">الأصناف المتاحة للإنتاج (لم يتم طلبها من مورد بعد)</h4>
                 <div class="bg-white border rounded-lg overflow-x-auto shadow-sm">
                     <table class="w-full text-right text-sm min-w-[900px]">
                         <thead class="bg-gray-100 border-b">
@@ -226,7 +244,7 @@
                 </div>
             </div>
             <div class="p-4 bg-white border-t rounded-b-xl flex justify-between items-center shrink-0">
-                <p class="text-xs text-gray-500"><i class="fas fa-info-circle text-blue-500"></i> سيتم تجميع الأصناف المتشابهة تلقائياً في ورقة الطباعة.</p>
+                <p class="text-xs text-gray-500"><i class="fas fa-info-circle text-blue-500"></i> سيتم إخفاء الأصناف التي يتم إرسالها للمورد من هذه القائمة.</p>
                 <div class="flex gap-2">
                     <button type="button" onclick="closeModal('smartPOModal')" class="bg-gray-200 px-6 py-2 rounded font-bold hover:bg-gray-300">إلغاء</button>
                     <button type="button" onclick="submitSupplierPO()" class="gpack-btn px-8 py-2 rounded font-bold shadow-lg">حفظ وإنشاء أمر الطباعة</button>
@@ -235,23 +253,54 @@
         </div>
     </div>
 
+    <div id="poDetailsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[80]">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-60" onclick="closeModal('poDetailsModal')"></div>
+        <div class="modal-container bg-white w-full max-w-4xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[90vh]">
+            <div class="bg-blue-800 text-white p-4 flex justify-between items-center rounded-t-xl shrink-0">
+                <h3 class="text-lg font-bold">تفاصيل طلب المورد <span id="viewPoNum" class="text-yellow-300 serial-num"></span></h3>
+                <button onclick="closeModal('poDetailsModal')" class="text-white hover:text-red-300"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <table class="w-full text-right text-sm border">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-2 border">العميل</th>
+                            <th class="p-2 border">الصنف / المقاس</th>
+                            <th class="p-2 border text-center">الكمية</th>
+                            <th class="p-2 border">حالة التصميم</th>
+                            <th class="p-2 border">ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="poDetailsModalBody"></tbody>
+                </table>
+            </div>
+            <div class="p-4 bg-gray-50 border-t rounded-b-xl flex justify-end gap-2 shrink-0">
+                <button type="button" onclick="closeModal('poDetailsModal')" class="bg-gray-200 px-6 py-2 rounded font-bold">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
     <div id="receivePOModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[80]">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-80" onclick="closeModal('receivePOModal')"></div>
         <div class="modal-container bg-white w-full max-w-4xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[90vh]">
             <div class="bg-green-700 text-white p-4 flex justify-between items-center rounded-t-xl shrink-0">
-                <h3 class="text-lg font-bold"><i class="fas fa-box-open"></i> استلام بضاعة من المورد (توريد مخزني)</h3>
+                <h3 class="text-lg font-bold"><i class="fas fa-box-open"></i> استلام بضاعة وإنشاء فاتورة مشتريات</h3>
                 <button onclick="closeModal('receivePOModal')" class="text-white hover:text-red-300"><i class="fas fa-times text-xl"></i></button>
             </div>
             <input type="hidden" id="receivePoId">
+            <input type="hidden" id="receiveSupplierId">
             <div class="p-6 overflow-y-auto flex-1">
-                <p class="text-sm text-gray-600 mb-4">أدخل الكمية المستلمة فعلياً. سيتم ترحيلها مباشرة لمستودع العميل.</p>
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-4 text-sm text-yellow-800">
+                    <strong>ملاحظة هامة:</strong> إدخال الكميات المستلمة هنا سيقوم بترحيلها للمخزن، وسيتم <b>إنشاء فاتورة مشتريات (مديونية)</b> أوتوماتيكياً في سجل المورد بناءً على الكمية المستلمة * السعر.
+                </div>
                 <table class="w-full text-right text-sm border">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="p-2 border">العميل</th>
                             <th class="p-2 border">الصنف</th>
-                            <th class="p-2 border text-center">الكمية المطلوبة</th>
-                            <th class="p-2 border text-center bg-green-50 text-green-800">الكمية المستلمة فعلياً</th>
+                            <th class="p-2 border text-center">المطلوب</th>
+                            <th class="p-2 border text-center bg-green-50 text-green-800 w-32">المستلم فعلياً</th>
+                            <th class="p-2 border text-center">سعر الوحدة</th>
                         </tr>
                     </thead>
                     <tbody id="receivePOItemsBody"></tbody>
@@ -259,7 +308,7 @@
             </div>
             <div class="p-4 bg-gray-50 border-t rounded-b-xl flex justify-end gap-2 shrink-0">
                 <button type="button" onclick="closeModal('receivePOModal')" class="bg-gray-200 px-6 py-2 rounded font-bold">إلغاء</button>
-                <button type="button" onclick="submitReceivePO()" class="bg-green-600 text-white px-8 py-2 rounded font-bold shadow-lg hover:bg-green-700">تأكيد الاستلام</button>
+                <button type="button" onclick="submitReceivePO()" id="btnConfirmReceive" class="bg-green-600 text-white px-8 py-2 rounded font-bold shadow-lg hover:bg-green-700">تأكيد الاستلام وإنشاء الفاتورة</button>
             </div>
         </div>
     </div>
@@ -272,9 +321,13 @@
                 <button onclick="closeModal('invoiceModal')" class="text-white hover:text-red-300"><i class="fas fa-times text-xl"></i></button>
             </div>
             <input type="hidden" id="invModalType">
+            <input type="hidden" id="invOrderId">
+            <input type="hidden" id="invClientId">
+            <input type="hidden" id="invAdvancePayment" value="0">
+            
             <div class="p-6 overflow-y-auto flex-1">
-                <p class="text-sm text-gray-600 mb-4">يمكنك تعديل الكميات والأسعار قبل إصدار الفاتورة.</p>
-                <table class="w-full text-right text-sm border">
+                <p class="text-sm text-gray-600 mb-4">يمكنك تعديل الكميات والأسعار قبل إصدار الفاتورة للعميل.</p>
+                <table class="w-full text-right text-sm border mb-4">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="p-2 border">الصنف</th>
@@ -285,11 +338,19 @@
                     </thead>
                     <tbody id="invoiceItemsBody"></tbody>
                 </table>
-                <div class="mt-4 text-left font-bold text-lg text-purple-900">الإجمالي: <span id="invoiceTotalVal">0.00</span></div>
+                
+                <div class="flex justify-end">
+                    <div class="w-64 bg-gray-50 p-3 rounded border">
+                        <div class="flex justify-between text-sm mb-1"><span>الإجمالي:</span> <span id="invoiceTotalVal" class="font-bold">0.00</span></div>
+                        <div class="flex justify-between text-sm mb-1 text-green-700"><span>الدفعة المقدمة:</span> <span id="invoiceAdvanceVal" class="font-bold">0.00</span></div>
+                        <div class="border-t border-gray-300 my-1"></div>
+                        <div class="flex justify-between text-lg text-purple-900 font-bold"><span>المتبقي:</span> <span id="invoiceRemainingVal">0.00</span></div>
+                    </div>
+                </div>
             </div>
             <div class="p-4 bg-gray-50 border-t rounded-b-xl flex justify-end gap-2 shrink-0">
                 <button type="button" onclick="closeModal('invoiceModal')" class="bg-gray-200 px-6 py-2 rounded font-bold">إلغاء</button>
-                <button type="button" onclick="submitInvoice()" class="gpack-btn px-8 py-2 rounded font-bold shadow-lg">إصدار الفاتورة</button>
+                <button type="button" onclick="submitInvoice()" class="gpack-btn px-8 py-2 rounded font-bold shadow-lg">حفظ وإصدار</button>
             </div>
         </div>
     </div>
@@ -302,12 +363,12 @@
                 <button onclick="closeModal('deliveryModal')" class="text-white hover:text-red-300"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div class="p-6 overflow-y-auto flex-1">
-                <p class="text-sm text-gray-600 mb-4">أدخل الكمية المراد تسليمها للمندوب لخصمها نهائياً (إخلاء عهدة).</p>
+                <p class="text-sm text-gray-600 mb-4">أدخل الكمية المراد تسليمها للمندوب لخصمها نهائياً من المستودع وتغيير حالتها إلى Delivered.</p>
                 <table class="w-full text-right text-sm border">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="p-2 border">الصنف</th>
-                            <th class="p-2 border text-center text-red-600">البضاعة المعلقة (لم تسلم)</th>
+                            <th class="p-2 border text-center text-red-600">المحجوز بالمخزن (لم يسلم)</th>
                             <th class="p-2 border text-center text-blue-700 bg-blue-50">الكمية المُراد تسليمها الآن</th>
                         </tr>
                     </thead>
@@ -327,7 +388,7 @@
             
             <div class="bg-purple-900 text-white p-4 flex justify-between items-center shrink-0">
                 <div>
-                    <h2 class="text-xl font-bold">إدارة أمر تشغيل <span id="mgrOrderNum" class="text-yellow-400">#000</span></h2>
+                    <h2 class="text-xl font-bold">إدارة أمر تشغيل <span id="mgrOrderNum" class="text-yellow-400 serial-num">#000</span></h2>
                     <p class="text-sm opacity-80 mt-1">العميل: <span id="mgrClientName" class="font-bold">...</span></p>
                 </div>
                 <button onclick="closeModal('orderManagerModal')" class="text-white hover:text-red-300 text-2xl"><i class="fas fa-times"></i></button>
@@ -339,7 +400,7 @@
             <div class="flex-1 flex flex-col bg-gray-50 overflow-hidden">
                 <div class="bg-white border-b px-6 flex gap-6 shrink-0 pt-2 overflow-x-auto hide-scrollbar">
                     <button onclick="switchMgrTab('items')" id="mgr-tab-items" class="tab-btn active"><i class="fas fa-box"></i> أصناف الأمر</button>
-                    <button onclick="switchMgrTab('invoices')" id="mgr-tab-invoices" class="tab-btn"><i class="fas fa-file-invoice-dollar"></i> الفواتير (مالية ومبيعات)</button>
+                    <button onclick="switchMgrTab('invoices')" id="mgr-tab-invoices" class="tab-btn"><i class="fas fa-file-invoice-dollar"></i> الفواتير</button>
                     <button onclick="switchMgrTab('deliveries')" id="mgr-tab-deliveries" class="tab-btn"><i class="fas fa-truck-loading"></i> سندات التسليم</button>
                 </div>
                 
@@ -360,13 +421,13 @@
 
                     <div id="mgr-content-invoices" class="hidden">
                         <div class="flex gap-4 mb-6">
-                            <button onclick="openInvoiceModal('proforma')" class="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700"><i class="fas fa-file-alt"></i> إصدار فاتورة أولية (مطالبة مالية)</button>
+                            <button onclick="openInvoiceModal('proforma')" class="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700"><i class="fas fa-file-alt"></i> إصدار فاتورة أولية (مالية)</button>
                             <button onclick="openInvoiceModal('final')" class="bg-purple-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-purple-700"><i class="fas fa-check-double"></i> إصدار فاتورة مبيعات (خصم من المخزون)</button>
                         </div>
                         <div class="bg-white rounded-lg shadow-sm border p-4">
                             <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">سجل الفواتير الصادرة</h4>
                             <table class="w-full text-right text-sm">
-                                <thead class="bg-gray-50"><tr><th class="p-2">التاريخ</th><th class="p-2">رقم الفاتورة</th><th class="p-2">النوع</th><th class="p-2">الإجمالي</th></tr></thead>
+                                <thead class="bg-gray-50"><tr><th class="p-2">التاريخ</th><th class="p-2">رقم الفاتورة</th><th class="p-2">النوع</th><th class="p-2">الإجمالي</th><th class="p-2 text-center">إجراء</th></tr></thead>
                                 <tbody id="mgrInvoicesBody" class="divide-y"></tbody>
                             </table>
                         </div>
@@ -374,10 +435,10 @@
 
                     <div id="mgr-content-deliveries" class="hidden">
                         <div class="flex gap-4 mb-6">
-                            <button onclick="openDeliveryModal()" class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700"><i class="fas fa-shipping-fast"></i> إنشاء سند تسليم بضاعة للعميل</button>
+                            <button onclick="openDeliveryModal()" class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700"><i class="fas fa-shipping-fast"></i> إصدار سند تسليم</button>
                         </div>
                         <div class="bg-white rounded-lg shadow-sm border p-4">
-                            <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">سجلات التسليم</h4>
+                            <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">سجلات التسليم السابقة</h4>
                             <table class="w-full text-right text-sm">
                                 <thead class="bg-gray-50"><tr><th class="p-2">التاريخ</th><th class="p-2">الكمية المسلمة</th><th class="p-2">الصنف</th></tr></thead>
                                 <tbody id="mgrDeliveriesBody" class="divide-y"></tbody>
@@ -390,7 +451,7 @@
     </div>
 
     <div id="printablePO" class="hidden">
-        <div class="print-header flex justify-between items-center" id="poPrintContainer">
+        <div class="print-header flex justify-between items-center">
             <div class="text-right">
                 <h1 class="text-3xl font-bold mb-1">أمر إنتاج / طلب طباعة</h1>
                 <p class="text-sm opacity-80">Production Order (PO)</p>
@@ -404,7 +465,6 @@
                  <p class="text-xs text-gray-300 mt-1">Packaging Solutions</p>
             </div>
         </div>
-
         <div class="p-8">
             <div class="bg-gray-100 p-4 rounded border-r-4 border-purple-800 mb-8">
                 <h3 class="text-purple-900 font-bold mb-2">إلى السادة / المطبعة:</h3>
@@ -419,12 +479,53 @@
         </div>
     </div>
 
+    <div id="printableClientInvoice" class="hidden">
+        <div class="print-header flex justify-between items-center">
+            <div class="text-right">
+                <h1 class="text-3xl font-bold mb-1" id="printInvTitle">فاتورة</h1>
+                <p class="text-sm opacity-80" id="printInvTypeEn">Invoice</p>
+                <div class="mt-4 text-sm">
+                    <p><strong>التاريخ:</strong> <span id="printInvDate"></span></p>
+                    <p><strong>رقم الفاتورة:</strong> <span id="printInvNum" class="serial-num font-mono text-yellow-400 font-bold text-lg"></span></p>
+                </div>
+            </div>
+            <div class="text-center">
+                 <img src="https://i.postimg.cc/L6xs5hQh/logo-g-pack.png" alt="G.PACK Logo" class="h-20 mb-2 mx-auto filter brightness-0 invert">
+                 <p class="text-xs text-gray-300 mt-1">Packaging Solutions</p>
+                 <p class="text-xs text-gray-300 font-mono">CR: 4700121038 | VAT: 310033995300003</p>
+            </div>
+        </div>
+        <div class="p-8">
+            <div class="bg-gray-100 p-4 rounded border-r-4 border-purple-800 mb-8 flex justify-between">
+                <div>
+                    <h3 class="text-purple-900 font-bold mb-2">المطلوب من السادة:</h3>
+                    <p class="font-bold text-xl" id="printInvClient">-</p>
+                </div>
+            </div>
+            <table class="w-full text-right inv-table mb-8 border border-gray-200">
+                <thead>
+                    <tr><th width="5%">#</th><th width="45%">البيان (الصنف والمقاس)</th><th width="15%">الكمية</th><th width="15%">السعر</th><th width="20%">الإجمالي</th></tr>
+                </thead>
+                <tbody id="printInvItemsBody"></tbody>
+            </table>
+            <div class="flex justify-end mt-8">
+                <div class="w-1/2">
+                    <div class="flex justify-between border-b py-2"><span class="font-bold">الإجمالي قبل الضريبة:</span><span id="printInvSub" class="font-mono">0.00</span></div>
+                    <div class="flex justify-between border-b py-2 text-red-600"><span class="font-bold">ضريبة القيمة المضافة (15%):</span><span id="printInvTax" class="font-mono">0.00</span></div>
+                    <div class="flex justify-between py-2 bg-purple-100 px-2 mt-2 rounded"><span class="font-bold text-purple-900 text-lg">الإجمالي الشامل:</span><span id="printInvTotal" class="font-bold text-purple-900 text-lg font-mono">0.00</span></div>
+                    <div class="flex justify-between border-b py-2 text-green-700 mt-2"><span class="font-bold">الدفعة المقدمة:</span><span id="printInvPaid" class="font-mono">0.00</span></div>
+                    <div class="flex justify-between py-2"><span class="font-bold text-lg text-gray-800">المتبقي للدفع:</span><span id="printInvRem" class="font-bold text-lg font-mono text-gray-800">0.00</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let activeOrders = []; 
+        let allClientOrders = []; // Cached for live search
         let availablePOItems = []; 
         let suppliersList = [];
         let invoiceItemsTemp = [];
@@ -452,31 +553,85 @@
             document.getElementById(`tab-${tabName}-btn`).classList.add('active');
             
             if(tabName === 'supplier_pos') fetchSupplierPOs();
-            // Fix 7: Call archive fetch
             if(tabName === 'archive') fetchArchivedOrders();
         }
 
+        // --- Fetch Data & Filters ---
         async function fetchClientOrders() {
-            const { data } = await supabaseClient.from('orders').select('*, clients(name)').eq('status', 'production').order('created_at', {ascending: false});
-            activeOrders = data || [];
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            const { data } = await supabaseClient.from('orders')
+                .select('*, clients(name)')
+                .eq('status', 'production')
+                .order('created_at', {ascending: false});
+            
+            allClientOrders = data || [];
+            filterClientOrders(); // Render with current filters
+            document.getElementById('loadingIndicator').classList.add('hidden');
+        }
+
+        function filterClientOrders() {
+            const term = document.getElementById('searchClientOrders').value.toLowerCase();
+            const sort = document.getElementById('sortClientOrders').value;
+            const statusF = document.getElementById('statusClientOrders').value;
+
+            let filtered = [...allClientOrders];
+
+            // Search
+            if(term) {
+                filtered = filtered.filter(o => 
+                    (o.clients?.name && o.clients.name.toLowerCase().includes(term)) || 
+                    (o.order_number && o.order_number.toString().includes(term))
+                );
+            }
+
+            // Status Filter (Financial)
+            if(statusF !== 'all') {
+                filtered = filtered.filter(o => {
+                    const paid = o.paid_amount || 0;
+                    const rem = o.grand_total - paid;
+                    if(statusF === 'paid') return rem <= 0;
+                    if(statusF === 'debt') return rem > 0;
+                    return true;
+                });
+            }
+
+            // Sort
+            filtered.sort((a, b) => {
+                const dateA = new Date(a.created_at);
+                const dateB = new Date(b.created_at);
+                return sort === 'newest' ? dateB - dateA : dateA - dateB;
+            });
+
+            renderClientOrdersTable(filtered);
+        }
+
+        function renderClientOrdersTable(orders) {
             const tbody = document.getElementById('clientOrdersTable');
             tbody.innerHTML = '';
             
-            if(activeOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-400">لا توجد أوامر تشغيل سارية</td></tr>';
+            if(orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-400">لا توجد أوامر تشغيل سارية مطابقة</td></tr>';
                 return;
             }
 
-            activeOrders.forEach(o => {
-                const remaining = o.grand_total - (o.paid_amount || 0);
+            orders.forEach(o => {
+                const paid = o.paid_amount || 0;
+                const remaining = o.grand_total - paid;
+                
+                // Fix 5: Dynamic Status Badge based on finance for now (since deeply querying POs for every row is slow)
+                let dynStatus = '<span class="bg-yellow-100 text-yellow-800 px-2 rounded text-xs font-bold">قيد التشغيل</span>';
+                if(remaining <= 0) dynStatus += ' <span class="bg-green-100 text-green-800 px-2 rounded text-xs font-bold">خالص مالياً</span>';
+                else dynStatus += ' <span class="bg-red-100 text-red-800 px-2 rounded text-xs font-bold">متبقي دفعة</span>';
+
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-gray-50 transition">
                         <td class="p-3 font-bold text-purple-800 serial-num">#${o.order_number}</td>
                         <td class="p-3 text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
                         <td class="p-3 font-bold">${o.clients?.name || '-'}</td>
                         <td class="p-3">${o.grand_total}</td>
-                        <td class="p-3 text-green-600 font-bold">${o.paid_amount || 0}</td>
+                        <td class="p-3 text-green-600 font-bold">${paid}</td>
                         <td class="p-3 text-red-600 font-bold">${remaining > 0 ? remaining : 0}</td>
+                        <td class="p-3 text-center">${dynStatus}</td>
                         <td class="p-3 text-center">
                             <button onclick="manageOrder('${o.id}', '${o.client_id}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-1 rounded-full text-xs font-bold transition border border-blue-200">إدارة الأمر</button>
                         </td>
@@ -505,7 +660,7 @@
                         <td class="p-3 text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
                         <td class="p-3 font-bold">${o.clients?.name || '-'}</td>
                         <td class="p-3">${o.grand_total}</td>
-                        <td class="p-3 text-center"><button class="text-blue-500 hover:underline text-xs" onclick="manageOrder('${o.id}', '${o.client_id}')">عرض</button></td>
+                        <td class="p-3 text-center"><button class="text-blue-500 hover:underline text-xs" onclick="manageOrder('${o.id}', '${o.client_id}')">عرض التفاصيل</button></td>
                     </tr>
                 `;
             });
@@ -530,7 +685,6 @@
 
             data.forEach(po => {
                 let statusBadge = '<span class="bg-yellow-100 text-yellow-800 px-2 rounded text-xs font-bold">قيد التصنيع</span>';
-                // Fix 3 & 6: Call openReceivePOModal
                 let receiveBtn = `<button onclick="openReceivePOModal('${po.id}')" class="text-green-600 hover:text-white hover:bg-green-600 font-bold text-xs bg-green-50 px-3 py-1 rounded border border-green-200 transition" title="استلام بضاعة (مشتريات)"><i class="fas fa-box-open"></i> استلام</button>`;
                 
                 if(po.status === 'completed') {
@@ -546,6 +700,7 @@
                         <td class="p-3 text-red-600 text-sm font-bold">${po.expected_delivery_date || '-'}</td>
                         <td class="p-3">${statusBadge}</td>
                         <td class="p-3 text-center flex justify-center gap-2">
+                            <button onclick="viewPODetails('${po.id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 px-2 py-1 rounded border" title="عرض التفاصيل"><i class="fas fa-eye"></i></button>
                             ${receiveBtn}
                             <button onclick="reprintSupplierPO('${po.id}')" class="text-gray-500 hover:text-purple-600 bg-gray-100 px-3 py-1 rounded border hover:bg-purple-50 transition" title="طباعة الأمر"><i class="fas fa-print"></i></button>
                         </td>
@@ -554,12 +709,49 @@
             });
         }
 
-        // --- Fix 5: Filter Ordered Items ---
+        // --- Fix 8: PO Details View Modal ---
+        async function viewPODetails(poId) {
+            const tbody = document.getElementById('poDetailsModalBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>';
+            
+            const { data: po } = await supabaseClient.from('supplier_production_orders').select('po_number').eq('id', poId).single();
+            document.getElementById('viewPoNum').innerText = po ? po.po_number : '';
+            openModal('poDetailsModal');
+
+            // Fetch safely
+            const { data: items } = await supabaseClient.from('supplier_po_items')
+                .select('*, order_items(quantity, orders(clients(name)), product_variants(size_name, products(name)))')
+                .eq('supplier_po_id', poId);
+
+            tbody.innerHTML = '';
+            if(items && items.length > 0) {
+                items.forEach(i => {
+                    const oi = i.order_items || {};
+                    const clientName = oi.orders?.clients?.name || '-';
+                    const prodName = oi.product_variants ? `${oi.product_variants.products?.name} (${oi.product_variants.size_name})` : '-';
+                    const dsText = i.design_status === 'new_design' ? '<span class="text-red-600">تصميم جديد</span>' : '<span class="text-blue-600">إعادة طباعة</span>';
+                    
+                    tbody.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-2 font-bold">${clientName}</td>
+                            <td class="p-2">${prodName}</td>
+                            <td class="p-2 text-center font-bold font-mono">${oi.quantity || 0}</td>
+                            <td class="p-2 text-xs font-bold">${dsText}</td>
+                            <td class="p-2 text-xs text-gray-500">${i.notes || '-'}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">لا توجد تفاصيل</td></tr>';
+            }
+        }
+
+        // --- Fix 1 & 5: Smart PO logic ---
         async function openSmartPOModal() {
             document.getElementById('poSupplierSelect').value = '';
             document.getElementById('poExpectedDate').value = '';
             
-            // Fetch already ordered items to exclude them
+            // Fix 5: Filter Ordered Items logically
             const { data: poItemsData } = await supabaseClient.from('supplier_po_items').select('order_item_id');
             const orderedItemIds = poItemsData ? poItemsData.map(i => i.order_item_id) : [];
 
@@ -567,7 +759,6 @@
                 .select(`*, orders!inner(order_number, status, clients(name)), product_variants(id, size_name, selling_price, products(name))`)
                 .eq('orders.status', 'production');
             
-            // Filter out items that are already in a supplier PO
             availablePOItems = (data || []).filter(item => !orderedItemIds.includes(item.id));
             
             const tbody = document.getElementById('poAvailableItemsBody');
@@ -619,7 +810,6 @@
 
         function toggleAllPoItems(el) { document.querySelectorAll('.po-item-checkbox').forEach(cb => cb.checked = el.checked); }
 
-        // --- Fix 1: Serial Format ---
         async function submitSupplierPO() {
             const supplierId = document.getElementById('poSupplierSelect').value;
             const expectedDate = document.getElementById('poExpectedDate').value;
@@ -655,7 +845,7 @@
 
             if(validationFailed) return alert('يجب تحديد (الحالة التصنيعية) لجميع الأصناف المحددة!');
 
-            // Accurate Serial Format 0001-PO-30026
+            // Fix 1: Accurate Serial Format 0001-PO-30026
             const { count } = await supabaseClient.from('supplier_production_orders').select('*', { count: 'exact', head: true });
             const nextSeq = (count || 0) + 1;
             const year = new Date().getFullYear().toString().substr(-2);
@@ -682,7 +872,6 @@
         async function reprintSupplierPO(poId) {
             try {
                 const { data: poData } = await supabaseClient.from('supplier_production_orders').select('*').eq('id', poId).single();
-                // Safely fetch nested data
                 const { data: items } = await supabaseClient.from('supplier_po_items')
                     .select('*, order_items(quantity, unit_price, orders(clients(name)), product_variants(size_name, products(name)))')
                     .eq('supplier_po_id', poId);
@@ -690,15 +879,15 @@
                 if (!items || items.length === 0) return alert("لا توجد بيانات للطباعة.");
 
                 const reconstructedItems = items.map(i => {
-                    const oi = i.order_items;
+                    const oi = i.order_items || {};
                     return {
                         design_status: i.design_status,
                         notes: i.notes,
                         _meta: {
-                            product: oi?.product_variants ? `${oi.product_variants.products?.name} (${oi.product_variants.size_name})` : 'غير معروف',
-                            client: oi?.orders?.clients?.name || 'عميل نقدي',
-                            qty: oi?.quantity || 0,
-                            price: oi?.unit_price || 0
+                            product: oi.product_variants ? `${oi.product_variants.products?.name} (${oi.product_variants.size_name})` : 'غير معروف',
+                            client: oi.orders?.clients?.name || 'عميل نقدي',
+                            qty: oi.quantity || 0,
+                            price: oi.unit_price || 0
                         }
                     };
                 });
@@ -707,6 +896,9 @@
         }
 
         function buildAndPrintPO(poData, itemsWithMeta, printToggle, supplierId) {
+            document.body.classList.add('printing-po');
+            document.body.classList.remove('printing-inv');
+            
             const printContainer = document.getElementById('printablePO');
             if(printToggle === 'hide') printContainer.classList.add('hide-price');
             else printContainer.classList.remove('hide-price');
@@ -770,31 +962,38 @@
             window.print();
         }
 
-        // --- Fix 3 & 6: Flexible Receive PO Modal ---
+        // --- Fix 4 & 6: Flexible Receive PO & Purchase Invoice Auto-Creation ---
         async function openReceivePOModal(poId) {
             document.getElementById('receivePoId').value = poId;
             const tbody = document.getElementById('receivePOItemsBody');
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i></td></tr>';
             openModal('receivePOModal');
 
+            // Safe fetch
+            const { data: poData } = await supabaseClient.from('supplier_production_orders').select('supplier_id').eq('id', poId).single();
+            document.getElementById('receiveSupplierId').value = poData ? poData.supplier_id : '';
+
             const { data: items } = await supabaseClient.from('supplier_po_items')
-                .select('id, order_item_id, order_items(quantity, variant_id, orders(client_id, clients(name)), product_variants(size_name, products(name)))')
+                .select('id, order_item_id, order_items(quantity, unit_price, variant_id, orders(client_id, clients(name)), product_variants(size_name, products(name)))')
                 .eq('supplier_po_id', poId);
 
             tbody.innerHTML = '';
-            if(items) {
+            if(items && items.length > 0) {
                 items.forEach(i => {
-                    const oi = i.order_items;
-                    const cName = oi.orders?.clients?.name || '-';
+                    const oi = i.order_items || {};
+                    const orders = oi.orders || {};
+                    const cName = orders.clients?.name || '-';
                     const pName = oi.product_variants ? `${oi.product_variants.products?.name} (${oi.product_variants.size_name})` : '-';
                     tbody.innerHTML += `
                         <tr class="border-b">
                             <td class="p-2 font-bold text-xs">${cName}</td>
                             <td class="p-2 text-xs">${pName}</td>
-                            <td class="p-2 text-center font-bold">${oi.quantity}</td>
+                            <td class="p-2 text-center font-bold">${oi.quantity || 0}</td>
                             <td class="p-2 text-center bg-green-50">
-                                <input type="number" id="recQty_${i.id}" value="${oi.quantity}" class="w-20 border rounded p-1 text-center font-bold text-green-700" data-var="${oi.variant_id}" data-client="${oi.orders.client_id}">
+                                <input type="number" id="recQty_${i.id}" value="${oi.quantity || 0}" class="w-20 border rounded p-1 text-center font-bold text-green-700" 
+                                data-var="${oi.variant_id}" data-client="${orders.client_id}" data-price="${oi.unit_price}">
                             </td>
+                            <td class="p-2 text-center text-xs text-gray-500">${oi.unit_price}</td>
                         </tr>
                     `;
                 });
@@ -803,31 +1002,61 @@
 
         async function submitReceivePO() {
             const poId = document.getElementById('receivePoId').value;
+            const supplierId = document.getElementById('receiveSupplierId').value;
             const inputs = document.querySelectorAll('input[id^="recQty_"]');
             
             const { data: wh } = await supabaseClient.from('warehouses').select('id').limit(1).single();
             const defaultWhId = wh ? wh.id : null;
+
+            document.getElementById('btnConfirmReceive').disabled = true;
+            document.getElementById('btnConfirmReceive').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الاستلام والفوترة...';
+
+            let totalInvoiceAmount = 0;
 
             for(const inp of inputs) {
                 const qty = parseInt(inp.value);
                 if(qty > 0) {
                     const varId = inp.getAttribute('data-var');
                     const cId = inp.getAttribute('data-client');
+                    const price = parseFloat(inp.getAttribute('data-price')) || 0;
                     
+                    totalInvoiceAmount += (qty * price);
+
+                    // 1. Update Stock
                     const { data: stock } = await supabaseClient.from('warehouse_stock').select('*').eq('warehouse_id', defaultWhId).eq('variant_id', varId).eq('client_id', cId).single();
                     if(stock) {
                         await supabaseClient.from('warehouse_stock').update({ quantity: stock.quantity + qty }).eq('id', stock.id);
                     } else {
                         await supabaseClient.from('warehouse_stock').insert([{ warehouse_id: defaultWhId, variant_id: varId, client_id: cId, quantity: qty }]);
                     }
+                    
+                    // 2. Log Inventory Transaction
                     await supabaseClient.from('inventory_transactions').insert([{
                         warehouse_to: defaultWhId, variant_id: varId, client_id: cId, quantity: qty, transaction_type: 'supply', delivery_status: 'delivered', notes: 'استلام من أمر إنتاج مورد'
                     }]);
                 }
             }
+
+            // 3. Create Purchase Invoice Automatically
+            if(totalInvoiceAmount > 0) {
+                const docNum = `PINV-${Date.now().toString().slice(-6)}`;
+                await supabaseClient.from('supplier_transactions').insert([{
+                    supplier_id: supplierId,
+                    type: 'invoice',
+                    amount: totalInvoiceAmount,
+                    description: `استلام آلي من طلب إنتاج رقم ` + document.getElementById('printPoNum').innerText,
+                    document_number: docNum,
+                    warehouse_id: defaultWhId,
+                    is_taxable: false // Assuming defaults, can be enhanced later
+                }]);
+            }
+
             await supabaseClient.from('supplier_production_orders').update({status: 'completed'}).eq('id', poId);
-            alert('تم استلام البضاعة وإضافتها للمخزون.');
+            
+            alert('تم استلام البضاعة وإضافتها للمخزون، وتم إنشاء فاتورة مشتريات (مديونية) تلقائياً.');
             closeModal('receivePOModal');
+            document.getElementById('btnConfirmReceive').disabled = false;
+            document.getElementById('btnConfirmReceive').innerHTML = 'تأكيد الاستلام وإنشاء الفاتورة';
             fetchSupplierPOs();
         }
 
@@ -836,11 +1065,11 @@
             document.getElementById('mgrActiveOrderId').value = orderId;
             document.getElementById('mgrActiveClientId').value = clientId;
 
-            const order = activeOrders.find(o => o.id === orderId);
-            // Fallback for archived orders that might not be in activeOrders array
+            const order = activeOrders.find(o => o.id === orderId) || (await supabaseClient.from('orders').select('*, clients(name)').eq('id', orderId).single()).data;
             if(order) {
                 document.getElementById('mgrOrderNum').innerText = `#${order.order_number}`;
                 document.getElementById('mgrClientName').innerText = order.clients?.name || 'عميل نقدي';
+                document.getElementById('invAdvancePayment').value = order.paid_amount || 0; // Store for invoice math
             }
 
             switchMgrTab('items'); 
@@ -869,16 +1098,70 @@
             fetchDeliveriesLog(clientId);
         }
 
+        // Fix 3: Print Action in Invoice list
         async function fetchClientInvoices(orderId) {
             const tbody = document.getElementById('mgrInvoicesBody');
             tbody.innerHTML = '';
-            const { data } = await supabaseClient.from('client_invoices').select('*').eq('order_id', orderId);
+            const { data } = await supabaseClient.from('client_invoices').select('*').eq('order_id', orderId).order('created_at', {ascending: false});
             if(data && data.length > 0) {
                 data.forEach(inv => {
-                    const typeAr = inv.invoice_type === 'proforma' ? '<span class="text-blue-600 bg-blue-50 px-2 rounded">أولية (مالية)</span>' : '<span class="text-purple-600 bg-purple-50 px-2 rounded">مبيعات (خصم مخزون)</span>';
-                    tbody.innerHTML += `<tr><td class="p-2">${new Date(inv.created_at).toLocaleDateString()}</td><td class="p-2 font-mono text-left">${inv.invoice_number}</td><td class="p-2">${typeAr}</td><td class="p-2 font-bold">${inv.total_amount}</td></tr>`;
+                    const typeAr = inv.invoice_type === 'proforma' ? '<span class="text-blue-600 bg-blue-50 px-2 rounded">أولية (مالية)</span>' : '<span class="text-purple-600 bg-purple-50 px-2 rounded">مبيعات (نهائية)</span>';
+                    tbody.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-2">${new Date(inv.created_at).toLocaleDateString()}</td>
+                            <td class="p-2 font-mono text-left">${inv.invoice_number}</td>
+                            <td class="p-2">${typeAr}</td>
+                            <td class="p-2 font-bold">${inv.total_amount}</td>
+                            <td class="p-2 text-center">
+                                <button onclick='printClientInvoice(${JSON.stringify(inv)})' class="text-gray-500 hover:text-purple-600 p-1 border rounded bg-white" title="طباعة"><i class="fas fa-print"></i></button>
+                            </td>
+                        </tr>`;
                 });
-            } else { tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-gray-400">لا توجد فواتير مصدرة</td></tr>'; }
+            } else { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد فواتير مصدرة</td></tr>'; }
+        }
+
+        // Fix 3: Logic to print Client Invoices
+        function printClientInvoice(invData) {
+            document.body.classList.remove('printing-po');
+            document.body.classList.add('printing-inv');
+
+            document.getElementById('printInvTitle').innerText = invData.invoice_type === 'proforma' ? 'فاتورة أولية (مطالبة مالية)' : 'فاتورة ضريبية';
+            document.getElementById('printInvTypeEn').innerText = invData.invoice_type === 'proforma' ? 'Proforma Invoice' : 'Tax Invoice';
+            document.getElementById('printInvDate').innerText = new Date(invData.created_at).toLocaleDateString('ar-EG');
+            document.getElementById('printInvNum').innerText = invData.invoice_number;
+            document.getElementById('printInvClient').innerText = document.getElementById('mgrClientName').innerText;
+
+            const tbody = document.getElementById('printInvItemsBody');
+            tbody.innerHTML = '';
+            
+            let sub = 0;
+            const items = invData.items_snapshot || [];
+            items.forEach((i, idx) => {
+                const rowTotal = i.qty * i.price;
+                sub += rowTotal;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="text-center">${idx + 1}</td>
+                        <td class="font-bold">${i.name}</td>
+                        <td class="text-center font-bold">${i.qty}</td>
+                        <td class="text-center">${i.price}</td>
+                        <td class="text-center font-bold">${rowTotal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            const tax = sub * 0.15;
+            const grand = sub + tax;
+            // The logic implies the invoice JSON should have stored downpayment. If not, use standard math.
+            const paid = invData.down_payment || 0; 
+
+            document.getElementById('printInvSub').innerText = sub.toFixed(2);
+            document.getElementById('printInvTax').innerText = tax.toFixed(2);
+            document.getElementById('printInvTotal').innerText = grand.toFixed(2);
+            document.getElementById('printInvPaid').innerText = paid.toFixed(2);
+            document.getElementById('printInvRem').innerText = (grand - paid).toFixed(2);
+
+            window.print();
         }
 
         function switchMgrTab(tabName) {
@@ -891,7 +1174,7 @@
             document.getElementById(`mgr-tab-${tabName}`).classList.add('active');
         }
 
-        // --- Fix 2: Flexible Invoice Modal ---
+        // --- Fix 2: Flexible Invoice Modal & Advance Payment ---
         async function openInvoiceModal(type) {
             document.getElementById('invModalType').value = type;
             document.getElementById('invoiceModalTitle').innerText = type === 'proforma' ? 'إصدار فاتورة أولية (مالية)' : 'إصدار فاتورة مبيعات (خصم من المخزون)';
@@ -904,9 +1187,11 @@
             tbody.innerHTML = '';
             
             invoiceItemsTemp.forEach((item, idx) => {
+                const pName = `${item.product_variants?.products?.name} (${item.product_variants?.size_name})`;
+                invoiceItemsTemp[idx].fullName = pName; // save for json snapshot
                 tbody.innerHTML += `
                     <tr>
-                        <td class="p-2 font-bold">${item.product_variants?.products?.name} (${item.product_variants?.size_name})</td>
+                        <td class="p-2 font-bold">${pName}</td>
                         <td class="p-2 text-center"><input type="number" id="invQty_${idx}" value="${item.quantity}" class="w-20 border rounded p-1 text-center font-bold" oninput="calcInvRow(${idx})"></td>
                         <td class="p-2 text-center"><input type="number" id="invPrice_${idx}" value="${item.unit_price}" class="w-20 border rounded p-1 text-center" oninput="calcInvRow(${idx})"></td>
                         <td class="p-2 text-center text-purple-700 font-bold" id="invTotal_${idx}">${(item.quantity * item.unit_price).toFixed(2)}</td>
@@ -924,9 +1209,16 @@
         }
 
         function calcInvTotal() {
-            let total = 0;
-            invoiceItemsTemp.forEach((_, idx) => { total += parseFloat(document.getElementById(`invTotal_${idx}`).innerText); });
-            document.getElementById('invoiceTotalVal').innerText = total.toFixed(2);
+            let sub = 0;
+            invoiceItemsTemp.forEach((_, idx) => { sub += parseFloat(document.getElementById(`invTotal_${idx}`).innerText); });
+            const tax = sub * 0.15;
+            const grand = sub + tax;
+            const advance = parseFloat(document.getElementById('invAdvancePayment').value) || 0;
+            const rem = grand - advance;
+
+            document.getElementById('invoiceTotalVal').innerText = grand.toFixed(2);
+            document.getElementById('invoiceAdvanceVal').innerText = advance.toFixed(2);
+            document.getElementById('invoiceRemainingVal').innerText = (rem > 0 ? rem : 0).toFixed(2);
         }
 
         async function submitInvoice() {
@@ -934,16 +1226,14 @@
             const orderId = document.getElementById('mgrActiveOrderId').value;
             const clientId = document.getElementById('mgrActiveClientId').value;
             
-            // Read inputs
-            let finalTotal = 0;
+            let finalTotal = parseFloat(document.getElementById('invoiceTotalVal').innerText);
             let finalItems = [];
             
             for(let i=0; i<invoiceItemsTemp.length; i++) {
                 const qty = parseFloat(document.getElementById(`invQty_${i}`).value) || 0;
                 const price = parseFloat(document.getElementById(`invPrice_${i}`).value) || 0;
                 if(qty > 0) {
-                    finalItems.push({ variant_id: invoiceItemsTemp[i].variant_id, qty: qty, price: price });
-                    finalTotal += (qty * price);
+                    finalItems.push({ variant_id: invoiceItemsTemp[i].variant_id, name: invoiceItemsTemp[i].fullName, qty: qty, price: price });
                 }
             }
 
@@ -956,21 +1246,26 @@
                             variant_id: item.variant_id, client_id: clientId, quantity: item.qty, transaction_type: 'dispense', delivery_status: 'pending', notes: 'محجوز لفاتورة مبيعات'
                         }]);
                     } else {
-                        return alert(`تنبيه: الرصيد المخزني لا يكفي لخصم الكمية المطلوبة من صنف معين!`);
+                        return alert(`تنبيه: الرصيد المخزني لا يكفي لخصم الكمية المطلوبة من الصنف: ${item.name}!\n يرجى استلام البضاعة من المورد أولاً.`);
                     }
                 }
             }
 
             const prefix = type === 'proforma' ? 'PRO' : 'INV';
             const invNum = `${prefix}-${Date.now().toString().slice(-6)}`;
-            await supabaseClient.from('client_invoices').insert([{ order_id: orderId, client_id: clientId, invoice_type: type, invoice_number: invNum, total_amount: finalTotal, items_snapshot: finalItems }]);
+            const advance = parseFloat(document.getElementById('invAdvancePayment').value) || 0;
+
+            await supabaseClient.from('client_invoices').insert([{ 
+                order_id: orderId, client_id: clientId, invoice_type: type, invoice_number: invNum, 
+                total_amount: finalTotal, down_payment: advance, items_snapshot: finalItems 
+            }]);
 
             alert("تم الإصدار بنجاح!");
             closeModal('invoiceModal');
             fetchClientInvoices(orderId);
         }
 
-        // --- Fix 4: Delivery Note Modal ---
+        // --- Fix 4: Delivery Note Modal Active ---
         async function fetchDeliveriesLog(clientId) {
             const tbody = document.getElementById('mgrDeliveriesBody');
             const { data } = await supabaseClient.from('inventory_transactions').select('*, product_variants(products(name))').eq('client_id', clientId).eq('delivery_status', 'delivered').order('created_at', {ascending: false});
@@ -1022,7 +1317,6 @@
                     if(deliverQty >= maxQty) {
                         await supabaseClient.from('inventory_transactions').update({delivery_status: 'delivered'}).eq('id', transId);
                     } else {
-                        // Split it: Update original to delivered qty, insert new pending for remainder
                         await supabaseClient.from('inventory_transactions').update({delivery_status: 'delivered', quantity: deliverQty}).eq('id', transId);
                         const { data: orig } = await supabaseClient.from('inventory_transactions').select('*').eq('id', transId).single();
                         delete orig.id; orig.quantity = maxQty - deliverQty; orig.delivery_status = 'pending';
