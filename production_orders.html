@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G.PACK - أوامر التشغيل والإنتاج</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; }
+        .gpack-purple { background-color: #3e206d; }
+        .gpack-yellow { color: #fccf4d; }
+        .gpack-btn { background-color: #fccf4d; color: #3e206d; transition: all 0.3s; }
+        .gpack-btn:hover { background-color: #e6bd45; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
+        .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
+        
+        .modal { transition: opacity 0.2s ease-in-out; }
+        body.modal-active { overflow: hidden; }
+        .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; cursor: pointer; padding: 10px 15px; white-space: nowrap; }
+        .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background-color: #f9fafb; }
+        .input-std { width: 100%; border: 1px solid #d1d5db; padding: 8px; border-radius: 6px; font-size: 0.875rem; outline: none; }
+        .input-std:focus { border-color: #3e206d; box-shadow: 0 0 0 1px #3e206d; }
+        
+        .serial-num { direction: ltr; unicode-bidi: embed; display: inline-block; text-align: left; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Sidebar Transition */
+        #sidebar { transition: width 0.3s ease, transform 0.3s ease; }
+        .sidebar-collapsed { width: 0 !important; overflow: hidden; }
+        @media (max-width: 768px) {
+            .sidebar-mobile-hidden { transform: translateX(100%); }
+            .sidebar-collapsed { width: 16rem !important; }
+        }
+
+        /* --- PRINT STYLES FOR SUPPLIER PO --- */
+        @media print {
+            body * { visibility: hidden; }
+            #printablePO, #printablePO * { visibility: visible; }
+            #printablePO { 
+                position: absolute; left: 0; top: 0; width: 100%; min-height: 100%; 
+                background: white; z-index: 99999; padding: 0; display: block !important; 
+            }
+            .no-print { display: none !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .print-price-col { display: table-cell; } /* Default */
+            .hide-price .print-price-col { display: none !important; }
+        }
+        .print-header { background-color: #3e206d; color: white; padding: 20px; border-bottom: 4px solid #fccf4d; }
+        .po-group-header { background-color: #f3f4f6; font-weight: bold; color: #3e206d; padding: 10px; border: 1px solid #d1d5db; border-bottom: none; margin-top: 15px; }
+        .po-table { width: 100%; border-collapse: collapse; text-align: right; font-size: 12px; }
+        .po-table th { background-color: #e5e7eb; padding: 8px; border: 1px solid #d1d5db; }
+        .po-table td { padding: 8px; border: 1px solid #d1d5db; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden bg-gray-100">
+
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
+
+    <aside id="sidebar" class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-30 fixed md:relative h-full sidebar-mobile-hidden md:transform-none shrink-0">
+        <div class="h-20 flex items-center justify-between px-6 border-b border-purple-800/50">
+            <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2">
+                <i class="fas fa-box-open gpack-yellow"></i> <span class="whitespace-nowrap">G.PACK</span>
+            </h1>
+            <button onclick="toggleSidebar()" class="md:hidden text-white hover:text-red-300"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="p-4 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20 whitespace-nowrap overflow-hidden">
+            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400 shrink-0">
+                <i class="fas fa-user text-yellow-400"></i>
+            </div>
+            <div>
+                <p class="text-sm font-bold">المدير العام</p>
+                <p class="text-xs text-gray-300">Admin</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 space-y-1">
+            <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-th-large w-5"></i> الرئيسية</a>
+            <a href="products.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-box w-5"></i> الأصناف</a>
+            <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-file-invoice-dollar w-5"></i> عروض الأسعار</a>
+            <a href="production_orders.html" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-white font-medium whitespace-nowrap"><i class="fas fa-industry w-5"></i> أوامر التشغيل</a>
+            <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-cubes w-5"></i> المستودعات</a>
+            <a href="suppliers.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-truck w-5"></i> الموردين</a>
+            <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-users w-5"></i> العملاء</a>
+            <a href="employees.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-id-card w-5"></i> الموظفين</a>
+            <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-list-alt w-5"></i> القوائم</a>
+            <a href="permissions.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-user-shield w-5"></i> الصلاحيات</a>
+            <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-tasks w-5"></i> المهام</a>
+            <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-file-signature w-5"></i> الشروط العامة</a>
+        </nav>
+        
+        <div class="p-4 border-t border-purple-800/50">
+            <button class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2 whitespace-nowrap">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-hidden relative w-full transition-all duration-300">
+        <header class="h-20 bg-white shadow-sm flex items-center justify-between px-4 md:px-8 z-10 shrink-0 no-print">
+            <div class="flex items-center gap-3 shrink-0">
+                <button onclick="toggleSidebar()" class="text-gray-600 text-xl focus:outline-none hover:text-gpack-purple p-2 rounded-md hover:bg-gray-100">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 class="text-lg md:text-xl font-bold text-gray-800 whitespace-nowrap">أوامر التشغيل والإنتاج</h2>
+                <div id="loadingIndicator" class="hidden flex items-center gap-2 text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full"><i class="fas fa-sync fa-spin"></i></div>
+            </div>
+            
+            <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar flex-1 justify-end pl-2">
+                <button onclick="openSmartPOModal()" class="gpack-btn px-4 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2 border border-yellow-500">
+                    <i class="fas fa-magic"></i><span>أمر إنتاج مورد (تجميعي)</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 no-print">
+            <div class="bg-white rounded-t-2xl border-b border-gray-100 flex overflow-x-auto whitespace-nowrap hide-scrollbar">
+                <button onclick="switchTab('client_orders')" id="tab-client_orders-btn" class="tab-btn active"><i class="fas fa-industry"></i> أوامر العملاء (السارية)</button>
+                <button onclick="switchTab('supplier_pos')" id="tab-supplier_pos-btn" class="tab-btn"><i class="fas fa-truck-loading text-blue-600"></i> أوامر الموردين (قيد التصنيع)</button>
+                <button onclick="switchTab('archive')" id="tab-archive-btn" class="tab-btn"><i class="fas fa-archive text-gray-500"></i> الأرشيف (منتهية)</button>
+            </div>
+
+            <div class="bg-white rounded-b-2xl shadow-sm border border-gray-100 p-4 md:p-6 min-h-[500px]">
+                
+                <div id="tab-client_orders" class="tab-content block">
+                    <div class="flex justify-between mb-4">
+                        <input type="text" id="searchClientOrders" onkeyup="/* Filter Logic */" placeholder="بحث برقم الأمر أو العميل..." class="input-std w-64">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm min-w-[700px]">
+                            <thead class="bg-gray-50 text-gray-600">
+                                <tr>
+                                    <th class="p-3">رقم الأمر</th>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">اسم العميل</th>
+                                    <th class="p-3">قيمة الأمر</th>
+                                    <th class="p-3 text-green-600">المدفوع</th>
+                                    <th class="p-3 text-red-600">المتبقي</th>
+                                    <th class="p-3 text-center">إدارة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientOrdersTable" class="divide-y divide-gray-100">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="tab-supplier_pos" class="tab-content hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm min-w-[700px]">
+                            <thead class="bg-blue-50 text-blue-900">
+                                <tr>
+                                    <th class="p-3">رقم طلب الإنتاج</th>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">المورد</th>
+                                    <th class="p-3">تاريخ التسليم المتوقع</th>
+                                    <th class="p-3">الحالة</th>
+                                    <th class="p-3 text-center">طباعة / استلام</th>
+                                </tr>
+                            </thead>
+                            <tbody id="supplierPOTable" class="divide-y divide-blue-100">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="tab-archive" class="tab-content hidden">
+                    <p class="text-gray-500 text-center py-8">لا توجد أوامر منتهية حالياً.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="smartPOModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-60" onclick="closeModal('smartPOModal')"></div>
+        <div class="modal-container bg-white w-full max-w-5xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[95vh]">
+            
+            <div class="bg-purple-900 text-white p-4 flex justify-between items-center rounded-t-xl shrink-0">
+                <h3 class="text-lg font-bold flex items-center gap-2"><i class="fas fa-magic text-yellow-400"></i> إنشاء أمر إنتاج مجمع (للمورد)</h3>
+                <button onclick="closeModal('smartPOModal')" class="text-white hover:text-red-300"><i class="fas fa-times text-xl"></i></button>
+            </div>
+
+            <div class="p-4 md:p-6 overflow-y-auto flex-1 bg-gray-50">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-lg shadow-sm border mb-6">
+                    <div>
+                        <label class="text-xs font-bold text-gray-600 block mb-1">اختر المورد المنفذ</label>
+                        <select id="poSupplierSelect" class="input-std font-bold text-purple-900"></select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-600 block mb-1">تاريخ التسليم المتوقع</label>
+                        <input type="date" id="poExpectedDate" class="input-std">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-600 block mb-1">إظهار الأسعار في الطباعة؟</label>
+                        <select id="poPrintPriceToggle" class="input-std">
+                            <option value="hide">إخفاء الأسعار (للمصنع فقط)</option>
+                            <option value="show">إظهار آخر سعر شراء (للتفاوض/الاعتماد)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h4 class="font-bold text-gray-800 mb-2 border-r-4 border-yellow-400 pr-2">الأصناف المتاحة للإنتاج (من أوامر العملاء السارية)</h4>
+                <div class="bg-white border rounded-lg overflow-x-auto shadow-sm">
+                    <table class="w-full text-right text-sm min-w-[800px]">
+                        <thead class="bg-gray-100 border-b">
+                            <tr>
+                                <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAllPoItems" onchange="toggleAllPoItems(this)"></th>
+                                <th class="p-3">رقم الأمر (العميل)</th>
+                                <th class="p-3">الصنف / المقاس</th>
+                                <th class="p-3">الكمية</th>
+                                <th class="p-3 w-40">الحالة التصنيعية (إلزامي)</th>
+                                <th class="p-3">ملاحظات للمطبعة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="poAvailableItemsBody" class="divide-y divide-gray-100">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="p-4 bg-white border-t rounded-b-xl flex justify-between items-center shrink-0">
+                <p class="text-xs text-gray-500"><i class="fas fa-info-circle text-blue-500"></i> سيتم تجميع الأصناف المتشابهة تلقائياً في ورقة الطباعة.</p>
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeModal('smartPOModal')" class="bg-gray-200 px-6 py-2 rounded font-bold hover:bg-gray-300">إلغاء</button>
+                    <button type="button" onclick="submitSupplierPO()" class="gpack-btn px-8 py-2 rounded font-bold shadow-lg">حفظ وإنشاء أمر الطباعة</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="orderManagerModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-80" onclick="closeModal('orderManagerModal')"></div>
+        <div class="modal-container bg-white w-full h-full md:w-11/12 md:h-[95vh] mx-auto rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col transform transition-all scale-95">
+            
+            <div class="bg-purple-900 text-white p-4 flex justify-between items-center shrink-0">
+                <div>
+                    <h2 class="text-xl font-bold">إدارة أمر تشغيل <span id="mgrOrderNum" class="text-yellow-400">#000</span></h2>
+                    <p class="text-sm opacity-80 mt-1">العميل: <span id="mgrClientName" class="font-bold">...</span></p>
+                </div>
+                <button onclick="closeModal('orderManagerModal')" class="text-white hover:text-red-300 text-2xl"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="flex-1 flex flex-col bg-gray-50 overflow-hidden">
+                <div class="bg-white border-b px-6 flex gap-6 shrink-0 pt-2">
+                    <button onclick="switchMgrTab('items')" id="mgr-tab-items" class="tab-btn active"><i class="fas fa-box"></i> أصناف الأمر</button>
+                    <button onclick="switchMgrTab('invoices')" id="mgr-tab-invoices" class="tab-btn"><i class="fas fa-file-invoice-dollar"></i> الفواتير (أولية / مبيعات)</button>
+                    <button onclick="switchMgrTab('deliveries')" id="mgr-tab-deliveries" class="tab-btn"><i class="fas fa-truck-loading"></i> سندات التسليم</button>
+                </div>
+                
+                <div class="p-6 overflow-y-auto flex-1">
+                    <div id="mgr-content-items" class="block">
+                        <div class="bg-white rounded-lg shadow-sm border p-4">
+                            <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">تفاصيل الأصناف المطلوبة</h3>
+                            <table class="w-full text-right text-sm">
+                                <thead class="bg-gray-50"><tr><th class="p-2">الصنف</th><th class="p-2">الكمية</th><th class="p-2">السعر</th><th class="p-2">الإجمالي</th><th class="p-2">حالة الإنتاج</th></tr></thead>
+                                <tbody id="mgrItemsBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="mgr-content-invoices" class="hidden">
+                        <div class="flex gap-4 mb-6">
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700"><i class="fas fa-plus"></i> إصدار فاتورة أولية (مالية)</button>
+                            <button class="bg-purple-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-purple-700"><i class="fas fa-check-double"></i> إصدار فاتورة مبيعات (خصم مخزون)</button>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm border p-4 text-center py-12 text-gray-500">
+                            <i class="fas fa-file-invoice text-4xl mb-3 text-gray-300"></i>
+                            <p>سجل الفواتير الصادرة سيظهر هنا</p>
+                        </div>
+                    </div>
+
+                    <div id="mgr-content-deliveries" class="hidden">
+                        <div class="flex gap-4 mb-6">
+                            <button class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700"><i class="fas fa-shipping-fast"></i> إنشاء سند تسليم بضاعة</button>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm border p-4 text-center py-12 text-gray-500">
+                            <p>سجلات استلام العميل للبضاعة ستظهر هنا</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="printablePO" class="hidden">
+        <div class="print-header flex justify-between items-center" id="poPrintContainer">
+            <div class="text-right">
+                <h1 class="text-3xl font-bold mb-1">أمر إنتاج / طلب طباعة</h1>
+                <p class="text-sm opacity-80">Production Order (PO)</p>
+                <div class="mt-4 text-sm">
+                    <p><strong>التاريخ:</strong> <span id="printPoDate"></span></p>
+                    <p><strong>رقم الأمر:</strong> <span id="printPoNum" class="serial-num font-mono text-yellow-400 font-bold text-lg"></span></p>
+                </div>
+            </div>
+            <div class="text-center">
+                 <img src="https://i.postimg.cc/L6xs5hQh/logo-g-pack.png" alt="G.PACK Logo" class="h-20 mb-2 mx-auto filter brightness-0 invert">
+                 <p class="text-xs text-gray-300 mt-1">Packaging Solutions</p>
+            </div>
+        </div>
+
+        <div class="p-8">
+            <div class="bg-gray-100 p-4 rounded border-r-4 border-purple-800 mb-8">
+                <h3 class="text-purple-900 font-bold mb-2">إلى السادة / المطبعة:</h3>
+                <p class="font-bold text-2xl" id="printPoSupplier">-</p>
+                <p class="text-sm text-gray-600 mt-2">نرجو منكم التكرم بتنفيذ أمر الطباعة المرفق أدناه حسب المواصفات والتصاميم المعتمدة، على أن يكون موعد التسليم المتوقع في: <span id="printPoExpectedDate" class="font-bold text-red-600"></span>.</p>
+            </div>
+
+            <div id="printPoContent"></div>
+
+            <div class="mt-12 pt-8 border-t border-gray-300 flex justify-between text-center text-sm font-bold text-gray-600">
+                <div class="w-1/3">توقيع مسؤول الإنتاج<br><br>_________________</div>
+                <div class="w-1/3">توقيع وتوجيه المورد<br><br>_________________</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let activeOrders = []; // Client Orders
+        let availablePOItems = []; // Items available to send to supplier
+        let suppliersList = [];
+        let currentPrintingPO = null;
+
+        window.onload = async () => {
+            await Promise.all([fetchClientOrders(), fetchSuppliers()]);
+            switchTab('client_orders');
+        };
+
+        // --- Sidebar & Tabs ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (window.innerWidth < 768) {
+                sidebar.classList.toggle('sidebar-mobile-hidden');
+                overlay.classList.toggle('hidden');
+            } else {
+                sidebar.classList.toggle('sidebar-collapsed');
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}-btn`).classList.add('active');
+            if(tabName === 'supplier_pos') fetchSupplierPOs();
+        }
+
+        // --- Data Fetching ---
+        async function fetchClientOrders() {
+            // Fetch orders in 'production' status
+            const { data } = await supabaseClient.from('orders')
+                .select('*, clients(name)')
+                .eq('status', 'production')
+                .order('created_at', {ascending: false});
+            
+            activeOrders = data || [];
+            const tbody = document.getElementById('clientOrdersTable');
+            tbody.innerHTML = '';
+            
+            if(activeOrders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-400">لا توجد أوامر تشغيل سارية</td></tr>';
+                return;
+            }
+
+            activeOrders.forEach(o => {
+                const remaining = o.grand_total - (o.paid_amount || 0);
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="p-3 font-bold text-purple-800 serial-num">#${o.order_number}</td>
+                        <td class="p-3 text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
+                        <td class="p-3 font-bold">${o.clients?.name || '-'}</td>
+                        <td class="p-3">${o.grand_total}</td>
+                        <td class="p-3 text-green-600 font-bold">${o.paid_amount || 0}</td>
+                        <td class="p-3 text-red-600 font-bold">${remaining > 0 ? remaining : 0}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="manageOrder('${o.id}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-1 rounded-full text-xs font-bold transition border border-blue-200">إدارة الأمر</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function fetchSuppliers() {
+            const { data } = await supabaseClient.from('suppliers').select('id, company_name');
+            suppliersList = data || [];
+            const sel = document.getElementById('poSupplierSelect');
+            sel.innerHTML = '<option value="">-- اختر المطبعة / المورد --</option>';
+            suppliersList.forEach(s => sel.innerHTML += `<option value="${s.id}">${s.company_name}</option>`);
+        }
+
+        async function fetchSupplierPOs() {
+            const { data } = await supabaseClient.from('supplier_production_orders')
+                .select('*, suppliers(company_name)')
+                .order('created_at', {ascending: false});
+            
+            const tbody = document.getElementById('supplierPOTable');
+            tbody.innerHTML = '';
+            if(!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">لا توجد أوامر موردين</td></tr>';
+                return;
+            }
+
+            data.forEach(po => {
+                let statusBadge = '<span class="bg-yellow-100 text-yellow-800 px-2 rounded text-xs">قيد التصنيع</span>';
+                if(po.status === 'completed') statusBadge = '<span class="bg-green-100 text-green-800 px-2 rounded text-xs">مكتمل</span>';
+                
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-blue-50/30">
+                        <td class="p-3 font-bold text-blue-800 serial-num">${po.po_number}</td>
+                        <td class="p-3 text-sm">${new Date(po.created_at).toLocaleDateString()}</td>
+                        <td class="p-3 font-bold">${po.suppliers?.company_name || '-'}</td>
+                        <td class="p-3 text-red-600 text-sm font-bold">${po.expected_delivery_date || '-'}</td>
+                        <td class="p-3">${statusBadge}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="reprintSupplierPO('${po.id}')" class="text-gray-500 hover:text-purple-600 ml-3" title="طباعة الأمر"><i class="fas fa-print"></i></button>
+                            <button class="text-green-600 hover:text-green-800 font-bold text-xs bg-green-50 px-2 py-1 rounded border border-green-200" title="استلام بضاعة (مشتريات)"><i class="fas fa-box-open"></i> استلام</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- Smart Supplier PO Creation (The Core Engine) ---
+        async function openSmartPOModal() {
+            document.getElementById('poSupplierSelect').value = '';
+            document.getElementById('poExpectedDate').value = '';
+            
+            // Fetch all items from active production orders that haven't been fully sent to a supplier yet.
+            // Simplified logic: Just fetch items belonging to 'production' orders.
+            const { data } = await supabaseClient.from('order_items')
+                .select(`
+                    *,
+                    orders!inner(order_number, status, clients(name)),
+                    product_variants(size_name, products(name))
+                `)
+                .eq('orders.status', 'production');
+            
+            availablePOItems = data || [];
+            
+            const tbody = document.getElementById('poAvailableItemsBody');
+            tbody.innerHTML = '';
+            
+            availablePOItems.forEach((item, idx) => {
+                const prodName = item.product_variants?.products?.name || '';
+                const sizeName = item.product_variants?.size_name || '';
+                const clientName = item.orders?.clients?.name || 'عميل نقدي';
+                const orderNum = item.orders?.order_number;
+
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-yellow-50/30 transition">
+                        <td class="p-3 text-center">
+                            <input type="checkbox" class="po-item-checkbox w-4 h-4 text-purple-600 rounded" value="${idx}">
+                        </td>
+                        <td class="p-3">
+                            <span class="font-bold serial-num text-purple-800">#${orderNum}</span><br>
+                            <span class="text-xs text-gray-500"><i class="fas fa-user"></i> ${clientName}</span>
+                        </td>
+                        <td class="p-3 font-bold">${prodName} <span class="text-gray-500 font-normal">(${sizeName})</span></td>
+                        <td class="p-3 font-mono font-bold text-lg">${item.quantity}</td>
+                        <td class="p-3">
+                            <select id="designStatus_${idx}" class="input-std text-xs bg-white border-red-200 focus:border-red-500">
+                                <option value="">-- حدد الحالة --</option>
+                                <option value="new_design">تصميم جديد (New Design)</option>
+                                <option value="reprint">إعادة طباعة (Reprint)</option>
+                            </select>
+                        </td>
+                        <td class="p-3">
+                            <input type="text" id="poNotes_${idx}" class="input-std text-xs" placeholder="ملاحظات (ألوان، الخ..)">
+                        </td>
+                    </tr>
+                `;
+            });
+
+            openModal('smartPOModal');
+        }
+
+        function toggleAllPoItems(el) {
+            const checkboxes = document.querySelectorAll('.po-item-checkbox');
+            checkboxes.forEach(cb => cb.checked = el.checked);
+        }
+
+        async function submitSupplierPO() {
+            const supplierId = document.getElementById('poSupplierSelect').value;
+            const expectedDate = document.getElementById('poExpectedDate').value;
+            const printToggle = document.getElementById('poPrintPriceToggle').value;
+            
+            if(!supplierId) return alert('الرجاء اختيار المورد');
+
+            // Gather selected items
+            const checkboxes = document.querySelectorAll('.po-item-checkbox:checked');
+            if(checkboxes.length === 0) return alert('الرجاء تحديد صنف واحد على الأقل');
+
+            let selectedItemsPayload = [];
+            let validationFailed = false;
+
+            checkboxes.forEach(cb => {
+                const idx = cb.value;
+                const itemData = availablePOItems[idx];
+                const designStatus = document.getElementById(`designStatus_${idx}`).value;
+                const notes = document.getElementById(`poNotes_${idx}`).value;
+
+                if(!designStatus) validationFailed = true;
+
+                selectedItemsPayload.push({
+                    order_item_id: itemData.id,
+                    design_status: designStatus,
+                    notes: notes,
+                    // Store extra metadata for printing later without re-fetching
+                    _meta: {
+                        product: `${itemData.product_variants?.products?.name} (${itemData.product_variants?.size_name})`,
+                        variant_id: itemData.variant_id,
+                        client: itemData.orders?.clients?.name,
+                        qty: itemData.quantity,
+                        price: itemData.unit_price // To show if requested
+                    }
+                });
+            });
+
+            if(validationFailed) return alert('يجب تحديد (الحالة التصنيعية) لجميع الأصناف المحددة!');
+
+            // Save to DB
+            const poNum = `PO-${new Date().getFullYear().toString().substr(-2)}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`; // Simplistic serial for now
+
+            // 1. Insert Master PO
+            const { data: poData, error: poErr } = await supabaseClient.from('supplier_production_orders').insert([{
+                supplier_id: supplierId,
+                po_number: poNum,
+                expected_delivery_date: expectedDate || null
+            }]).select().single();
+
+            if(poErr) return alert(poErr.message);
+
+            // 2. Insert PO Items
+            const itemsToInsert = selectedItemsPayload.map(i => ({
+                supplier_po_id: poData.id,
+                order_item_id: i.order_item_id,
+                design_status: i.design_status,
+                notes: i.notes
+            }));
+
+            await supabaseClient.from('supplier_po_items').insert(itemsToInsert);
+
+            alert('تم إنشاء أمر الإنتاج للمورد بنجاح!');
+            closeModal('smartPOModal');
+            
+            // Build Print View & Print
+            buildAndPrintPO(poData, selectedItemsPayload, printToggle);
+            fetchSupplierPOs();
+        }
+
+        // --- Printing Logic (Intelligent Grouping) ---
+        function buildAndPrintPO(poData, itemsWithMeta, printToggle) {
+            // Apply CSS class for price toggle
+            const printContainer = document.getElementById('printablePO');
+            if(printToggle === 'hide') printContainer.classList.add('hide-price');
+            else printContainer.classList.remove('hide-price');
+
+            document.getElementById('printPoNum').innerText = poData.po_number;
+            document.getElementById('printPoDate').innerText = new Date().toLocaleDateString('ar-EG');
+            document.getElementById('printPoExpectedDate').innerText = poData.expected_delivery_date || 'غير محدد';
+            
+            const supplierName = document.getElementById('poSupplierSelect').options[document.getElementById('poSupplierSelect').selectedIndex].text;
+            document.getElementById('printPoSupplier').innerText = supplierName;
+
+            // Grouping Logic: By Variant
+            const grouped = {};
+            itemsWithMeta.forEach(i => {
+                const groupKey = i._meta.product; // e.g. "كوب ورق دبل (12 اونز)"
+                if(!grouped[groupKey]) grouped[groupKey] = [];
+                grouped[groupKey].push(i);
+            });
+
+            const contentDiv = document.getElementById('printPoContent');
+            contentDiv.innerHTML = '';
+
+            for (const [groupName, items] of Object.entries(grouped)) {
+                // Header for the Variant
+                contentDiv.innerHTML += `<div class="po-group-header">الصنف: ${groupName}</div>`;
+                
+                // Table for the clients under this variant
+                let tableHtml = `
+                    <table class="po-table">
+                        <thead>
+                            <tr>
+                                <th width="30%">العميل / الطلب</th>
+                                <th width="15%">الكمية</th>
+                                <th width="20%">حالة التصميم (الكليشه)</th>
+                                <th width="25%">ملاحظات</th>
+                                <th width="10%" class="print-price-col">السعر المرجعي</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                let totalGroupQty = 0;
+                items.forEach(i => {
+                    totalGroupQty += i._meta.qty;
+                    const dsText = i.design_status === 'new_design' ? '<span class="text-red-600 font-bold">تصميم جديد (مرفق)</span>' : '<span class="text-blue-600 font-bold">إعادة طباعة (Reprint)</span>';
+                    
+                    tableHtml += `
+                        <tr>
+                            <td class="font-bold">${i._meta.client || 'عميل نقدي'}</td>
+                            <td class="font-bold text-lg">${i._meta.qty.toLocaleString()}</td>
+                            <td>${dsText}</td>
+                            <td>${i.notes || '-'}</td>
+                            <td class="print-price-col text-gray-500">${i._meta.price || '-'}</td>
+                        </tr>
+                    `;
+                });
+
+                // Total for this group
+                tableHtml += `
+                        <tr class="bg-gray-100 font-bold">
+                            <td class="text-left">إجمالي كمية الصنف:</td>
+                            <td colspan="4" class="text-lg text-purple-900">${totalGroupQty.toLocaleString()}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                `;
+                
+                contentDiv.innerHTML += tableHtml;
+            }
+
+            window.print();
+        }
+
+        async function reprintSupplierPO(poId) {
+            // Function to fetch and reconstruct the PO for reprinting
+            alert('قيد التطوير - ستجلب تفاصيل الأمر من الداتا بيز وتطبع بنفس الدالة buildAndPrintPO');
+        }
+
+        // --- Client Order Manager ---
+        function manageOrder(orderId) {
+            const order = activeOrders.find(o => o.id === orderId);
+            document.getElementById('mgrOrderNum').innerText = `#${order.order_number}`;
+            document.getElementById('mgrClientName').innerText = order.clients?.name || 'عميل نقدي';
+            
+            switchMgrTab('items'); // Default tab
+            openModal('orderManagerModal');
+        }
+
+        function switchMgrTab(tabName) {
+            document.querySelectorAll('#orderManagerModal .block, #orderManagerModal .hidden').forEach(el => {
+                if(el.id && el.id.startsWith('mgr-content-')) {
+                    el.classList.remove('block');
+                    el.classList.add('hidden');
+                }
+            });
+            document.querySelectorAll('#orderManagerModal .tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`mgr-content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`mgr-content-${tabName}`).classList.add('block');
+            document.getElementById(`mgr-tab-${tabName}`).classList.add('active');
+        }
+
+        // --- Modals ---
+        function openModal(id) {
+            const el = document.getElementById(id);
+            el.classList.remove('opacity-0', 'pointer-events-none');
+            el.querySelector('.modal-container').classList.remove('scale-95');
+            el.querySelector('.modal-container').classList.add('scale-100');
+        }
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            el.querySelector('.modal-container').classList.add('scale-95');
+            el.querySelector('.modal-container').classList.remove('scale-100');
+            setTimeout(() => el.classList.add('opacity-0', 'pointer-events-none'), 200);
+        }
+    </script>
+</body>
+</html>
