@@ -616,7 +616,7 @@
 
         document.getElementById('transTax').addEventListener('change', () => renderTransItems());
 
-        // --- SUBMIT ---
+// --- SUBMIT (تم تنظيفها والاعتماد على الداتا بيز بالكامل) ---
         async function submitTransaction() {
             const type = document.getElementById('transType').value;
             const supplierId = document.getElementById('transSupplierSelect').value || currentProfileId;
@@ -625,7 +625,6 @@
             const warehouseId = document.getElementById('transWarehouse').value; 
             
             if(!supplierId) return alert("الرجاء اختيار المورد");
-            // Warehouse is mandatory for product movements (Invoice/Return)
             if(type !== 'payment' && !warehouseId) return alert("الرجاء اختيار المستودع الذي سيتم التوريد إليه");
             
             let amount = 0;
@@ -634,13 +633,14 @@
 
             if(amount <= 0) return alert("المبلغ يجب أن يكون أكبر من صفر");
 
+            // Smart Serial
             const { count } = await supabaseClient.from('supplier_transactions').select('*', { count: 'exact', head: true });
             const nextSeq = (count || 0) + 1;
             const year = new Date().getFullYear().toString().substr(-2);
             const serialPrefix = type === 'payment' ? 'PAY' : '200';
             const docNum = `${serialPrefix}${year}-${String(nextSeq).padStart(4, '0')}`;
 
-            // Save
+            // Save Transaction ONLY (Database Trigger will handle the inventory mapping)
             const { data: transData, error } = await supabaseClient.from('supplier_transactions').insert([{
                 supplier_id: supplierId,
                 type: type,
@@ -649,25 +649,11 @@
                 document_number: docNum,
                 created_at: date,
                 items: transItems,
-                warehouse_id: warehouseId || null, // Saving Warehouse ID
+                warehouse_id: warehouseId || null, 
                 is_taxable: document.getElementById('transTax').checked
             }]).select().single();
 
             if(error) return alert("خطأ في الحفظ: " + error.message);
-
-            // Update Stock
-            if(type !== 'payment') {
-                for(const item of transItems) {
-                    if(!item.variantId) continue;
-                    const { data: v } = await supabaseClient.from('product_variants').select('stock_quantity').eq('id', item.variantId).single();
-                    if(v) {
-                        let newStock = v.stock_quantity;
-                        if(type === 'invoice') newStock += item.qty;
-                        else if(type === 'return') newStock -= item.qty;
-                        await supabaseClient.from('product_variants').update({stock_quantity: newStock}).eq('id', item.variantId);
-                    }
-                }
-            }
 
             alert(`تم الحفظ بنجاح رقم السند: ${docNum}`);
             viewTransaction(transData); 
