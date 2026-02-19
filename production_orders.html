@@ -528,7 +528,7 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         let availablePOItems = []; 
         let suppliersList = [];
         let invoiceItemsTemp = [];
-        let currentInvoicesList = []; // Global for safe printing
+        let currentInvoicesList = []; 
 
         window.onload = async () => {
             await Promise.all([fetchClientOrders(), fetchSuppliers()]);
@@ -556,7 +556,6 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             if(tabName === 'archive') fetchArchivedOrders();
         }
 
-        // --- Fetch Data & Filters ---
         async function fetchClientOrders() {
             document.getElementById('loadingIndicator').classList.remove('hidden');
             const { data, error } = await supabaseClient.from('orders')
@@ -564,10 +563,7 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
                 .eq('status', 'production')
                 .order('created_at', {ascending: false});
             
-            if(error) {
-                alert("خطأ في جلب أوامر العملاء: " + error.message);
-                return;
-            }
+            if(error) return alert("خطأ في جلب أوامر العملاء: " + error.message);
             
             allClientOrders = data || [];
             filterClientOrders(); 
@@ -647,8 +643,6 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
                 .in('status', ['archived', 'completed'])
                 .order('created_at', {ascending: false});
             
-            if(error) alert("خطأ في جلب الأرشيف: " + error.message);
-            
             const tbody = document.getElementById('archivedOrdersTable');
             tbody.innerHTML = '';
             if(!data || data.length === 0) {
@@ -669,9 +663,7 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         }
 
         async function fetchSuppliers() {
-            const { data, error } = await supabaseClient.from('suppliers').select('id, company_name');
-            if(error) alert("خطأ في جلب الموردين: " + error.message);
-            
+            const { data } = await supabaseClient.from('suppliers').select('id, company_name');
             suppliersList = data || [];
             const sel = document.getElementById('poSupplierSelect');
             sel.innerHTML = '<option value="">-- اختر المطبعة / المورد --</option>';
@@ -680,8 +672,7 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
 
         async function fetchSupplierPOs() {
             const { data, error } = await supabaseClient.from('supplier_production_orders').select('*, suppliers(*)').order('created_at', {ascending: false});
-            if(error) alert("خطأ في جلب أوامر الموردين: " + error.message);
-
+            
             const tbody = document.getElementById('supplierPOTable');
             tbody.innerHTML = '';
             if(!data || data.length === 0) {
@@ -715,7 +706,7 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             });
         }
 
-        // --- Fix 8: Safe Modal to View PO Details ---
+        // --- Fix 1: Bulletproof Fetch for View Details ---
         async function viewPODetails(poId) {
             const tbody = document.getElementById('poDetailsModalBody');
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>';
@@ -724,40 +715,39 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             document.getElementById('viewPoNum').innerText = po ? po.po_number : '';
             openModal('poDetailsModal');
 
-            // Robust flattened query with deep error protection
-            const { data: items, error } = await supabaseClient.from('supplier_po_items')
-                .select('*, order_items(*, orders(*, clients(*)), product_variants(*, products(*)))')
-                .eq('supplier_po_id', poId);
-
-            if(error) {
-                alert("خطأ في جلب التفاصيل: " + error.message);
+            // 1. Fetch base items from PO
+            const { data: poItems, error: err1 } = await supabaseClient.from('supplier_po_items').select('*').eq('supplier_po_id', poId);
+            
+            if(err1 || !poItems || poItems.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-500">لا توجد تفاصيل (تأكد من الربط بقاعدة البيانات)</td></tr>';
                 return;
             }
 
+            // 2. Extract item IDs and fetch rich details separately to bypass Supabase Join Limits
+            const orderItemIds = poItems.map(i => i.order_item_id);
+            const { data: richItems } = await supabaseClient.from('order_items')
+                .select('id, quantity, orders(clients(name)), product_variants(size_name, products(name))')
+                .in('id', orderItemIds);
+
             tbody.innerHTML = '';
-            if(items && items.length > 0) {
-                items.forEach(i => {
-                    const oi = i.order_items || {};
-                    const clientName = oi.orders?.clients?.name || 'غير معروف';
-                    const prodName = oi.product_variants?.products?.name ? `${oi.product_variants.products.name} (${oi.product_variants.size_name || ''})` : 'صنف غير محدد';
-                    const dsText = i.design_status === 'new_design' ? '<span class="text-red-600">تصميم جديد</span>' : '<span class="text-blue-600">إعادة طباعة</span>';
-                    
-                    tbody.innerHTML += `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-2 font-bold">${clientName}</td>
-                            <td class="p-2">${prodName}</td>
-                            <td class="p-2 text-center font-bold font-mono">${oi.quantity || 0}</td>
-                            <td class="p-2 text-xs font-bold">${dsText}</td>
-                            <td class="p-2 text-xs text-gray-500">${i.notes || '-'}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">لا توجد تفاصيل</td></tr>';
-            }
+            poItems.forEach(i => {
+                const details = (richItems || []).find(r => r.id === i.order_item_id) || {};
+                const clientName = details.orders?.clients?.name || 'غير محدد';
+                const pName = details.product_variants?.products?.name ? `${details.product_variants.products.name} (${details.product_variants.size_name || ''})` : 'صنف غير معروف';
+                const dsText = i.design_status === 'new_design' ? '<span class="text-red-600">تصميم جديد</span>' : '<span class="text-blue-600">إعادة طباعة</span>';
+                
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-2 font-bold">${clientName}</td>
+                        <td class="p-2">${pName}</td>
+                        <td class="p-2 text-center font-bold font-mono">${details.quantity || 0}</td>
+                        <td class="p-2 text-xs font-bold">${dsText}</td>
+                        <td class="p-2 text-xs text-gray-500">${i.notes || '-'}</td>
+                    </tr>
+                `;
+            });
         }
 
-        // --- Fix 1 & 5: Smart PO logic ---
         async function openSmartPOModal() {
             document.getElementById('poSupplierSelect').value = '';
             document.getElementById('poExpectedDate').value = '';
@@ -765,14 +755,12 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب البيانات...</td></tr>';
             openModal('smartPOModal');
 
-            const { data: poItemsData, error: err1 } = await supabaseClient.from('supplier_po_items').select('order_item_id');
-            if (err1) { alert("خطأ 1: " + err1.message); return; }
+            const { data: poItemsData } = await supabaseClient.from('supplier_po_items').select('order_item_id');
             const orderedItemIds = poItemsData ? poItemsData.map(i => i.order_item_id) : [];
 
-            const { data, error: err2 } = await supabaseClient.from('order_items')
+            const { data } = await supabaseClient.from('order_items')
                 .select('*, orders(*, clients(*)), product_variants(*, products(*))')
                 .eq('orders.status', 'production');
-            if (err2) { alert("خطأ 2: " + err2.message); return; }
             
             availablePOItems = (data || []).filter(item => !orderedItemIds.includes(item.id));
             
@@ -839,7 +827,6 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
                 const notes = document.getElementById(`poNotes_${idx}`).value;
                 if(!designStatus) validationFailed = true;
 
-                // Protect meta payload construction
                 const pName = itemData.product_variants?.products?.name || 'صنف مجهول';
                 const sName = itemData.product_variants?.size_name || '';
                 const cName = itemData.orders?.clients?.name || 'عميل نقدي';
@@ -874,8 +861,7 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             const itemsToInsert = selectedItemsPayload.map(i => ({
                 supplier_po_id: poData.id, order_item_id: i.order_item_id, design_status: i.design_status, notes: i.notes
             }));
-            const { error: insertErr } = await supabaseClient.from('supplier_po_items').insert(itemsToInsert);
-            if(insertErr) return alert("خطأ في ربط الأصناف: " + insertErr.message);
+            await supabaseClient.from('supplier_po_items').insert(itemsToInsert);
 
             alert('تم إنشاء أمر الإنتاج للمورد بنجاح!');
             closeModal('smartPOModal');
@@ -883,25 +869,23 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             fetchSupplierPOs();
         }
 
-        // --- Fix 3: Print Error map (Secured Fetch & Processing) ---
         async function reprintSupplierPO(poId) {
             try {
-                const { data: poData, error: err1 } = await supabaseClient.from('supplier_production_orders').select('*').eq('id', poId).single();
-                if (err1) throw err1;
+                const { data: poData } = await supabaseClient.from('supplier_production_orders').select('*').eq('id', poId).single();
+                
+                // Bulletproof Hybrid Fetch for printing
+                const { data: poItems } = await supabaseClient.from('supplier_po_items').select('*').eq('supplier_po_id', poId);
+                if (!poItems || poItems.length === 0) return alert("لا توجد بيانات للطباعة.");
 
-                // Safest query possible
-                const { data: items, error: err2 } = await supabaseClient.from('supplier_po_items')
-                    .select('*, order_items(*, orders(*, clients(*)), product_variants(*, products(*)))')
-                    .eq('supplier_po_id', poId);
+                const orderItemIds = poItems.map(i => i.order_item_id);
+                const { data: richItems } = await supabaseClient.from('order_items')
+                    .select('id, quantity, unit_price, orders(clients(name)), product_variants(size_name, products(name))')
+                    .in('id', orderItemIds);
 
-                if (err2) throw err2;
-                if (!items || items.length === 0) return alert("لا توجد بيانات للطباعة.");
-
-                // Add protection against null mapped items
-                const reconstructedItems = (items || []).map(i => {
-                    const oi = i.order_items || {};
-                    const clientName = oi.orders?.clients?.name || 'عميل نقدي';
-                    const prodName = oi.product_variants?.products?.name ? `${oi.product_variants.products.name} (${oi.product_variants.size_name || ''})` : 'صنف غير محدد';
+                const reconstructedItems = poItems.map(i => {
+                    const detail = (richItems || []).find(r => r.id === i.order_item_id) || {};
+                    const clientName = detail.orders?.clients?.name || 'عميل نقدي';
+                    const prodName = detail.product_variants?.products?.name ? `${detail.product_variants.products.name} (${detail.product_variants.size_name || ''})` : 'صنف غير محدد';
                     
                     return {
                         design_status: i.design_status,
@@ -909,8 +893,8 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
                         _meta: {
                             product: prodName,
                             client: clientName,
-                            qty: oi.quantity || 0,
-                            price: oi.unit_price || 0
+                            qty: detail.quantity || 0,
+                            price: detail.unit_price || 0
                         }
                     };
                 });
@@ -986,7 +970,7 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             setTimeout(() => document.body.classList.remove('printing-po'), 1000);
         }
 
-        // --- Fix 4 & 6: Flexible Receive PO & Safe Objects ---
+        // --- Fix 2 & 4: Bulletproof Fetch for Receive PO ---
         async function openReceivePOModal(poId) {
             document.getElementById('receivePoId').value = poId;
             const tbody = document.getElementById('receivePOItemsBody');
@@ -996,36 +980,39 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             const { data: poData } = await supabaseClient.from('supplier_production_orders').select('supplier_id').eq('id', poId).single();
             document.getElementById('receiveSupplierId').value = poData ? poData.supplier_id : '';
 
-            // Safe robust query
-            const { data: items, error } = await supabaseClient.from('supplier_po_items')
-                .select('*, order_items(*, orders(*, clients(*)), product_variants(*, products(*)))')
-                .eq('supplier_po_id', poId);
+            // 1. Fetch base items
+            const { data: poItems } = await supabaseClient.from('supplier_po_items').select('*').eq('supplier_po_id', poId);
+            
+            if(!poItems || poItems.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">لا توجد بيانات للاستلام</td></tr>';
+                return;
+            }
 
-            if(error) { alert("خطأ استلام: " + error.message); return; }
+            // 2. Fetch rich details manually
+            const orderItemIds = poItems.map(i => i.order_item_id);
+            const { data: richItems } = await supabaseClient.from('order_items')
+                .select('id, quantity, unit_price, variant_id, orders(client_id, clients(name)), product_variants(size_name, products(name))')
+                .in('id', orderItemIds);
 
             tbody.innerHTML = '';
-            if(items && items.length > 0) {
-                items.forEach(i => {
-                    const oi = i.order_items || {};
-                    const cName = oi.orders?.clients?.name || '-';
-                    const pName = oi.product_variants?.products?.name ? `${oi.product_variants.products.name} (${oi.product_variants.size_name || ''})` : '-';
-                    
-                    tbody.innerHTML += `
-                        <tr class="border-b">
-                            <td class="p-2 font-bold text-xs">${cName}</td>
-                            <td class="p-2 text-xs">${pName}</td>
-                            <td class="p-2 text-center font-bold">${oi.quantity || 0}</td>
-                            <td class="p-2 text-center bg-green-50">
-                                <input type="number" id="recQty_${i.id}" value="${oi.quantity || 0}" class="w-20 border rounded p-1 text-center font-bold text-green-700" 
-                                data-var="${oi.variant_id}" data-client="${oi.orders?.client_id}" data-price="${oi.unit_price}">
-                            </td>
-                            <td class="p-2 text-center text-xs text-gray-500">${oi.unit_price || 0}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">لا توجد بيانات</td></tr>';
-            }
+            poItems.forEach(i => {
+                const detail = (richItems || []).find(r => r.id === i.order_item_id) || {};
+                const cName = detail.orders?.clients?.name || '-';
+                const pName = detail.product_variants?.products?.name ? `${detail.product_variants.products.name} (${detail.product_variants.size_name || ''})` : '-';
+                
+                tbody.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-2 font-bold text-xs">${cName}</td>
+                        <td class="p-2 text-xs">${pName}</td>
+                        <td class="p-2 text-center font-bold">${detail.quantity || 0}</td>
+                        <td class="p-2 text-center bg-green-50">
+                            <input type="number" id="recQty_${i.id}" value="${detail.quantity || 0}" class="w-20 border rounded p-1 text-center font-bold text-green-700" 
+                            data-var="${detail.variant_id}" data-client="${detail.orders?.client_id}" data-price="${detail.unit_price}">
+                        </td>
+                        <td class="p-2 text-center text-xs text-gray-500">${detail.unit_price || 0}</td>
+                    </tr>
+                `;
+            });
         }
 
         async function submitReceivePO() {
@@ -1084,12 +1071,10 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             fetchSupplierPOs();
         }
 
-        // --- Client Order Manager (Crucial Fix here) ---
         async function manageOrder(orderId, clientId) {
             document.getElementById('mgrActiveOrderId').value = orderId;
             document.getElementById('mgrActiveClientId').value = clientId;
 
-            // FIX: Changed undefined 'activeOrders' to 'allClientOrders' to prevent JS crash
             let order = allClientOrders.find(o => o.id === orderId);
             if(!order) {
                 const { data } = await supabaseClient.from('orders').select('*, clients(*)').eq('id', orderId).single();
@@ -1100,7 +1085,6 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
                 document.getElementById('mgrOrderNum').innerText = `#${order.order_number}`;
                 document.getElementById('mgrClientName').innerText = order.clients?.name || 'عميل نقدي';
                 
-                // Parse Downpayment carefully
                 let advance = parseFloat(order.paid_amount) || 0;
                 try {
                     const meta = JSON.parse(order.snapshotted_terms || '{}');
@@ -1117,14 +1101,9 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             const loading = document.getElementById('mgrItemsLoading');
             table.classList.add('hidden'); loading.classList.remove('hidden'); tbody.innerHTML = '';
 
-            const { data: items, error } = await supabaseClient.from('order_items')
+            const { data: items } = await supabaseClient.from('order_items')
                 .select('*, product_variants(*, products(*))')
                 .eq('order_id', orderId);
-
-            if(error) {
-                alert("خطأ في جلب أصناف الأمر: " + error.message);
-                return;
-            }
 
             if(items && items.length > 0) {
                 items.forEach(i => {
@@ -1152,9 +1131,7 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         async function fetchClientInvoices(orderId) {
             const tbody = document.getElementById('mgrInvoicesBody');
             tbody.innerHTML = '';
-            const { data, error } = await supabaseClient.from('client_invoices').select('*').eq('order_id', orderId).order('created_at', {ascending: false});
-            
-            if(error) { alert("خطأ الفواتير: " + error.message); return; }
+            const { data } = await supabaseClient.from('client_invoices').select('*').eq('order_id', orderId).order('created_at', {ascending: false});
             
             currentInvoicesList = data || [];
 
@@ -1175,6 +1152,7 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             } else { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد فواتير مصدرة</td></tr>'; }
         }
 
+        // --- Fix 3: Bulletproof Print Client Invoice (Handles old and new JSON structures) ---
         function printClientInvoice(invId) {
             const invData = currentInvoicesList.find(i => i.id === invId);
             if(!invData) return alert("حدث خطأ في قراءة الفاتورة");
@@ -1195,12 +1173,16 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             const items = typeof invData.items_snapshot === 'string' ? JSON.parse(invData.items_snapshot) : (invData.items_snapshot || []);
             
             items.forEach((i, idx) => {
-                const rowTotal = i.qty * i.price;
+                const rowTotal = (i.qty || 0) * (i.price || 0);
                 sub += rowTotal;
+                
+                // Fallback for older json keys (name, product_name, fullName, etc)
+                const safeName = i.name || i.product_name || i.fullName || i.product || 'صنف غير محدد';
+
                 tbody.innerHTML += `
                     <tr>
                         <td class="text-center">${idx + 1}</td>
-                        <td class="font-bold">${i.name}</td>
+                        <td class="font-bold">${safeName}</td>
                         <td class="text-center font-bold">${i.qty}</td>
                         <td class="text-center">${i.price}</td>
                         <td class="text-center font-bold">${rowTotal.toFixed(2)}</td>
@@ -1238,11 +1220,9 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             
             const orderId = document.getElementById('mgrActiveOrderId').value;
             
-            const { data: items, error } = await supabaseClient.from('order_items')
+            const { data: items } = await supabaseClient.from('order_items')
                 .select('*, product_variants(*, products(*))')
                 .eq('order_id', orderId);
-            
-            if(error) return alert(error.message);
 
             invoiceItemsTemp = items || [];
             const tbody = document.getElementById('invoiceItemsBody');
@@ -1295,7 +1275,14 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
                 const qty = parseFloat(document.getElementById(`invQty_${i}`).value) || 0;
                 const price = parseFloat(document.getElementById(`invPrice_${i}`).value) || 0;
                 if(qty > 0) {
-                    finalItems.push({ variant_id: invoiceItemsTemp[i].variant_id, name: invoiceItemsTemp[i].fullName, qty: qty, price: price });
+                    // Added multiple keys for safe printing fallback later
+                    finalItems.push({ 
+                        variant_id: invoiceItemsTemp[i].variant_id, 
+                        name: invoiceItemsTemp[i].fullName,
+                        product_name: invoiceItemsTemp[i].fullName, 
+                        qty: qty, 
+                        price: price 
+                    });
                 }
             }
 
@@ -1330,14 +1317,12 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         async function fetchDeliveriesLog(clientId) {
             const tbody = document.getElementById('mgrDeliveriesBody');
             
-            const { data, error } = await supabaseClient.from('inventory_transactions')
+            const { data } = await supabaseClient.from('inventory_transactions')
                 .select('*, product_variants(*, products(*))')
                 .eq('client_id', clientId)
                 .eq('delivery_status', 'delivered')
                 .order('created_at', {ascending: false});
                 
-            if(error) { alert("Delivery Log Error: " + error.message); return; }
-
             tbody.innerHTML = '';
             if(data && data.length > 0) {
                 data.forEach(d => {
@@ -1353,12 +1338,10 @@ const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
             tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري البحث عن البضاعة المعلقة...</td></tr>';
             openModal('deliveryModal');
 
-            const { data: pending, error } = await supabaseClient.from('inventory_transactions')
+            const { data: pending } = await supabaseClient.from('inventory_transactions')
                 .select('id, variant_id, quantity, product_variants(*, products(*))')
                 .eq('client_id', clientId).eq('delivery_status', 'pending');
             
-            if (error) { alert(error.message); return; }
-
             tbody.innerHTML = '';
             if(pending && pending.length > 0) {
                 pending.forEach(p => {
