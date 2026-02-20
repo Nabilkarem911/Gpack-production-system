@@ -352,13 +352,13 @@
                     <strong>ملاحظة هامة:</strong> يمكنك إدخال جزء من الكمية (استلام جزئي) أو استلام كامل الكمية. سيتم ترحيل ما تدخله فقط للمخزن مع إنشاء مديونية للمورد تلقائياً.
                 </div>
                 <table class="w-full text-right text-sm border">
-                    <thead class="bg-gray-50">
+<thead class="bg-gray-50">
                         <tr>
                             <th class="p-2 border">العميل</th>
                             <th class="p-2 border">الصنف</th>
                             <th class="p-2 border text-center">المطلوب الأساسي</th>
                             <th class="p-2 border text-center bg-green-50 text-green-800 w-32">المستلم فعلياً (الآن)</th>
-                            <th class="p-2 border text-center">سعر الوحدة</th>
+                            <th class="p-2 border text-center bg-blue-50 text-blue-800 w-32">سعر التوريد للوحدة</th>
                         </tr>
                     </thead>
                     <tbody id="receivePOItemsBody"></tbody>
@@ -534,7 +534,7 @@
         </div>
     </div>
 
-    <div id="printablePO" class="hidden">
+<div id="printablePO" class="hidden">
         <div class="print-header flex justify-between items-center" id="poPrintContainer">
             <div class="text-right">
                 <h1 class="text-3xl font-bold mb-1">أمر إنتاج / طلب طباعة</h1>
@@ -545,7 +545,7 @@
                 </div>
             </div>
             <div class="text-center">
-                 <img src="https://i.postimg.cc/L6xs5hQh/logo-g-pack.png" alt="G.PACK Logo" class="h-20 mb-2 mx-auto filter brightness-0 invert">
+                 <img src="https://i.postimg.cc/GHsRS3C1/logo.png" alt="G.PACK Logo" class="h-24 mb-2 mx-auto">
             </div>
         </div>
         <div class="p-8">
@@ -561,7 +561,7 @@
         </div>
     </div>
 
-    <div id="printableClientInvoice" class="hidden">
+<div id="printableClientInvoice" class="hidden">
         <div class="print-header flex justify-between items-center">
             <div class="text-right">
                 <h1 class="text-3xl font-bold mb-1" id="printInvTitle">فاتورة</h1>
@@ -572,8 +572,8 @@
                 </div>
             </div>
             <div class="text-center">
-                 <img src="https://i.postimg.cc/L6xs5hQh/logo-g-pack.png" alt="G.PACK Logo" class="h-20 mb-2 mx-auto filter brightness-0 invert">
-                 <p class="text-xs text-gray-300 font-mono">CR: 4700121038 | VAT: 310033995300003</p>
+                 <img src="https://i.postimg.cc/GHsRS3C1/logo.png" alt="G.PACK Logo" class="h-24 mb-2 mx-auto">
+                 <p class="text-xs text-gray-300 mt-2 font-mono">CR: 4700121038 | VAT: 310033995300003</p>
             </div>
         </div>
         <div class="p-8">
@@ -789,7 +789,7 @@
             });
         }
 
-        async function openSingleOrderPOModal(orderId) {
+async function openSingleOrderPOModal(orderId) {
             document.getElementById('singlePoExpectedDate').value = '';
             const selectAllCheck = document.getElementById('selectAllSinglePoItems');
             if(selectAllCheck) selectAllCheck.checked = false;
@@ -827,6 +827,7 @@
                     const varDetails = getVariantDetails(item.variant_id);
                     item._cachedName = varDetails.name;
                     item._cachedClient = clientName;
+                    item._cachedCostPrice = varDetails.price; // <-- حفظ سعر التكلفة (التوريد) هنا وليس سعر البيع
                     
                     const priceBadge = varDetails.price > 0 ? `<span class="font-mono text-blue-700 font-bold">${varDetails.price}</span>` : '<span class="text-xs text-red-500 font-bold bg-red-50 px-2 py-1 rounded">أول توريد</span>';
 
@@ -857,11 +858,10 @@
                 console.error(err);
             }
         }
-
         function toggleAllSinglePoItems(el) { document.querySelectorAll('.single-po-item-checkbox').forEach(cb => cb.checked = el.checked); }
 
 // 1. دالة الحفظ للطلب الفردي (تم إضافة po_quantity)
-        async function submitSingleSupplierPO() {
+async function submitSingleSupplierPO() {
             const expectedDate = document.getElementById('singlePoExpectedDate').value;
             const checkboxes = document.querySelectorAll('.single-po-item-checkbox:checked');
             
@@ -885,7 +885,8 @@
                         order_item_id: itemData.id,
                         design_status: designStatus,
                         notes: notes,
-                        po_quantity: itemData.quantity // <--- تم إضافة الكمية هنا
+                        po_quantity: itemData.quantity,
+                        _meta: { product: itemData._cachedName, client: itemData._cachedClient, qty: itemData.quantity, price: itemData._cachedCostPrice || 0 } // <-- استخدام سعر التكلفة للطباعة
                     });
                 }
             });
@@ -910,13 +911,8 @@
 
                     if(poErr) throw poErr;
 
-                    // تمرير po_quantity لقاعدة البيانات
                     const itemsToInsert = itemsArr.map(i => ({
-                        supplier_po_id: poData.id, 
-                        order_item_id: i.order_item_id, 
-                        design_status: i.design_status, 
-                        notes: i.notes,
-                        po_quantity: i.po_quantity // <--- تمرير الكمية للـ Database
+                        supplier_po_id: poData.id, order_item_id: i.order_item_id, design_status: i.design_status, notes: i.notes, po_quantity: i.po_quantity
                     }));
                     
                     const { error: insErr } = await supabaseClient.from('supplier_po_items').insert(itemsToInsert);
@@ -938,6 +934,36 @@
                 btn.disabled = false;
                 btn.innerHTML = 'حفظ وإنشاء أوامر الموردين';
             }
+        }
+
+        async function reprintSupplierPO(poId) {
+            try {
+                const { data: poData } = await supabaseClient.from('supplier_production_orders').select('*').eq('id', poId).single();
+                const { data: poItems } = await supabaseClient.from('supplier_po_items').select('*').eq('supplier_po_id', poId);
+                if (!poItems || poItems.length === 0) return alert("لا توجد بيانات للطباعة.");
+
+                const orderItemIds = poItems.map(i => i.order_item_id);
+                const { data: orderItems } = await supabaseClient.from('order_items').select('*').in('id', orderItemIds);
+
+                const reconstructedItems = poItems.map(i => {
+                    const oi = (orderItems||[]).find(x => x.id === i.order_item_id);
+                    if(!oi) return null;
+                    const varDetails = getVariantDetails(oi.variant_id);
+                    const parentOrder = allOrdersList.find(o => o.id === oi.order_id);
+                    const clientName = parentOrder ? getClientName(parentOrder.client_id) : 'عميل نقدي';
+                    
+                    return {
+                        design_status: i.design_status, notes: i.notes,
+                        _meta: { product: varDetails.name, client: clientName, qty: oi.quantity || 0, price: varDetails.price || 0 } // <-- استخدام السعر المرجعي (التكلفة)
+                    };
+                }).filter(Boolean);
+
+                // سؤال المستخدم إذا كان يريد إظهار السعر قبل الطباعة
+                const wantPrices = confirm("هل تريد إظهار الأسعار (السعر المرجعي) في هذا الأمر؟ \n\nاضغط 'موافق' للإظهار، أو 'إلغاء' لإخفائها.");
+                const printToggle = wantPrices ? 'show' : 'hide';
+
+                buildAndPrintPO(poData, reconstructedItems, printToggle, poData.supplier_id);
+            } catch(e) { alert("خطأ في الطباعة: " + e.message); }
         }
         // --- Active Orders Tab ---
         function filterClientOrders() {
@@ -1226,7 +1252,7 @@
             fetchClientOrders(); 
         }
         // --- Receiving ---
-        async function openReceivePOModal(poId) {
+async function openReceivePOModal(poId) {
             document.getElementById('receivePoId').value = poId;
             const tbody = document.getElementById('receivePOItemsBody');
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري جلب البضاعة...</td></tr>';
@@ -1256,6 +1282,7 @@
                     const parentOrder = allOrdersList.find(o => o.id === oi.order_id);
                     if(parentOrder) { clientName = getClientName(parentOrder.client_id); clientId = parentOrder.client_id; }
                     
+                    // وضع السعر في Input قابل للتعديل
                     tbody.innerHTML += `
                         <tr class="border-b">
                             <td class="p-2 font-bold text-xs">${clientName}</td>
@@ -1263,9 +1290,11 @@
                             <td class="p-2 text-center font-bold text-gray-500">${oi.quantity}</td>
                             <td class="p-2 text-center bg-green-50">
                                 <input type="number" id="recQty_${i.id}" value="${oi.quantity}" class="w-20 border rounded p-1 text-center font-bold text-green-700" 
-                                data-var="${oi.variant_id}" data-client="${clientId}" data-price="${oi.unit_price}">
+                                data-var="${oi.variant_id}" data-client="${clientId}">
                             </td>
-                            <td class="p-2 text-center text-xs text-gray-500">${oi.unit_price || 0}</td>
+                            <td class="p-2 text-center bg-blue-50">
+                                <input type="number" step="0.01" id="recPrice_${i.id}" value="${varDetails.price || 0}" class="w-20 border rounded p-1 text-center font-bold text-blue-700" title="تعديل السعر إذا لزم الأمر">
+                            </td>
                         </tr>
                     `;
                 });
@@ -1274,7 +1303,7 @@
             }
         }
 
-        async function submitReceivePO() {
+ async function submitReceivePO() {
             const poId = document.getElementById('receivePoId').value;
             const supplierId = document.getElementById('receiveSupplierId').value;
             const isCompleted = document.getElementById('markPoCompleted').checked;
@@ -1293,9 +1322,14 @@
                 const qty = parseInt(inp.value) || 0;
                 if(qty > 0) {
                     receivedSomething = true;
+                    // استخراج ID الصنف في الجدول
+                    const rowId = inp.id.split('_')[1];
                     const varId = inp.getAttribute('data-var');
                     const cId = inp.getAttribute('data-client') !== 'null' ? inp.getAttribute('data-client') : null;
-                    const price = parseFloat(inp.getAttribute('data-price')) || 0;
+                    
+                    // قراءة السعر من الـ Input الخاص به
+                    const priceInput = document.getElementById(`recPrice_${rowId}`);
+                    const price = priceInput ? parseFloat(priceInput.value) : 0;
                     
                     totalInvoiceAmount += (qty * price);
 
@@ -1328,13 +1362,12 @@
                 await supabaseClient.from('supplier_production_orders').update({status: 'completed'}).eq('id', poId);
             }
             
-            alert('تم استلام الكميات المُدخلة للمخزن بنجاح.');
+            alert('تم استلام الكميات المُدخلة للمخزن بنجاح وتحديث مديونية المورد بناءً على الأسعار المُدخلة.');
             closeModal('receivePOModal');
             document.getElementById('btnConfirmReceive').disabled = false;
             document.getElementById('btnConfirmReceive').innerHTML = 'تأكيد الاستلام وإنشاء الفاتورة';
             fetchSupplierPOs();
         }
-
         // --- Manager, Invoices, Delivery ---
         function switchMgrTab(tabName) {
             document.querySelectorAll('#orderManagerModal .block, #orderManagerModal .hidden').forEach(el => {
