@@ -936,7 +936,7 @@ async function submitSingleSupplierPO() {
             }
         }
 
-        async function reprintSupplierPO(poId) {
+async function reprintSupplierPO(poId) {
             try {
                 const { data: poData } = await supabaseClient.from('supplier_production_orders').select('*').eq('id', poId).single();
                 const { data: poItems } = await supabaseClient.from('supplier_po_items').select('*').eq('supplier_po_id', poId);
@@ -948,22 +948,34 @@ async function submitSingleSupplierPO() {
                 const reconstructedItems = poItems.map(i => {
                     const oi = (orderItems||[]).find(x => x.id === i.order_item_id);
                     if(!oi) return null;
+                    
                     const varDetails = getVariantDetails(oi.variant_id);
                     const parentOrder = allOrdersList.find(o => o.id === oi.order_id);
                     const clientName = parentOrder ? getClientName(parentOrder.client_id) : 'عميل نقدي';
                     
                     return {
-                        design_status: i.design_status, notes: i.notes,
-                        _meta: { product: varDetails.name, client: clientName, qty: oi.quantity || 0, price: varDetails.price || 0 } // <-- استخدام السعر المرجعي (التكلفة)
+                        design_status: i.design_status, 
+                        notes: i.notes,
+                        _meta: { 
+                            product: varDetails.name, 
+                            client: clientName, 
+                            qty: oi.quantity || 0, 
+                            // هنا بنسحب سعر المورد (التكلفة) للمقاس
+                            price: varDetails.price || 0 
+                        }
                     };
                 }).filter(Boolean);
 
-                // سؤال المستخدم إذا كان يريد إظهار السعر قبل الطباعة
-                const wantPrices = confirm("هل تريد إظهار الأسعار (السعر المرجعي) في هذا الأمر؟ \n\nاضغط 'موافق' للإظهار، أو 'إلغاء' لإخفائها.");
+                // === هنا بيتم إظهار رسالة التأكيد للمستخدم ===
+                const wantPrices = confirm("هل تريد إظهار الأسعار (السعر المرجعي) في أمر الطباعة للمورد؟ \n\n- اضغط 'موافق' (OK) لإظهار السعر.\n- اضغط 'إلغاء' (Cancel) لإخفائه تماماً.");
+                
+                // تحديد الحالة بناءً على اختيارك
                 const printToggle = wantPrices ? 'show' : 'hide';
 
                 buildAndPrintPO(poData, reconstructedItems, printToggle, poData.supplier_id);
-            } catch(e) { alert("خطأ في الطباعة: " + e.message); }
+            } catch(e) { 
+                alert("خطأ في الطباعة: " + e.message); 
+            }
         }
         // --- Active Orders Tab ---
         function filterClientOrders() {
