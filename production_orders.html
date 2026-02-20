@@ -715,10 +715,11 @@
             if(tabName === 'pending_orders') renderPendingOrdersTable();
         }
 
-        // --- الجلب الرئيسي وفصل الطلبات (استعلام مسطح آمن 100%) ---
+// 1. تحديث دالة جلب الأوامر لضمان الشفافية اللحظية
         async function fetchClientOrders() {
             document.getElementById('loadingIndicator').classList.remove('hidden');
             try {
+                // جلب الأوامر بحالة production فقط
                 const { data: orders, error } = await supabaseClient.from('orders')
                     .select('*')
                     .eq('status', 'production')
@@ -733,12 +734,12 @@
                     return;
                 }
 
-                // جلب كل عناصر الطلبات
+                // جلب كل أصناف الأوامر السارية
                 const orderIds = allOrdersList.map(o => o.id);
                 const { data: allItems } = await supabaseClient.from('order_items').select('id, order_id').in('order_id', orderIds);
                 const allItemIds = allItems ? allItems.map(i => i.id) : [];
 
-                // جلب ما تم إرساله للموردين باستخدام تقطيع آمن لتفادي الليميت
+                // جلب الأصناف التي تم إصدار أمر إنتاج لها فعلاً
                 let orderedItemIds = [];
                 if (allItemIds.length > 0) {
                     const chunkSize = 500;
@@ -749,49 +750,109 @@
                     }
                 }
 
-                pendingOrdersList = []; activeOrdersList = [];
+                pendingOrdersList = [];
+                activeOrdersList = [];
                 
                 allOrdersList.forEach(order => {
                     const itemsForThisOrder = (allItems || []).filter(i => i.order_id === order.id);
+                    // الطلب يعتبر "ساري" فقط إذا تم إرسال صنف واحد منه على الأقل للمورد
                     const hasSentItems = itemsForThisOrder.some(i => orderedItemIds.includes(i.id));
                     
-                    if(hasSentItems) activeOrdersList.push(order);
-                    else pendingOrdersList.push(order);
+                    if(hasSentItems) {
+                        activeOrdersList.push(order);
+                    } else {
+                        pendingOrdersList.push(order);
+                    }
                 });
 
                 renderPendingOrdersTable();
                 filterClientOrders(); 
             } catch (err) {
-                console.error("Error fetching orders:", err);
-                alert("حدث خطأ أثناء جلب الأوامر.");
+                console.error("Error:", err);
             } finally {
                 document.getElementById('loadingIndicator').classList.add('hidden');
             }
         }
 
-        // --- تابة المعلقة (إصلاح عدم ظهور العميل) ---
-        function renderPendingOrdersTable() {
-            const tbody = document.getElementById('pendingOrdersTable');
-            tbody.innerHTML = '';
+        // 2. تحديث دالة الحفظ لضمان انتقال الطلب فوراً
+        async function submitSingleSupplierPO() {
+            const supplierId = document.getElementById('singlePoSupplierSelect').value;
+            const expectedDate = document.getElementById('singlePoExpectedDate').value;
+            const printToggle = document.getElementById('singlePoPrintPriceToggle').value;
             
-            if(pendingOrdersList.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-400">لا توجد طلبات معلقة بانتظار الإنتاج.</td></tr>';
-                return;
-            }
+            if(!supplierId) return alert('الرجاء اختيار المورد');
 
-            pendingOrdersList.forEach(o => {
-                const clientName = getClientName(o.client_id);
-                tbody.innerHTML += `
-                    <tr class="border-b hover:bg-orange-50/50 transition">
-                        <td class="p-3 font-bold text-gray-700 serial-num">#${o.order_number}</td>
-                        <td class="p-3 text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
-                        <td class="p-3 font-bold text-purple-900">${clientName}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="openSingleOrderPOModal('${o.id}')" class="bg-orange-100 text-orange-700 hover:bg-orange-600 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition border border-orange-200"><i class="fas fa-cogs"></i> تحويل للإنتاج</button>
-                        </td>
-                    </tr>
-                `;
+            const checkboxes = document.querySelectorAll('.single-po-item-checkbox:checked');
+            if(checkboxes.length === 0) return alert('يرجى تحديد صنف واحد على الأقل للإنتاج');
+
+            let selectedItemsPayload = [];
+            let validationFailed = false;
+
+            checkboxes.forEach(cb => {
+                const idx = cb.value;
+                const itemData = singleOrderPOItems[idx];
+                const designStatus = document.getElementById(`singleDesignStatus_${idx}`).value;
+                const notes = document.getElementById(`singlePoNotes_${idx}`).value;
+                if(!designStatus) validationFailed = true;
+
+                selectedItemsPayload.push({
+                    order_item_id: itemData.id,
+                    design_status: designStatus,
+                    notes: notes,
+                    _meta: { product: itemData._cachedName, client: itemData._cachedClient, qty: itemData.quantity, price: itemData.unit_price }
+                });
             });
+
+            if(validationFailed) return alert('الحالة التصنيعية إلزامية!');
+
+            try {
+                // إظهار اللودينج على الزرار
+                const btn = document.querySelector('#singleOrderPOModal button.bg-orange-600');
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري المعالجة...';
+
+                // 1. حساب رقم الـ PO الجديد
+                const { count } = await supabaseClient.from('supplier_production_orders').select('*', { count: 'exact', head: true });
+                const poNum = `${String((count || 0) + 1).padStart(4, '0')}-PO-300${new Date().getFullYear().toString().substr(-2)}`;
+
+                // 2. إنشاء رأس أمر المورد
+                const { data: poData, error: poErr } = await supabaseClient.from('supplier_production_orders').insert([{
+                    supplier_id: supplierId, po_number: poNum, expected_delivery_date: expectedDate || null, status: 'pending'
+                }]).select().single();
+
+                if(poErr) throw poErr;
+
+                // 3. إدخال الأصناف
+                const itemsToInsert = selectedItemsPayload.map(i => ({
+                    supplier_po_id: poData.id, order_item_id: i.order_item_id, design_status: i.design_status, notes: i.notes
+                }));
+                const { error: insErr } = await supabaseClient.from('supplier_po_items').insert(itemsToInsert);
+                if(insErr) throw insErr;
+
+                // --- التريك المهم هنا ---
+                // إغلاق المودال أولاً
+                closeModal('singleOrderPOModal');
+                
+                // تحديث البيانات قسرياً مع انتظار النتيجة
+                await fetchClientOrders(); 
+                
+                // الانتقال للتابة
+                switchTab('client_orders');
+                
+                alert('تم تحويل الطلب للإنتاج بنجاح!');
+                
+                // فتح نافذة الطباعة في النهاية
+                buildAndPrintPO(poData, selectedItemsPayload, printToggle, supplierId);
+
+            } catch (err) {
+                alert("خطأ أثناء الحفظ: " + err.message);
+                console.error(err);
+            } finally {
+                const btn = document.querySelector('#singleOrderPOModal button.bg-orange-600');
+                btn.disabled = false;
+                btn.innerHTML = 'حفظ وإنشاء أمر طباعة المورد';
+            }
         }
 
         // --- نافذة الإنتاج لطلب واحد (إصلاح الاختفاء والأسعار) ---
