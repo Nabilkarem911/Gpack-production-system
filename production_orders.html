@@ -675,7 +675,7 @@
             }
         }
 
-        // --- Core Fetching & Separation (Pending vs Active) ---
+// 1. الدالة الأساسية اللي بتجيب الأوامر وتوزعها
         async function fetchClientOrders() {
             document.getElementById('loadingIndicator').classList.remove('hidden');
             
@@ -702,15 +702,24 @@
             const orderIds = allOrdersList.map(o => o.id);
             const { data: allItems } = await supabaseClient.from('order_items').select('id, order_id').in('order_id', orderIds);
             
-            const { data: poItems } = await supabaseClient.from('supplier_po_items').select('order_item_id');
-            const orderedItemIds = poItems ? poItems.map(p => p.order_item_id) : [];
+            let orderedItemIds = [];
+            const allItemIds = allItems ? allItems.map(i => i.id) : [];
+            
+            // الحل الجذري لمشكلة الـ 1000 صف: الاستعلام بالدفعات (Chunking)
+            if (allItemIds.length > 0) {
+                const chunkSize = 500;
+                for (let i = 0; i < allItemIds.length; i += chunkSize) {
+                    const chunk = allItemIds.slice(i, i + chunkSize);
+                    const { data } = await supabaseClient.from('supplier_po_items').select('order_item_id').in('order_item_id', chunk);
+                    if (data) orderedItemIds.push(...data.map(p => p.order_item_id));
+                }
+            }
 
             pendingOrdersList = [];
             activeOrdersList = [];
             
             allOrdersList.forEach(order => {
                 const itemsForThisOrder = (allItems || []).filter(i => i.order_id === order.id);
-                // IF ANY item in this order exists in supplier_po_items -> It's Active
                 const hasSentItems = itemsForThisOrder.some(i => orderedItemIds.includes(i.id));
                 
                 if(hasSentItems) {
@@ -725,30 +734,209 @@
             document.getElementById('loadingIndicator').classList.add('hidden');
         }
 
-        // --- Pending Orders Tab ---
-        function renderPendingOrdersTable() {
-            const tbody = document.getElementById('pendingOrdersTable');
-            tbody.innerHTML = '';
+        // 2. دالة فتح نافذة أمر المورد للطلب المعلق
+        async function openSingleOrderPOModal(orderId) {
+            document.getElementById('singlePoSupplierSelect').value = '';
+            document.getElementById('singlePoExpectedDate').value = '';
+            const selectAllCheck = document.getElementById('selectAllSinglePoItems');
+            if(selectAllCheck) selectAllCheck.checked = false;
+
+            const tbody = document.getElementById('singlePoAvailableItemsBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب أصناف الطلب...</td></tr>';
+            openModal('singleOrderPOModal');
+
+            const { data: items } = await supabaseClient.from('order_items')
+                .select('*, product_variants(*, products(*)), orders(*, clients(*))')
+                .eq('order_id', orderId);
             
-            if(pendingOrdersList.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-400">لا توجد طلبات معلقة بانتظار الإنتاج.</td></tr>';
+            if (!items || items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-red-500 font-bold">لا توجد أصناف.</td></tr>';
                 return;
             }
 
-            pendingOrdersList.forEach(o => {
+            const itemIds = items.map(i => i.id);
+            
+            // استعلام محدد جداً لأصناف هذا الطلب فقط (لضمان إخفاء المكتمل)
+            const { data: poItemsData } = await supabaseClient.from('supplier_po_items')
+                .select('order_item_id')
+                .in('order_item_id', itemIds);
+                
+            const orderedItemIds = poItemsData ? poItemsData.map(i => i.order_item_id) : [];
+            
+            singleOrderPOItems = (items || []).filter(item => !orderedItemIds.includes(item.id));
+            
+            for(let i=0; i < singleOrderPOItems.length; i++) {
+                const varId = singleOrderPOItems[i].variant_id;
+                let lastPrice = '<span class="text-xs text-red-500 font-bold bg-red-50 px-2 py-1 rounded">أول توريد</span>'; 
+                try {
+                    const { data: vData } = await supabaseClient.from('product_variants').select('selling_price').eq('id', varId).single();
+                    if(vData && vData.selling_price) {
+                        lastPrice = `<span class="font-mono text-blue-700 font-bold">${vData.selling_price}</span>`;
+                    }
+                } catch(e) {}
+                singleOrderPOItems[i].lastPriceStr = lastPrice;
+            }
+
+            tbody.innerHTML = '';
+            if(singleOrderPOItems.length === 0) {
+                 tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-gray-400 font-bold text-green-600">تم إرسال جميع أصناف هذا الطلب للموردين.</td></tr>';
+                 return;
+            }
+
+            singleOrderPOItems.forEach((item, idx) => {
+                const prodName = item.product_variants?.products?.name || 'غير معروف';
+                const sizeName = item.product_variants?.size_name || '';
+
                 tbody.innerHTML += `
-                    <tr class="border-b hover:bg-orange-50/50 transition">
-                        <td class="p-3 font-bold text-gray-700 serial-num">#${o.order_number}</td>
-                        <td class="p-3 text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
-                        <td class="p-3 font-bold text-purple-900">${o.clients?.name || '-'}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="openSingleOrderPOModal('${o.id}')" class="bg-orange-100 text-orange-700 hover:bg-orange-600 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition border border-orange-200"><i class="fas fa-cogs"></i> إنشاء أمر إنتاج للطلب</button>
+                    <tr class="border-b hover:bg-orange-50/30 transition">
+                        <td class="p-3 text-center"><input type="checkbox" class="single-po-item-checkbox w-4 h-4 text-orange-600 rounded" value="${idx}"></td>
+                        <td class="p-3 font-bold">${prodName} <span class="text-gray-500 font-normal">(${sizeName})</span></td>
+                        <td class="p-3 font-mono font-bold text-lg text-center">${item.quantity}</td>
+                        <td class="p-3 text-center">${item.lastPriceStr}</td>
+                        <td class="p-3">
+                            <select id="singleDesignStatus_${idx}" class="input-std text-xs bg-white border-red-200 focus:border-red-500">
+                                <option value="">-- حدد الحالة --</option>
+                                <option value="new_design">تصميم جديد</option>
+                                <option value="reprint">إعادة طباعة</option>
+                            </select>
                         </td>
+                        <td class="p-3"><input type="text" id="singlePoNotes_${idx}" class="input-std text-xs" placeholder="ملاحظات.."></td>
                     </tr>
                 `;
             });
         }
 
+        // 3. دالة الحفظ وإصدار الأمر للطلب المعلق
+        async function submitSingleSupplierPO() {
+            const supplierId = document.getElementById('singlePoSupplierSelect').value;
+            const expectedDate = document.getElementById('singlePoExpectedDate').value;
+            const printToggle = document.getElementById('singlePoPrintPriceToggle').value;
+            if(!supplierId) return alert('الرجاء اختيار المورد');
+
+            const checkboxes = document.querySelectorAll('.single-po-item-checkbox:checked');
+            if(checkboxes.length === 0) return alert('حدد صنف واحد على الأقل');
+
+            let selectedItemsPayload = [];
+            let validationFailed = false;
+
+            checkboxes.forEach(cb => {
+                const idx = cb.value;
+                const itemData = singleOrderPOItems[idx];
+                const designStatus = document.getElementById(`singleDesignStatus_${idx}`).value;
+                const notes = document.getElementById(`singlePoNotes_${idx}`).value;
+                if(!designStatus) validationFailed = true;
+
+                const pName = itemData.product_variants?.products?.name || 'صنف مجهول';
+                const sName = itemData.product_variants?.size_name || '';
+                const cName = itemData.orders?.clients?.name || 'عميل نقدي';
+
+                selectedItemsPayload.push({
+                    order_item_id: itemData.id,
+                    design_status: designStatus,
+                    notes: notes,
+                    _meta: { product: `${pName} (${sName})`, client: cName, qty: itemData.quantity, price: itemData.unit_price }
+                });
+            });
+
+            if(validationFailed) return alert('حدد (الحالة التصنيعية) لجميع الأصناف.');
+
+            const { count } = await supabaseClient.from('supplier_production_orders').select('*', { count: 'exact', head: true });
+            const poNum = `${String((count || 0) + 1).padStart(4, '0')}-PO-300${new Date().getFullYear().toString().substr(-2)}`;
+
+            const { data: poData, error: poErr } = await supabaseClient.from('supplier_production_orders').insert([{
+                supplier_id: supplierId, po_number: poNum, expected_delivery_date: expectedDate || null
+            }]).select().single();
+
+            if(poErr) return alert("خطأ: " + poErr.message);
+
+            const itemsToInsert = selectedItemsPayload.map(i => ({
+                supplier_po_id: poData.id, order_item_id: i.order_item_id, design_status: i.design_status, notes: i.notes
+            }));
+            
+            const { error: insertErr } = await supabaseClient.from('supplier_po_items').insert(itemsToInsert);
+            if(insertErr) return alert("حدث خطأ أثناء الربط: " + insertErr.message);
+
+            alert('تم إنشاء أمر الإنتاج للمورد! سينتقل الطلب الآن إلى الأوامر السارية.');
+            closeModal('singleOrderPOModal');
+            
+            // التحديث ونقل التابة "قبل" الطباعة عشان الجدول يتغير فورا
+            await fetchClientOrders(); 
+            switchTab('client_orders'); 
+            
+            buildAndPrintPO(poData, selectedItemsPayload, printToggle, supplierId);
+        }
+
+        // 4. دالة الأمر التجميعي المجمع (معدلة للحماية من الـ 1000 صف)
+        async function openSmartPOModal() {
+            document.getElementById('poSupplierSelect').value = '';
+            document.getElementById('poExpectedDate').value = '';
+            const tbody = document.getElementById('poAvailableItemsBody');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب البيانات...</td></tr>';
+            openModal('smartPOModal');
+
+            const { data, error } = await supabaseClient.from('order_items')
+                .select('*, orders!inner(*, clients(*)), product_variants(*, products(*))')
+                .eq('orders.status', 'production');
+            
+            if(error) { console.error(error); return; }
+
+            const itemIds = data ? data.map(i => i.id) : [];
+            let orderedItemIds = [];
+            
+            // الحل الجذري لمشكلة الـ 1000 صف للأمر المجمع
+            if(itemIds.length > 0) {
+                const chunkSize = 500;
+                for (let i = 0; i < itemIds.length; i += chunkSize) {
+                    const chunk = itemIds.slice(i, i + chunkSize);
+                    const { data: poData } = await supabaseClient.from('supplier_po_items').select('order_item_id').in('order_item_id', chunk);
+                    if(poData) orderedItemIds.push(...poData.map(p => p.order_item_id));
+                }
+            }
+
+            availablePOItems = (data || []).filter(item => !orderedItemIds.includes(item.id));
+            
+            for(let i=0; i < availablePOItems.length; i++) {
+                const varId = availablePOItems[i].variant_id;
+                let lastPrice = 'غير متوفر';
+                try {
+                    const { data: vData } = await supabaseClient.from('product_variants').select('selling_price').eq('id', varId).single();
+                    if(vData && vData.selling_price) lastPrice = vData.selling_price + ' (سعر أساسي)';
+                } catch(e) {}
+                availablePOItems[i].lastPriceStr = lastPrice;
+            }
+
+            tbody.innerHTML = '';
+            if(availablePOItems.length === 0) {
+                 tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400">جميع الأصناف تم طلبها من الموردين.</td></tr>';
+                 return;
+            }
+
+            availablePOItems.forEach((item, idx) => {
+                const prodName = item.product_variants?.products?.name || 'غير معروف';
+                const sizeName = item.product_variants?.size_name || '';
+                const clientName = item.orders?.clients?.name || 'عميل نقدي';
+                const orderNum = item.orders?.order_number;
+
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-yellow-50/30 transition">
+                        <td class="p-3 text-center"><input type="checkbox" class="po-item-checkbox w-4 h-4 text-purple-600 rounded" value="${idx}"></td>
+                        <td class="p-3"><span class="font-bold serial-num text-purple-800">#${orderNum}</span><br><span class="text-xs text-gray-500"><i class="fas fa-user"></i> ${clientName}</span></td>
+                        <td class="p-3 font-bold">${prodName} <span class="text-gray-500 font-normal">(${sizeName})</span></td>
+                        <td class="p-3 font-mono font-bold text-lg text-center">${item.quantity}</td>
+                        <td class="p-3 text-center font-mono text-blue-700 text-xs">${item.lastPriceStr}</td>
+                        <td class="p-3">
+                            <select id="designStatus_${idx}" class="input-std text-xs bg-white border-red-200 focus:border-red-500">
+                                <option value="">-- حدد الحالة --</option>
+                                <option value="new_design">تصميم جديد</option>
+                                <option value="reprint">إعادة طباعة</option>
+                            </select>
+                        </td>
+                        <td class="p-3"><input type="text" id="poNotes_${idx}" class="input-std text-xs" placeholder="ملاحظات.."></td>
+                    </tr>
+                `;
+            });
+        }
+        
 async function openSingleOrderPOModal(orderId) {
             document.getElementById('singlePoSupplierSelect').value = '';
             document.getElementById('singlePoExpectedDate').value = '';
