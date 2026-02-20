@@ -860,6 +860,7 @@
 
         function toggleAllSinglePoItems(el) { document.querySelectorAll('.single-po-item-checkbox').forEach(cb => cb.checked = el.checked); }
 
+// 1. دالة الحفظ للطلب الفردي (تم إضافة po_quantity)
         async function submitSingleSupplierPO() {
             const expectedDate = document.getElementById('singlePoExpectedDate').value;
             const checkboxes = document.querySelectorAll('.single-po-item-checkbox:checked');
@@ -883,7 +884,8 @@
                     payloadBySupplier[supplierId].push({
                         order_item_id: itemData.id,
                         design_status: designStatus,
-                        notes: notes
+                        notes: notes,
+                        po_quantity: itemData.quantity // <--- تم إضافة الكمية هنا
                     });
                 }
             });
@@ -908,8 +910,13 @@
 
                     if(poErr) throw poErr;
 
+                    // تمرير po_quantity لقاعدة البيانات
                     const itemsToInsert = itemsArr.map(i => ({
-                        supplier_po_id: poData.id, order_item_id: i.order_item_id, design_status: i.design_status, notes: i.notes
+                        supplier_po_id: poData.id, 
+                        order_item_id: i.order_item_id, 
+                        design_status: i.design_status, 
+                        notes: i.notes,
+                        po_quantity: i.po_quantity // <--- تمرير الكمية للـ Database
                     }));
                     
                     const { error: insErr } = await supabaseClient.from('supplier_po_items').insert(itemsToInsert);
@@ -932,7 +939,6 @@
                 btn.innerHTML = 'حفظ وإنشاء أوامر الموردين';
             }
         }
-
         // --- Active Orders Tab ---
         function filterClientOrders() {
             const term = document.getElementById('searchClientOrders').value.toLowerCase();
@@ -1157,6 +1163,7 @@
 
         function toggleAllPoItems(el) { document.querySelectorAll('.po-item-checkbox').forEach(cb => cb.checked = el.checked); }
 
+// 2. دالة الحفظ للأمر التجميعي (تم إضافة po_quantity)
         async function submitSupplierPO() {
             const supplierId = document.getElementById('poSupplierSelect').value;
             const expectedDate = document.getElementById('poExpectedDate').value;
@@ -1181,7 +1188,10 @@
                 const clientName = getClientName(orderData?.client_id);
 
                 selectedItemsPayload.push({
-                    order_item_id: itemData.id, design_status: designStatus, notes: notes,
+                    order_item_id: itemData.id, 
+                    design_status: designStatus, 
+                    notes: notes,
+                    po_quantity: itemData.quantity, // <--- تم إضافة الكمية هنا
                     _meta: { product: varDetails.name, client: clientName, qty: itemData.quantity || 0, price: itemData.unit_price || 0 }
                 });
             });
@@ -1199,15 +1209,22 @@
 
             if(poErr) return alert("خطأ في إنشاء أمر المورد: " + poErr.message);
 
-            const itemsToInsert = selectedItemsPayload.map(i => ({ supplier_po_id: poData.id, order_item_id: i.order_item_id, design_status: i.design_status, notes: i.notes }));
+            // تمرير po_quantity لقاعدة البيانات
+            const itemsToInsert = selectedItemsPayload.map(i => ({ 
+                supplier_po_id: poData.id, 
+                order_item_id: i.order_item_id, 
+                design_status: i.design_status, 
+                notes: i.notes,
+                po_quantity: i.po_quantity // <--- تمرير الكمية للـ Database
+            }));
             await supabaseClient.from('supplier_po_items').insert(itemsToInsert);
 
             alert('تم إنشاء أمر الإنتاج للمورد بنجاح!');
             closeModal('smartPOModal');
             buildAndPrintPO(poData, selectedItemsPayload, printToggle, supplierId);
             fetchSupplierPOs();
+            fetchClientOrders(); 
         }
-
         // --- Receiving ---
         async function openReceivePOModal(poId) {
             document.getElementById('receivePoId').value = poId;
