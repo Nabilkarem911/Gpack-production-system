@@ -1410,7 +1410,7 @@ function openPaymentModal() {
             openModal('paymentModal');
         }
         // 1. دالة حفظ الدفعة وتسميعها في كشف حساب العميل
-// دالة حفظ الدفعة وتسميعها في كشف حساب العميل (محدثة لتصطياد الأخطاء)
+// دالة حفظ الدفعة (تم حل مشكلة عمود الـ document_number)
         async function submitClientPayment() {
             const amount = parseFloat(document.getElementById('paymentAmount').value);
             const method = document.getElementById('paymentMethod').value;
@@ -1418,7 +1418,6 @@ function openPaymentModal() {
             const orderId = document.getElementById('mgrActiveOrderId').value;
             let clientId = document.getElementById('mgrActiveClientId').value;
             
-            // معالجة مهمة جداً: لو العميل نقدي، المتصفح بيبعتها كنص 'null' وده بيرفضه الداتا بيز
             if(clientId === 'null' || clientId === 'undefined' || !clientId) {
                 clientId = null;
             }
@@ -1428,7 +1427,6 @@ function openPaymentModal() {
             document.getElementById('btnSubmitPayment').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
             try {
-                // 1. تحديث المبلغ المدفوع في جدول الأوامر مع التأكد من عدم وجود خطأ
                 const { data: orderData, error: err1 } = await supabaseClient.from('orders').select('paid_amount, order_number').eq('id', orderId).single();
                 if(err1) throw new Error("فشل في قراءة بيانات الأمر: " + err1.message);
 
@@ -1438,35 +1436,34 @@ function openPaymentModal() {
                 const { error: err2 } = await supabaseClient.from('orders').update({ paid_amount: newPaid }).eq('id', orderId);
                 if(err2) throw new Error("فشل في تحديث مديونية الأمر: " + err2.message);
 
-                // 2. تسميع الدفعة في كشف حساب العميل (سند قبض)
                 const docNum = `REC-${Date.now().toString().slice(-6)}`;
+                
+                // الحل هنا: تم إزالة document_number ودمج رقم السند في الملاحظات
                 const { error: err3 } = await supabaseClient.from('client_transactions').insert([{
                     client_id: clientId,
                     order_id: orderId, 
                     type: 'payment', 
                     amount: amount,
                     payment_method: method,
-                    document_number: docNum,
-                    description: `دفعة مالية لأمر تشغيل #${orderData?.order_number || ''} ${notes ? '- '+notes : ''}`
+                    description: `سند قبض رقم (${docNum}) لأمر #${orderData?.order_number || ''} ${notes ? ' | ملاحظات: '+notes : ''}`
                 }]);
                 
-                // لو جدول الحسابات فيه مشكلة أو مش موجود، هيطلعلك رسالة صريحة بالسبب!
                 if(err3) throw new Error("فشل في إدراج السند في كشف حساب العميل: " + err3.message);
                 
                 await fetchClientOrders();
-                await fetchClientPayments(orderId); // الآن الجدول موجود في الـ HTML وهتشتغل تمام
+                if (typeof fetchClientPayments === 'function') {
+                    await fetchClientPayments(orderId); 
+                }
                 
                 closeModal('paymentModal');
                 alert(`تم تسجيل الدفعة بنجاح وتم تسميعها في كشف حساب العميل!`);
             } catch (err) {
-                // الكود ده هيصطاد المشكلة ويطلعهالك بدل ما يسكت
                 alert("تم إيقاف الحفظ بسبب خطأ في قاعدة البيانات:\n" + err.message);
                 console.error(err);
             } finally {
                 document.getElementById('btnSubmitPayment').innerHTML = 'تأكيد وحفظ الدفعة';
             }
         }
-
         // 2. الدالة المفقودة: جلب الدفعات وعرضها داخل إدارة الأمر
         async function fetchClientPayments(orderId) {
             const tbody = document.getElementById('mgrPaymentsBody');
