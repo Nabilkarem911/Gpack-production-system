@@ -126,45 +126,48 @@
                 <div class="bg-white p-4 rounded-lg border shadow-sm">
                     <h4 class="font-bold text-gray-800 mb-4 border-b pb-2"><i class="fas fa-check-square text-green-600"></i> تحديد الصلاحيات (الوحدات المسموح بها)</h4>
                     
-                    <div class="space-y-3" id="permissionsContainer">
-                        <label class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer transition">
-                            <input type="checkbox" id="perm_all_access" class="perm-checkbox text-purple-600" onchange="toggleAllPermissions(this)">
-                            <span class="font-bold text-red-600">صلاحيات مطلقة (مدير عام - وصول لكل شيء)</span>
+<div class="space-y-4" id="permissionsContainer">
+                        <label class="flex items-center gap-3 p-3 bg-red-50 border border-red-200 hover:bg-red-100 rounded-lg cursor-pointer transition mb-4">
+                            <input type="checkbox" id="perm_all_access" class="perm-checkbox w-5 h-5 text-red-600" onchange="toggleAllPermissions(this)">
+                            <span class="font-bold text-red-700 text-lg">صلاحيات مطلقة (مدير عام - وصول كامل لكل النظام)</span>
                         </label>
                         
-                        <hr class="my-2">
-                        
-                        <label class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer transition">
-                            <input type="checkbox" id="perm_sales" class="perm-checkbox permission-item">
-                            <span class="font-bold text-gray-700 w-32">المبيعات:</span>
-                            <span class="text-xs text-gray-500">إدارة العملاء، عروض الأسعار، الأرصدة، الفواتير المبدئية.</span>
-                        </label>
+                        <div class="border rounded-lg p-3 bg-gray-50">
+                            <h5 class="font-bold text-gray-800 border-b pb-2 mb-3"><i class="fas fa-users text-blue-600"></i> قسم المبيعات والعملاء</h5>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <label class="flex items-center gap-2"><input type="checkbox" id="perm_sales_view" class="perm-checkbox permission-item"> <span>رؤية القسم</span></label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="perm_sales_create" class="perm-checkbox permission-item"> <span>إضافة جديد</span></label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="perm_sales_edit" class="perm-checkbox permission-item"> <span>تعديل البيانات</span></label>
+                                <label class="flex items-center gap-2 text-red-600"><input type="checkbox" id="perm_sales_delete" class="perm-checkbox permission-item"> <span>حذف بيانات</span></label>
+                            </div>
+                        </div>
 
-                        <label class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer transition">
-                            <input type="checkbox" id="perm_production" class="perm-checkbox permission-item">
-                            <span class="font-bold text-gray-700 w-32">الإنتاج:</span>
-                            <span class="text-xs text-gray-500">متابعة أوامر التشغيل، إرسال للموردين، متابعة المطابع.</span>
-                        </label>
+                        <div class="border rounded-lg p-3 bg-gray-50">
+                            <h5 class="font-bold text-gray-800 border-b pb-2 mb-3"><i class="fas fa-industry text-orange-600"></i> أوامر التشغيل والإنتاج</h5>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                <label class="flex items-center gap-2"><input type="checkbox" id="perm_prod_view" class="perm-checkbox permission-item"> <span>رؤية الأوامر</span></label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="perm_prod_suppliers" class="perm-checkbox permission-item"> <span>إرسال وتوزيع للموردين</span></label>
+                                <label class="flex items-center gap-2 text-purple-700 font-bold"><input type="checkbox" id="perm_prod_costs" class="perm-checkbox permission-item"> <span>رؤية أسعار تكلفة الموردين</span></label>
+                            </div>
+                        </div>
 
-                        <label class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer transition">
-                            <input type="checkbox" id="perm_inventory" class="perm-checkbox permission-item">
-                            <span class="font-bold text-gray-700 w-32">المستودعات:</span>
-                            <span class="text-xs text-gray-500">استلام وتسليم البضاعة، جرد المخزون، إدارة الأصناف.</span>
-                        </label>
+                        <div class="border rounded-lg p-3 bg-gray-50">
+                            <h5 class="font-bold text-gray-800 border-b pb-2 mb-3"><i class="fas fa-boxes text-green-600"></i> المستودعات والمخازن</h5>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                <label class="flex items-center gap-2"><input type="checkbox" id="perm_inv_view" class="perm-checkbox permission-item"> <span>رؤية الأرصدة</span></label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="perm_inv_receive" class="perm-checkbox permission-item"> <span>استلام بضاعة (موردين)</span></label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="perm_inv_deliver" class="perm-checkbox permission-item"> <span>تسليم بضاعة (عملاء)</span></label>
+                            </div>
+                        </div>
 
-                        <label class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer transition">
-                            <input type="checkbox" id="perm_finance" class="perm-checkbox permission-item">
-                            <span class="font-bold text-gray-700 w-32">الإدارة المالية:</span>
-                            <span class="text-xs text-gray-500">تسجيل الدفعات، الفواتير الضريبية، حسابات الموردين والأرباح.</span>
-                        </label>
-
-                        <label class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer transition">
-                            <input type="checkbox" id="perm_settings" class="perm-checkbox permission-item">
-                            <span class="font-bold text-gray-700 w-32">إدارة النظام:</span>
-                            <span class="text-xs text-gray-500">إضافة موظفين، تعديل القوائم، إدارة الصلاحيات.</span>
-                        </label>
+                        <div class="border rounded-lg p-3 bg-gray-50">
+                            <h5 class="font-bold text-gray-800 border-b pb-2 mb-3"><i class="fas fa-money-bill-wave text-yellow-600"></i> الإدارة المالية وإعدادات النظام</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <label class="flex items-center gap-2"><input type="checkbox" id="perm_finance" class="perm-checkbox permission-item"> <span>المالية (فواتير، دفعات، أرباح)</span></label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="perm_settings" class="perm-checkbox permission-item"> <span>إدارة النظام (موظفين، قوائم، صلاحيات)</span></label>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
                 <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
                     <h4 class="font-bold text-blue-800 mb-2"><i class="fas fa-eye"></i> نطاق رؤية البيانات (Data Scope)</h4>
@@ -328,20 +331,37 @@ function editRole(id) {
             const allAccessCb = document.getElementById('perm_all_access');
             allAccessCb.checked = perms.all_access === true;
             
-            document.getElementById('perm_sales').checked = perms.sales === true;
-            document.getElementById('perm_production').checked = perms.production === true;
-            document.getElementById('perm_inventory').checked = perms.inventory === true;
+            // قراءة صلاحيات المبيعات المفصلة
+            const sales = perms.sales || {};
+            document.getElementById('perm_sales_view').checked = sales.view === true;
+            document.getElementById('perm_sales_create').checked = sales.create === true;
+            document.getElementById('perm_sales_edit').checked = sales.edit === true;
+            document.getElementById('perm_sales_delete').checked = sales.delete === true;
+
+            // قراءة صلاحيات الإنتاج المفصلة
+            const prod = perms.production || {};
+            document.getElementById('perm_prod_view').checked = prod.view === true;
+            document.getElementById('perm_prod_suppliers').checked = prod.manage_suppliers === true;
+            document.getElementById('perm_prod_costs').checked = prod.view_costs === true;
+
+            // قراءة صلاحيات المستودعات المفصلة
+            const inv = perms.inventory || {};
+            document.getElementById('perm_inv_view').checked = inv.view === true;
+            document.getElementById('perm_inv_receive').checked = inv.receive === true;
+            document.getElementById('perm_inv_deliver').checked = inv.deliver === true;
+
+            // المالية والإعدادات (خليناها عامة شوية لأنها إما متاحة أو لأ)
             document.getElementById('perm_finance').checked = perms.finance === true;
             document.getElementById('perm_settings').checked = perms.settings === true;
             
-            // قراءة نطاق البيانات من الداتا بيز (لو مش موجود نعتبره personal_only للحماية)
+            // قراءة نطاق البيانات
             document.getElementById('dataScope').value = perms.data_scope || 'personal_only';
 
             toggleAllPermissions(allAccessCb); 
 
             if (perms.all_access === true && role.role_name === 'المدير العام') {
                 document.getElementById('roleName').disabled = true;
-                document.getElementById('dataScope').disabled = true; // منع تعديل نطاق المدير
+                document.getElementById('dataScope').disabled = true;
                 document.getElementById('dataScope').value = 'all_data'; 
                 document.getElementById('adminWarning').classList.remove('hidden');
             } else {
@@ -366,16 +386,29 @@ function editRole(id) {
 
             const isAllAccess = document.getElementById('perm_all_access').checked;
 
-            // تجميع الصلاحيات ونطاق البيانات في كائن JSON
+            // تجميع الصلاحيات المعقدة في كائن JSON شجري
             const permissionsJSON = {
                 all_access: isAllAccess,
-                sales: document.getElementById('perm_sales').checked,
-                production: document.getElementById('perm_production').checked,
-                inventory: document.getElementById('perm_inventory').checked,
+                data_scope: isAllAccess ? 'all_data' : document.getElementById('dataScope').value,
+                
+                sales: {
+                    view: document.getElementById('perm_sales_view').checked,
+                    create: document.getElementById('perm_sales_create').checked,
+                    edit: document.getElementById('perm_sales_edit').checked,
+                    delete: document.getElementById('perm_sales_delete').checked
+                },
+                production: {
+                    view: document.getElementById('perm_prod_view').checked,
+                    manage_suppliers: document.getElementById('perm_prod_suppliers').checked,
+                    view_costs: document.getElementById('perm_prod_costs').checked // دي اللي هتخفي الفلوس عن المندوب
+                },
+                inventory: {
+                    view: document.getElementById('perm_inv_view').checked,
+                    receive: document.getElementById('perm_inv_receive').checked,
+                    deliver: document.getElementById('perm_inv_deliver').checked
+                },
                 finance: document.getElementById('perm_finance').checked,
-                settings: document.getElementById('perm_settings').checked,
-                // لو مدير عام بياخد all_data إجباري، غير كده بياخد اللي اخترته من القائمة
-                data_scope: isAllAccess ? 'all_data' : document.getElementById('dataScope').value
+                settings: document.getElementById('perm_settings').checked
             };
 
             const payload = {
