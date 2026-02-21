@@ -20,90 +20,77 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; }
+/* --- Sidebar & Mobile Styles --- */
+        body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; overflow: hidden; }
         .gpack-purple { background-color: #3e206d; }
         .gpack-yellow { color: #fccf4d; }
         .gpack-btn { background-color: #fccf4d; color: #3e206d; transition: all 0.3s; }
         .gpack-btn:hover { background-color: #e6bd45; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
-        .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
-        .modal { transition: opacity 0.25s ease; }
-        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         
-        .toggle-checkbox:checked { right: 0; border-color: #68D391; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #68D391; }
+        .sidebar-item { border-right: 4px solid transparent; transition: all 0.2s ease; }
+        .sidebar-item:hover { background-color: rgba(255,255,255,0.05); border-right-color: rgba(252, 207, 77, 0.5); }
+        .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right-color: #fccf4d; color: #fff; font-weight: bold; }
         
-        .term-card { transition: all 0.3s ease; border-left: 4px solid transparent; }
-        .term-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .term-card.active-term { border-left-color: #10B981; }
-        .term-card.inactive-term { border-left-color: #9CA3AF; opacity: 0.8; }
+        /* شريط التمرير المخفي الأنيق للقائمة */
+        .nav-scroll::-webkit-scrollbar { width: 4px; }
+        .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .nav-scroll:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); }
+
+        /* التحكم في الموبايل والطي */
+        #sidebar { transition: width 0.3s ease, transform 0.3s ease; flex-shrink: 0; }
+        .sidebar-collapsed { width: 0 !important; overflow: hidden; }
+        @media (max-width: 768px) {
+            .sidebar-mobile-hidden { transform: translateX(100%); }
+            .sidebar-collapsed { width: 16rem !important; }
+        }
     </style>
 </head>
 
     
 <body class="flex h-screen overflow-hidden">
 
-    <aside class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-20 hidden md:flex">
-        <div class="h-20 flex items-center justify-center border-b border-purple-800/50">
+<div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
+
+    <aside id="sidebar" class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-30 fixed md:relative h-full sidebar-mobile-hidden md:transform-none">
+        
+        <div class="h-20 flex items-center justify-between px-6 border-b border-purple-800/50 shrink-0">
             <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2">
-                <i class="fas fa-box-open gpack-yellow"></i>
-                <span>G.PACK</span>
+                <i class="fas fa-box-open gpack-yellow"></i> <span class="whitespace-nowrap">G.PACK</span>
             </h1>
+            <button onclick="toggleSidebar()" class="md:hidden text-white hover:text-red-300 text-xl"><i class="fas fa-times"></i></button>
         </div>
-        <div class="p-6 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20">
-            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400">
+        
+        <div class="p-4 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20 whitespace-nowrap overflow-hidden shrink-0">
+            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400 shrink-0">
                 <i class="fas fa-user text-yellow-400"></i>
             </div>
             <div>
-<p class="text-sm font-bold" id="sidebarUserName">المدير العام</p>
-                <p class="text-xs text-gray-300" id="sidebarUserRole">Admin</p>
+                <p class="text-sm font-bold" id="sidebarUserName">جاري التحميل...</p>
+                <p class="text-xs text-gray-300" id="sidebarUserRole">...</p>
             </div>
         </div>
-        <nav class="flex-1 overflow-y-auto py-4 space-y-1">
-            <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-th-large w-5"></i> الرئيسية</a>
-            <a href="products.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-box w-5"></i> الأصناف</a>
-            <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-file-invoice-dollar w-5"></i> عروض الأسعار</a>
-            <a href="production_orders.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-industry w-5"></i> أوامر التشغيل</a>
-            <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-cubes w-5"></i> المستودعات</a>
-            <a href="suppliers.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-truck w-5"></i> الموردين</a>
-            <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-users w-5"></i> العملاء</a>
-            <a href="employees.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-id-card w-5"></i> الموظفين</a>
-            <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-list-alt w-5"></i> القوائم</a>
-            <a href="permissions.html" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-white font-medium whitespace-nowrap"><i class="fas fa-user-shield w-5"></i> الصلاحيات</a>
-            <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-tasks w-5"></i> المهام</a>
-            <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-file-signature w-5"></i> الشروط العامة</a>
+
+        <nav class="flex-1 overflow-y-auto py-4 space-y-1 nav-scroll">
+            <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="index.html"><i class="fas fa-th-large w-5 text-center"></i> الرئيسية</a>
+            <a href="products.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="products.html"><i class="fas fa-box w-5 text-center"></i> الأصناف</a>
+            <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="quotations.html"><i class="fas fa-file-invoice-dollar w-5 text-center"></i> عروض الأسعار</a>
+            <a href="production_orders.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="production_orders.html"><i class="fas fa-industry w-5 text-center"></i> أوامر التشغيل</a>
+            <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="inventory.html"><i class="fas fa-cubes w-5 text-center"></i> المستودعات</a>
+            <a href="suppliers.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="suppliers.html"><i class="fas fa-truck w-5 text-center"></i> الموردين</a>
+            <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="clients.html"><i class="fas fa-users w-5 text-center"></i> العملاء</a>
+            <a href="employees.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="employees.html"><i class="fas fa-id-card w-5 text-center"></i> الموظفين</a>
+            <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="lists.html"><i class="fas fa-list-alt w-5 text-center"></i> القوائم</a>
+            <a href="permissions.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="permissions.html"><i class="fas fa-user-shield w-5 text-center"></i> الصلاحيات</a>
+            <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="tasks.html"><i class="fas fa-tasks w-5 text-center"></i> المهام</a>
+            <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="terms.html"><i class="fas fa-file-signature w-5 text-center"></i> الشروط العامة</a>
         </nav>
-        <div class="p-4 border-t border-purple-800/50">
-<button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2 whitespace-nowrap">
-    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-</button>
+        
+        <div class="p-4 border-t border-purple-800/50 shrink-0">
+            <button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2 whitespace-nowrap font-bold bg-purple-900/50 rounded-lg hover:bg-purple-900">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
         </div>
     </aside>
-
-    <main class="flex-1 flex flex-col overflow-hidden relative">
-        <header class="h-20 bg-white shadow-sm flex items-center justify-between px-8 z-10">
-            <div class="flex items-center gap-4">
-                <h2 class="text-xl font-bold text-gray-800">إدارة الشروط والأحكام</h2>
-                <div id="loadingIndicator" class="hidden flex items-center gap-2 text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full"><i class="fas fa-sync fa-spin"></i></div>
-            </div>
-            <div class="flex items-center gap-6">
-                <button onclick="openAddModal()" class="gpack-btn px-4 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2">
-                    <i class="fas fa-plus"></i>
-                    <span>إضافة شرط جديد</span>
-                </button>
-            </div>
-        </header>
-
-        <div class="flex-1 overflow-y-auto p-8">
-            <div class="mb-6 bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
-                <i class="fas fa-info-circle text-blue-500 mt-1"></i>
-                <div>
-                    <h3 class="font-bold text-blue-800 text-sm">كيف يعمل هذا النظام؟</h3>
-                    <p class="text-xs text-blue-600 mt-1">الشروط المفعلة (باللون الأخضر) ستظهر تلقائياً في عروض الأسعار الجديدة. غير المفعلة يمكن اختيارها يدوياً.</p>
-                </div>
-            </div>
-            <div id="termsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4"></div>
-        </div>
     </main>
 
     <div id="termModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
@@ -253,68 +240,69 @@
             el.querySelector('.modal-container').classList.toggle('scale-100');
         }
     </script>
-    <script>
+<script>
         document.addEventListener('DOMContentLoaded', () => {
-            applyUserPermissions();
+            initSystemUI();
         });
 
-        function applyUserPermissions() {
-            // 1. جلب بيانات الموظف من المتصفح
+        function initSystemUI() {
+            // 1. تحديد الزرار النشط أوتوماتيكياً
+            const currentPath = window.location.pathname;
+            const pageName = currentPath.split("/").pop() || 'index.html';
+            
+            document.querySelectorAll('.sidebar-item').forEach(link => {
+                link.classList.remove('active', 'text-white');
+                if (link.getAttribute('data-page') === pageName) {
+                    link.classList.add('active', 'text-white');
+                    link.classList.remove('text-gray-300');
+                }
+            });
+
+            // 2. تطبيق الصلاحيات وبيانات المستخدم
             const userDataString = localStorage.getItem('gpack_user');
             if (!userDataString) return; 
 
             const userData = JSON.parse(userDataString);
 
-            // 2. تغيير الاسم والمسمى الوظيفي في القائمة الجانبية
-            const nameEl = document.getElementById('sidebarUserName');
-            const roleEl = document.getElementById('sidebarUserRole');
-            if(nameEl) nameEl.innerText = userData.name;
-            if(roleEl) roleEl.innerText = userData.role_name;
+            document.getElementById('sidebarUserName').innerText = userData.name;
+            document.getElementById('sidebarUserRole').innerText = userData.role_name;
 
-            // 3. تطبيق الصلاحيات (إخفاء الصفحات الممنوعة)
             const perms = userData.permissions || {};
-
-            // لو الموظف "مدير عام" (عنده صلاحيات مطلقة)، متخفيش حاجة واخرج من الدالة
             if (perms.all_access === true) return;
 
-            // --- إذا لم يكن مديراً، نبدأ في فلترة القائمة الجانبية ---
-
-            // المبيعات (العملاء، عروض الأسعار)
+            // إخفاء الصفحات حسب الصلاحيات
             if (!perms.sales || !perms.sales.view) {
-                hideSidebarLink('clients.html');
-                hideSidebarLink('quotations.html');
+                hideSidebarLink('clients.html'); hideSidebarLink('quotations.html');
             }
-
-            // الإنتاج (أوامر التشغيل، الموردين)
             if (!perms.production || !perms.production.view) {
-                hideSidebarLink('production_orders.html');
-                hideSidebarLink('suppliers.html');
+                hideSidebarLink('production_orders.html'); hideSidebarLink('suppliers.html');
             }
-
-            // المستودعات (المستودعات، الأصناف)
             if (!perms.inventory || !perms.inventory.view) {
-                hideSidebarLink('inventory.html');
-                hideSidebarLink('products.html');
+                hideSidebarLink('inventory.html'); hideSidebarLink('products.html');
             }
-
-            // الإعدادات وإدارة النظام (الموظفين، الصلاحيات، القوائم، الشروط)
             if (!perms.settings) {
-                hideSidebarLink('employees.html');
-                hideSidebarLink('permissions.html');
-                hideSidebarLink('lists.html');
-                hideSidebarLink('terms.html');
+                hideSidebarLink('employees.html'); hideSidebarLink('permissions.html');
+                hideSidebarLink('lists.html'); hideSidebarLink('terms.html');
             }
         }
 
-        // دالة مساعدة لإخفاء الرابط من القائمة الجانبية
-        function hideSidebarLink(href) {
-            const link = document.querySelector(`a[href="${href}"]`);
-            if (link) {
-                link.style.display = 'none';
+        function hideSidebarLink(page) {
+            const link = document.querySelector(`.sidebar-item[data-page="${page}"]`);
+            if (link) link.style.display = 'none';
+        }
+
+        // تحكم القائمة في الموبايل
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (window.innerWidth < 768) {
+                sidebar.classList.toggle('sidebar-mobile-hidden');
+                overlay.classList.toggle('hidden');
+            } else {
+                sidebar.classList.toggle('sidebar-collapsed');
             }
         }
-        
-        // دالة تسجيل الخروج (مربوطة بزر تسجيل الخروج في القائمة)
+
         function logout() {
             localStorage.removeItem('gpack_user');
             window.location.replace('login.html');
