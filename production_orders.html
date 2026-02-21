@@ -1406,6 +1406,89 @@ function openPaymentModal() {
             document.getElementById('paymentNotes').value = '';
             openModal('paymentModal');
         }
+        // 1. دالة حفظ الدفعة وتسميعها في كشف حساب العميل
+        async function submitClientPayment() {
+            const amount = parseFloat(document.getElementById('paymentAmount').value);
+            const method = document.getElementById('paymentMethod').value;
+            const notes = document.getElementById('paymentNotes').value;
+            const orderId = document.getElementById('mgrActiveOrderId').value;
+            const clientId = document.getElementById('mgrActiveClientId').value;
+            
+            if(!amount || amount <= 0) return alert("الرجاء إدخال مبلغ صحيح.");
+
+            document.getElementById('btnSubmitPayment').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+
+            try {
+                // تحديث المبلغ المدفوع في جدول الأوامر
+                const { data: orderData } = await supabaseClient.from('orders').select('paid_amount, order_number').eq('id', orderId).single();
+                const currentPaid = parseFloat(orderData?.paid_amount) || 0;
+                const newPaid = currentPaid + amount;
+                await supabaseClient.from('orders').update({ paid_amount: newPaid }).eq('id', orderId);
+
+                // تسميع الدفعة في كشف حساب العميل (سند قبض)
+                const docNum = `REC-${Date.now().toString().slice(-6)}`;
+                await supabaseClient.from('client_transactions').insert([{
+                    client_id: clientId,
+                    order_id: orderId, 
+                    type: 'payment', 
+                    amount: amount,
+                    payment_method: method,
+                    document_number: docNum,
+                    description: `دفعة مالية لأمر تشغيل #${orderData?.order_number || ''} ${notes ? '- '+notes : ''}`
+                }]);
+                
+                // تحديث الجداول في الخلفية
+                await fetchClientOrders();
+                
+                // استدعاء دالة عرض الدفعات
+                if (typeof fetchClientPayments === 'function') {
+                    await fetchClientPayments(orderId); 
+                }
+                
+                closeModal('paymentModal');
+                alert(`تم تسجيل الدفعة بنجاح وتم تسميعها في كشف حساب العميل!`);
+            } catch (err) {
+                alert("حدث خطأ أثناء تسجيل الدفعة: " + err.message);
+                console.error(err);
+            } finally {
+                document.getElementById('btnSubmitPayment').innerHTML = 'تأكيد وحفظ الدفعة';
+            }
+        }
+
+        // 2. الدالة المفقودة: جلب الدفعات وعرضها داخل إدارة الأمر
+        async function fetchClientPayments(orderId) {
+            const tbody = document.getElementById('mgrPaymentsBody');
+            if(!tbody) return;
+            
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب الدفعات...</td></tr>';
+            
+            const { data, error } = await supabaseClient.from('client_transactions')
+                .select('*')
+                .eq('order_id', orderId)
+                .eq('type', 'payment')
+                .order('created_at', {ascending: false});
+
+            tbody.innerHTML = '';
+            
+            if(!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد دفعات مسجلة لهذا الأمر حتى الآن</td></tr>';
+                return;
+            }
+
+            const methodNames = { 'bank_transfer': 'تحويل بنكي', 'cash': 'كاش / نقدي', 'pos': 'شبكة / نقاط بيع', 'check': 'شيك' };
+
+            data.forEach(p => {
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-green-50/30">
+                        <td class="p-2 text-sm">${new Date(p.created_at).toLocaleDateString()}</td>
+                        <td class="p-2 font-mono text-xs text-gray-600">${p.document_number || '-'}</td>
+                        <td class="p-2 font-bold">${methodNames[p.payment_method] || p.payment_method}</td>
+                        <td class="p-2 font-bold text-green-700 text-lg">${p.amount}</td>
+                        <td class="p-2 text-xs text-gray-500">${p.description || '-'}</td>
+                    </tr>
+                `;
+            });
+        }
 // دالة جلب الدفعات وعرضها داخل إدارة الأمر
         async function fetchClientPayments(orderId) {
             const tbody = document.getElementById('mgrPaymentsBody');
