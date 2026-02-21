@@ -412,30 +412,33 @@
                         </div>
                     </div>
 
-                    <div id="mgr-content-invoices" class="hidden">
+<div id="mgr-content-invoices" class="hidden">
                         <div class="flex flex-wrap gap-4 mb-6">
                             <button onclick="openInvoiceModal('proforma')" class="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700"><i class="fas fa-file-alt"></i> إصدار فاتورة أولية (مالية)</button>
                             <button onclick="openInvoiceModal('final')" class="bg-purple-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-purple-700"><i class="fas fa-check-double"></i> إصدار فاتورة مبيعات (خصم من المخزون)</button>
                             <button onclick="openPaymentModal()" class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700 mr-auto"><i class="fas fa-money-bill-wave"></i> تسجيل دفعة مالية</button>
                         </div>
-                        <div class="bg-white rounded-lg shadow-sm border p-4">
+                        <div class="bg-white rounded-lg shadow-sm border p-4 mb-4">
                             <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">سجل الفواتير الصادرة</h4>
                             <table class="w-full text-right text-sm">
                                 <thead class="bg-gray-50"><tr><th class="p-2">التاريخ</th><th class="p-2">رقم الفاتورة</th><th class="p-2">النوع</th><th class="p-2">الإجمالي</th><th class="p-2 text-center">إجراء</th></tr></thead>
                                 <tbody id="mgrInvoicesBody" class="divide-y"></tbody>
                             </table>
                         </div>
-                    </div>
-
-                    <div id="mgr-content-deliveries" class="hidden">
-                        <div class="flex gap-4 mb-6">
-                            <button onclick="openDeliveryModal()" class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700"><i class="fas fa-shipping-fast"></i> إصدار سند تسليم</button>
-                        </div>
+                        
                         <div class="bg-white rounded-lg shadow-sm border p-4">
-                            <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">سجلات التسليم السابقة</h4>
+                            <h4 class="font-bold text-green-700 mb-3 border-b pb-2"><i class="fas fa-money-check-alt"></i> سجل الدفعات المستلمة لهذا الأمر</h4>
                             <table class="w-full text-right text-sm">
-                                <thead class="bg-gray-50"><tr><th class="p-2">التاريخ</th><th class="p-2">الكمية المسلمة</th><th class="p-2">الصنف</th></tr></thead>
-                                <tbody id="mgrDeliveriesBody" class="divide-y"></tbody>
+                                <thead class="bg-green-50 text-green-900">
+                                    <tr>
+                                        <th class="p-2">التاريخ</th>
+                                        <th class="p-2">رقم السند</th>
+                                        <th class="p-2">طريقة الدفع</th>
+                                        <th class="p-2">المبلغ</th>
+                                        <th class="p-2">ملاحظات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mgrPaymentsBody" class="divide-y"></tbody>
                             </table>
                         </div>
                     </div>
@@ -1407,27 +1410,37 @@ function openPaymentModal() {
             openModal('paymentModal');
         }
         // 1. دالة حفظ الدفعة وتسميعها في كشف حساب العميل
+// دالة حفظ الدفعة وتسميعها في كشف حساب العميل (محدثة لتصطياد الأخطاء)
         async function submitClientPayment() {
             const amount = parseFloat(document.getElementById('paymentAmount').value);
             const method = document.getElementById('paymentMethod').value;
             const notes = document.getElementById('paymentNotes').value;
             const orderId = document.getElementById('mgrActiveOrderId').value;
-            const clientId = document.getElementById('mgrActiveClientId').value;
+            let clientId = document.getElementById('mgrActiveClientId').value;
             
+            // معالجة مهمة جداً: لو العميل نقدي، المتصفح بيبعتها كنص 'null' وده بيرفضه الداتا بيز
+            if(clientId === 'null' || clientId === 'undefined' || !clientId) {
+                clientId = null;
+            }
+
             if(!amount || amount <= 0) return alert("الرجاء إدخال مبلغ صحيح.");
 
             document.getElementById('btnSubmitPayment').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
             try {
-                // تحديث المبلغ المدفوع في جدول الأوامر
-                const { data: orderData } = await supabaseClient.from('orders').select('paid_amount, order_number').eq('id', orderId).single();
+                // 1. تحديث المبلغ المدفوع في جدول الأوامر مع التأكد من عدم وجود خطأ
+                const { data: orderData, error: err1 } = await supabaseClient.from('orders').select('paid_amount, order_number').eq('id', orderId).single();
+                if(err1) throw new Error("فشل في قراءة بيانات الأمر: " + err1.message);
+
                 const currentPaid = parseFloat(orderData?.paid_amount) || 0;
                 const newPaid = currentPaid + amount;
-                await supabaseClient.from('orders').update({ paid_amount: newPaid }).eq('id', orderId);
+                
+                const { error: err2 } = await supabaseClient.from('orders').update({ paid_amount: newPaid }).eq('id', orderId);
+                if(err2) throw new Error("فشل في تحديث مديونية الأمر: " + err2.message);
 
-                // تسميع الدفعة في كشف حساب العميل (سند قبض)
+                // 2. تسميع الدفعة في كشف حساب العميل (سند قبض)
                 const docNum = `REC-${Date.now().toString().slice(-6)}`;
-                await supabaseClient.from('client_transactions').insert([{
+                const { error: err3 } = await supabaseClient.from('client_transactions').insert([{
                     client_id: clientId,
                     order_id: orderId, 
                     type: 'payment', 
@@ -1437,18 +1450,17 @@ function openPaymentModal() {
                     description: `دفعة مالية لأمر تشغيل #${orderData?.order_number || ''} ${notes ? '- '+notes : ''}`
                 }]);
                 
-                // تحديث الجداول في الخلفية
-                await fetchClientOrders();
+                // لو جدول الحسابات فيه مشكلة أو مش موجود، هيطلعلك رسالة صريحة بالسبب!
+                if(err3) throw new Error("فشل في إدراج السند في كشف حساب العميل: " + err3.message);
                 
-                // استدعاء دالة عرض الدفعات
-                if (typeof fetchClientPayments === 'function') {
-                    await fetchClientPayments(orderId); 
-                }
+                await fetchClientOrders();
+                await fetchClientPayments(orderId); // الآن الجدول موجود في الـ HTML وهتشتغل تمام
                 
                 closeModal('paymentModal');
                 alert(`تم تسجيل الدفعة بنجاح وتم تسميعها في كشف حساب العميل!`);
             } catch (err) {
-                alert("حدث خطأ أثناء تسجيل الدفعة: " + err.message);
+                // الكود ده هيصطاد المشكلة ويطلعهالك بدل ما يسكت
+                alert("تم إيقاف الحفظ بسبب خطأ في قاعدة البيانات:\n" + err.message);
                 console.error(err);
             } finally {
                 document.getElementById('btnSubmitPayment').innerHTML = 'تأكيد وحفظ الدفعة';
