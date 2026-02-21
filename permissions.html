@@ -165,6 +165,15 @@
                         </label>
                     </div>
                 </div>
+
+                <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <h4 class="font-bold text-blue-800 mb-2"><i class="fas fa-eye"></i> نطاق رؤية البيانات (Data Scope)</h4>
+                    <p class="text-xs text-gray-600 mb-2">هل يُسمح لهذا الدور برؤية عملائه وطلباته فقط، أم جميع البيانات في النظام؟</p>
+                    <select id="dataScope" class="input-std font-bold text-gray-800 border-blue-200 focus:border-blue-500">
+                        <option value="personal_only">رؤية وإدارة بياناته الخاصة فقط (عملائه، طلباته، إلخ...)</option>
+                        <option value="all_data">رؤية وإدارة جميع بيانات النظام (للمشرفين والمديرين)</option>
+                    </select>
+                </div>
                 
                 <div id="adminWarning" class="hidden mt-4 p-3 bg-red-50 border-r-4 border-red-500 text-red-700 text-sm font-bold">
                     <i class="fas fa-exclamation-triangle"></i> لا يمكن تعديل صلاحيات أو اسم "المدير العام" للحفاظ على استقرار النظام.
@@ -305,7 +314,7 @@
             openModal('roleModal');
         }
 
-        function editRole(id) {
+function editRole(id) {
             const role = rolesList.find(r => r.id === id);
             if (!role) return;
 
@@ -316,7 +325,6 @@
 
             const perms = role.permissions || {};
             
-            // فك التشفير عن الصلاحيات وتوزيعها
             const allAccessCb = document.getElementById('perm_all_access');
             allAccessCb.checked = perms.all_access === true;
             
@@ -325,15 +333,20 @@
             document.getElementById('perm_inventory').checked = perms.inventory === true;
             document.getElementById('perm_finance').checked = perms.finance === true;
             document.getElementById('perm_settings').checked = perms.settings === true;
+            
+            // قراءة نطاق البيانات من الداتا بيز (لو مش موجود نعتبره personal_only للحماية)
+            document.getElementById('dataScope').value = perms.data_scope || 'personal_only';
 
-            toggleAllPermissions(allAccessCb); // لو هو مدير عام يقفل الباقي
+            toggleAllPermissions(allAccessCb); 
 
-            // حماية دور المدير العام من التعديل
             if (perms.all_access === true && role.role_name === 'المدير العام') {
                 document.getElementById('roleName').disabled = true;
+                document.getElementById('dataScope').disabled = true; // منع تعديل نطاق المدير
+                document.getElementById('dataScope').value = 'all_data'; 
                 document.getElementById('adminWarning').classList.remove('hidden');
             } else {
                 document.getElementById('roleName').disabled = false;
+                document.getElementById('dataScope').disabled = false;
                 document.getElementById('adminWarning').classList.add('hidden');
             }
 
@@ -351,14 +364,18 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
             btn.disabled = true;
 
-            // تجميع الصلاحيات في كائن JSON
+            const isAllAccess = document.getElementById('perm_all_access').checked;
+
+            // تجميع الصلاحيات ونطاق البيانات في كائن JSON
             const permissionsJSON = {
-                all_access: document.getElementById('perm_all_access').checked,
+                all_access: isAllAccess,
                 sales: document.getElementById('perm_sales').checked,
                 production: document.getElementById('perm_production').checked,
                 inventory: document.getElementById('perm_inventory').checked,
                 finance: document.getElementById('perm_finance').checked,
                 settings: document.getElementById('perm_settings').checked,
+                // لو مدير عام بياخد all_data إجباري، غير كده بياخد اللي اخترته من القائمة
+                data_scope: isAllAccess ? 'all_data' : document.getElementById('dataScope').value
             };
 
             const payload = {
@@ -369,17 +386,15 @@
 
             try {
                 if (id) {
-                    // Update
                     const { error } = await supabaseClient.from('roles').update(payload).eq('id', id);
                     if (error) throw error;
                 } else {
-                    // Insert
                     const { error } = await supabaseClient.from('roles').insert([payload]);
                     if (error) throw error;
                 }
 
                 closeModal('roleModal');
-                fetchRoles(); // Refresh grid
+                fetchRoles(); 
             } catch (err) {
                 console.error(err);
                 if (err.code === '23505') {
