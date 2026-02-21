@@ -62,9 +62,9 @@
             <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400 shrink-0">
                 <i class="fas fa-user-shield text-yellow-400"></i>
             </div>
-            <div>
-                <p class="text-sm font-bold">المدير العام</p>
-                <p class="text-xs text-gray-300">Admin</p>
+<div>
+                <p class="text-sm font-bold" id="sidebarUserName">المدير العام</p>
+                <p class="text-xs text-gray-300" id="sidebarUserRole">Admin</p>
             </div>
         </div>
 
@@ -84,9 +84,9 @@
         </nav>
         
         <div class="p-4 border-t border-purple-800/50">
-            <button class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2 whitespace-nowrap">
-                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-            </button>
+<button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2 whitespace-nowrap">
+    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+</button>
         </div>
     </aside>
 
@@ -451,6 +451,73 @@ function editRole(id) {
                 btn.innerHTML = 'حفظ الدور والصلاحيات';
                 btn.disabled = false;
             }
+        }
+    </script>
+        <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            applyUserPermissions();
+        });
+
+        function applyUserPermissions() {
+            // 1. جلب بيانات الموظف من المتصفح
+            const userDataString = localStorage.getItem('gpack_user');
+            if (!userDataString) return; 
+
+            const userData = JSON.parse(userDataString);
+
+            // 2. تغيير الاسم والمسمى الوظيفي في القائمة الجانبية
+            const nameEl = document.getElementById('sidebarUserName');
+            const roleEl = document.getElementById('sidebarUserRole');
+            if(nameEl) nameEl.innerText = userData.name;
+            if(roleEl) roleEl.innerText = userData.role_name;
+
+            // 3. تطبيق الصلاحيات (إخفاء الصفحات الممنوعة)
+            const perms = userData.permissions || {};
+
+            // لو الموظف "مدير عام" (عنده صلاحيات مطلقة)، متخفيش حاجة واخرج من الدالة
+            if (perms.all_access === true) return;
+
+            // --- إذا لم يكن مديراً، نبدأ في فلترة القائمة الجانبية ---
+
+            // المبيعات (العملاء، عروض الأسعار)
+            if (!perms.sales || !perms.sales.view) {
+                hideSidebarLink('clients.html');
+                hideSidebarLink('quotations.html');
+            }
+
+            // الإنتاج (أوامر التشغيل، الموردين)
+            if (!perms.production || !perms.production.view) {
+                hideSidebarLink('production_orders.html');
+                hideSidebarLink('suppliers.html');
+            }
+
+            // المستودعات (المستودعات، الأصناف)
+            if (!perms.inventory || !perms.inventory.view) {
+                hideSidebarLink('inventory.html');
+                hideSidebarLink('products.html');
+            }
+
+            // الإعدادات وإدارة النظام (الموظفين، الصلاحيات، القوائم، الشروط)
+            if (!perms.settings) {
+                hideSidebarLink('employees.html');
+                hideSidebarLink('permissions.html');
+                hideSidebarLink('lists.html');
+                hideSidebarLink('terms.html');
+            }
+        }
+
+        // دالة مساعدة لإخفاء الرابط من القائمة الجانبية
+        function hideSidebarLink(href) {
+            const link = document.querySelector(`a[href="${href}"]`);
+            if (link) {
+                link.style.display = 'none';
+            }
+        }
+        
+        // دالة تسجيل الخروج (مربوطة بزر تسجيل الخروج في القائمة)
+        function logout() {
+            localStorage.removeItem('gpack_user');
+            window.location.replace('login.html');
         }
     </script>
 </body>
