@@ -144,10 +144,12 @@
         });
 
         // --- 2. برمجة تسجيل الدخول (الربط مع قاعدة البيانات) ---
+// --- 2. برمجة تسجيل الدخول (محدثة لتفادي أخطاء قاعدة البيانات وحالة الحروف) ---
         async function handleLogin(e) {
             e.preventDefault();
             
-            const loginId = document.getElementById('loginId').value.trim();
+            // سحب القيمة وتحويلها لحروف صغيرة (عشان لو كتب حرف كابيتال بالغلط)
+            const loginId = document.getElementById('loginId').value.trim().toLowerCase();
             const password = document.getElementById('password').value;
             const btn = document.getElementById('btnLogin');
             const errorBox = document.getElementById('errorMsg');
@@ -157,13 +159,24 @@
             btn.disabled = true;
 
             try {
-                // البحث في جدول الموظفين (إما بالإيميل أو رقم التليفون) وجلب الصلاحيات معاه
-                const { data: employee, error } = await supabaseClient
+                // تحديد هل المستخدم أدخل بريد إلكتروني أم رقم جوال
+                const isEmail = loginId.includes('@');
+                
+                // بناء الاستعلام الأساسي (مطابقة الباسورد)
+                let query = supabaseClient
                     .from('employees')
                     .select('*, roles(role_name, permissions)')
-                    .or(`email.eq.${loginId},phone.eq.${loginId}`)
-                    .eq('password', password)
-                    .single();
+                    .eq('password', password);
+
+                // توجيه البحث بذكاء للعمود الصحيح
+                if (isEmail) {
+                    query = query.ilike('email', loginId); // ilike تتجاهل الكابيتال والسمول
+                } else {
+                    query = query.eq('phone', loginId);
+                }
+
+                // تنفيذ الاستعلام
+                const { data: employee, error } = await query.single();
 
                 if (error || !employee) {
                     throw new Error("بيانات الدخول غير صحيحة، تأكد من البريد/الجوال وكلمة المرور.");
