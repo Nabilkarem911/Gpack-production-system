@@ -1409,8 +1409,7 @@ function openPaymentModal() {
             document.getElementById('paymentNotes').value = '';
             openModal('paymentModal');
         }
-        // 1. دالة حفظ الدفعة وتسميعها في كشف حساب العميل
-// دالة حفظ الدفعة (تم حل مشكلة عمود الـ document_number)
+// 1. دالة الحفظ (تم حل مشكلة أعمدة الداتا بيز بدمج البيانات في الوصف)
         async function submitClientPayment() {
             const amount = parseFloat(document.getElementById('paymentAmount').value);
             const method = document.getElementById('paymentMethod').value;
@@ -1427,28 +1426,28 @@ function openPaymentModal() {
             document.getElementById('btnSubmitPayment').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
             try {
+                // تحديث المبلغ في جدول الأوامر
                 const { data: orderData, error: err1 } = await supabaseClient.from('orders').select('paid_amount, order_number').eq('id', orderId).single();
-                if(err1) throw new Error("فشل في قراءة بيانات الأمر: " + err1.message);
+                if(err1) throw new Error("فشل قراءة الأمر: " + err1.message);
 
                 const currentPaid = parseFloat(orderData?.paid_amount) || 0;
                 const newPaid = currentPaid + amount;
                 
                 const { error: err2 } = await supabaseClient.from('orders').update({ paid_amount: newPaid }).eq('id', orderId);
-                if(err2) throw new Error("فشل في تحديث مديونية الأمر: " + err2.message);
+                if(err2) throw new Error("فشل تحديث الأمر: " + err2.message);
 
                 const docNum = `REC-${Date.now().toString().slice(-6)}`;
+                const methodAr = method === 'bank_transfer' ? 'تحويل بنكي' : method === 'cash' ? 'كاش' : method === 'pos' ? 'شبكة' : 'شيك';
                 
-                // الحل هنا: تم إزالة document_number ودمج رقم السند في الملاحظات
+                // الخدعة هنا: إرسال (العميل، النوع، المبلغ، والوصف الشامل) فقط لضمان التوافق مع أي داتا بيز
                 const { error: err3 } = await supabaseClient.from('client_transactions').insert([{
                     client_id: clientId,
-                    order_id: orderId, 
                     type: 'payment', 
                     amount: amount,
-                    payment_method: method,
-                    description: `سند قبض رقم (${docNum}) لأمر #${orderData?.order_number || ''} ${notes ? ' | ملاحظات: '+notes : ''}`
+                    description: `[ORDER_ID:${orderId}] سند قبض (${docNum}) | طريقة الدفع: ${methodAr} | أمر #${orderData?.order_number || ''} | ${notes}`
                 }]);
                 
-                if(err3) throw new Error("فشل في إدراج السند في كشف حساب العميل: " + err3.message);
+                if(err3) throw new Error("فشل الإدراج: " + err3.message);
                 
                 await fetchClientOrders();
                 if (typeof fetchClientPayments === 'function') {
@@ -1456,25 +1455,27 @@ function openPaymentModal() {
                 }
                 
                 closeModal('paymentModal');
-                alert(`تم تسجيل الدفعة بنجاح وتم تسميعها في كشف حساب العميل!`);
+                alert(`تم تسجيل الدفعة بنجاح!`);
             } catch (err) {
-                alert("تم إيقاف الحفظ بسبب خطأ في قاعدة البيانات:\n" + err.message);
+                alert("تم إيقاف الحفظ بسبب خطأ:\n" + err.message);
                 console.error(err);
             } finally {
                 document.getElementById('btnSubmitPayment').innerHTML = 'تأكيد وحفظ الدفعة';
             }
         }
         // 2. الدالة المفقودة: جلب الدفعات وعرضها داخل إدارة الأمر
+// 2. دالة العرض (تم تعديلها لتبحث داخل الوصف لتفادي خطأ الأعمدة المفقودة)
         async function fetchClientPayments(orderId) {
             const tbody = document.getElementById('mgrPaymentsBody');
             if(!tbody) return;
             
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب الدفعات...</td></tr>';
             
+            // البحث باستخدام ilike داخل الوصف لأن الداتا بيز لا تحتوي على order_id
             const { data, error } = await supabaseClient.from('client_transactions')
                 .select('*')
-                .eq('order_id', orderId)
                 .eq('type', 'payment')
+                .ilike('description', `%[ORDER_ID:${orderId}]%`)
                 .order('created_at', {ascending: false});
 
             tbody.innerHTML = '';
@@ -1484,14 +1485,12 @@ function openPaymentModal() {
                 return;
             }
 
-            const methodNames = { 'bank_transfer': 'تحويل بنكي', 'cash': 'كاش / نقدي', 'pos': 'شبكة / نقاط بيع', 'check': 'شيك' };
-
             data.forEach(p => {
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-green-50/30">
                         <td class="p-2 text-sm">${new Date(p.created_at).toLocaleDateString()}</td>
-                        <td class="p-2 font-mono text-xs text-gray-600">${p.document_number || '-'}</td>
-                        <td class="p-2 font-bold">${methodNames[p.payment_method] || p.payment_method}</td>
+                        <td class="p-2 font-mono text-xs text-gray-600">-</td>
+                        <td class="p-2 font-bold text-gray-600">حسب الوصف</td>
                         <td class="p-2 font-bold text-green-700 text-lg">${p.amount}</td>
                         <td class="p-2 text-xs text-gray-500">${p.description || '-'}</td>
                     </tr>
