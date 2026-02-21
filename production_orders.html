@@ -1480,13 +1480,14 @@ function openPaymentModal() {
         }
         // 2. الدالة المفقودة: جلب الدفعات وعرضها داخل إدارة الأمر
 // 2. دالة العرض (تم تعديلها لتبحث داخل الوصف لتفادي خطأ الأعمدة المفقودة)
+// دالة جلب الدفعات (محدثة لتبحث داخل الوصف وتستخرج البيانات بذكاء)
         async function fetchClientPayments(orderId) {
             const tbody = document.getElementById('mgrPaymentsBody');
             if(!tbody) return;
             
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب الدفعات...</td></tr>';
             
-            // البحث باستخدام ilike داخل الوصف لأن الداتا بيز لا تحتوي على order_id
+            // 1. البحث باستخدام ilike داخل الوصف لأن الداتا بيز لا تحتوي على order_id
             const { data, error } = await supabaseClient.from('client_transactions')
                 .select('*')
                 .eq('type', 'payment')
@@ -1501,13 +1502,32 @@ function openPaymentModal() {
             }
 
             data.forEach(p => {
+                // 2. استخراج البيانات من النص (لأننا دمجناها في الوصف لحل مشكلة الداتا بيز)
+                let docNum = '-';
+                let method = 'حسب الوصف';
+                
+                try {
+                    // استخراج رقم السند
+                    if(p.description.includes('سند قبض (')) {
+                        docNum = p.description.split('سند قبض (')[1].split(')')[0];
+                    }
+                    // استخراج طريقة الدفع
+                    if(p.description.includes('طريقة الدفع: ')) {
+                        method = p.description.split('طريقة الدفع: ')[1].split(' |')[0];
+                    }
+                } catch(e) {}
+
+                // تنظيف الوصف لعرض الملاحظات الإضافية فقط
+                let cleanNotes = p.description.split(' | ').pop(); 
+                if(cleanNotes.includes('[ORDER_ID')) cleanNotes = '-'; // لو مفيش ملاحظات اتكتبت
+
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-green-50/30">
                         <td class="p-2 text-sm">${new Date(p.created_at).toLocaleDateString()}</td>
-                        <td class="p-2 font-mono text-xs text-gray-600">-</td>
-                        <td class="p-2 font-bold text-gray-600">حسب الوصف</td>
+                        <td class="p-2 font-mono text-xs text-gray-600">${docNum}</td>
+                        <td class="p-2 font-bold">${method}</td>
                         <td class="p-2 font-bold text-green-700 text-lg">${p.amount}</td>
-                        <td class="p-2 text-xs text-gray-500">${p.description || '-'}</td>
+                        <td class="p-2 text-xs text-gray-500">${cleanNotes}</td>
                     </tr>
                 `;
             });
