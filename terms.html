@@ -4,23 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>G.PACK - الشروط والأحكام</title>
-        <script>
-        // التحقق من وجود بيانات تسجيل الدخول في المتصفح
+    
+    <script>
         const loggedInUser = localStorage.getItem('gpack_user');
-        
-        // لو مفيش بيانات (يعني مش مسجل دخول)
         if (!loggedInUser) {
-            // اطرده فوراً لصفحة تسجيل الدخول قبل ما الصفحة تحمل
             window.location.replace('login.html');
         }
     </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-/* --- Sidebar & Mobile Styles --- */
+        /* --- Sidebar & Mobile Styles --- */
         body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; overflow: hidden; }
         .gpack-purple { background-color: #3e206d; }
         .gpack-yellow { color: #fccf4d; }
@@ -31,12 +29,10 @@
         .sidebar-item:hover { background-color: rgba(255,255,255,0.05); border-right-color: rgba(252, 207, 77, 0.5); }
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right-color: #fccf4d; color: #fff; font-weight: bold; }
         
-        /* شريط التمرير المخفي الأنيق للقائمة */
         .nav-scroll::-webkit-scrollbar { width: 4px; }
         .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
         .nav-scroll:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); }
 
-        /* التحكم في الموبايل والطي */
         #sidebar { transition: width 0.3s ease, transform 0.3s ease; flex-shrink: 0; }
         .sidebar-collapsed { width: 0 !important; overflow: hidden; }
         @media (max-width: 768px) {
@@ -46,10 +42,9 @@
     </style>
 </head>
 
-    
 <body class="flex h-screen overflow-hidden">
 
-<div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
 
     <aside id="sidebar" class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-30 fixed md:relative h-full sidebar-mobile-hidden md:transform-none">
         
@@ -91,6 +86,27 @@
             </button>
         </div>
     </aside>
+
+    <main class="flex-1 flex flex-col overflow-hidden relative w-full transition-all duration-300">
+        <header class="h-20 bg-white shadow-sm flex items-center justify-between px-4 md:px-8 z-10 shrink-0">
+            <div class="flex items-center gap-3 shrink-0">
+                <button onclick="toggleSidebar()" class="text-gray-600 text-xl focus:outline-none hover:text-gpack-purple p-2 rounded-md hover:bg-gray-100">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 class="text-lg md:text-xl font-bold text-gray-800 whitespace-nowrap">الشروط والأحكام العامة</h2>
+                <div id="loadingIndicator" class="hidden flex items-center gap-2 text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full"><i class="fas fa-sync fa-spin"></i></div>
+            </div>
+            <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar flex-1 justify-end pl-2">
+                <button onclick="openAddModal()" class="gpack-btn px-4 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2">
+                    <i class="fas fa-plus"></i><span>إضافة شرط جديد</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
+            <div id="termsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+        </div>
     </main>
 
     <div id="termModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
@@ -130,13 +146,68 @@
     <script>
         const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
-        // التصحيح هنا: تغيير اسم المتغير لتجنب التعارض
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let allTerms = [];
 
-        window.onload = fetchTerms;
+        // --- كود الواجهة الديناميكية المحدث (يقرأ روابط Netlify صح) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initSystemUI();
+            fetchTerms(); // تحميل الشروط بعد الواجهة
+        });
 
+        function initSystemUI() {
+            // معالجة الروابط عشان تنور صح حتى في Netlify
+            let pageName = window.location.pathname.split("/").pop();
+            if (pageName === '' || pageName === '/') pageName = 'index.html';
+            if (!pageName.includes('.html')) pageName += '.html'; // عشان Netlify
+            
+            document.querySelectorAll('.sidebar-item').forEach(link => {
+                link.classList.remove('active', 'text-white');
+                if (link.getAttribute('data-page') === pageName) {
+                    link.classList.add('active', 'text-white');
+                    link.classList.remove('text-gray-300');
+                }
+            });
+
+            const userDataString = localStorage.getItem('gpack_user');
+            if (!userDataString) return; 
+
+            const userData = JSON.parse(userDataString);
+            document.getElementById('sidebarUserName').innerText = userData.name;
+            document.getElementById('sidebarUserRole').innerText = userData.role_name;
+
+            const perms = userData.permissions || {};
+            if (perms.all_access === true) return;
+
+            if (!perms.sales || !perms.sales.view) { hideSidebarLink('clients.html'); hideSidebarLink('quotations.html'); }
+            if (!perms.production || !perms.production.view) { hideSidebarLink('production_orders.html'); hideSidebarLink('suppliers.html'); }
+            if (!perms.inventory || !perms.inventory.view) { hideSidebarLink('inventory.html'); hideSidebarLink('products.html'); }
+            if (!perms.settings) { hideSidebarLink('employees.html'); hideSidebarLink('permissions.html'); hideSidebarLink('lists.html'); hideSidebarLink('terms.html'); }
+        }
+
+        function hideSidebarLink(page) {
+            const link = document.querySelector(`.sidebar-item[data-page="${page}"]`);
+            if (link) link.style.display = 'none';
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (window.innerWidth < 768) {
+                sidebar.classList.toggle('sidebar-mobile-hidden');
+                overlay.classList.toggle('hidden');
+            } else {
+                sidebar.classList.toggle('sidebar-collapsed');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('gpack_user');
+            window.location.replace('login.html');
+        }
+
+        // --- وظائف صفحة الشروط ---
         async function fetchTerms() {
             document.getElementById('loadingIndicator').classList.remove('hidden');
             const { data, error } = await supabaseClient.from('general_terms').select('*').order('created_at', {ascending: true});
@@ -151,7 +222,7 @@
             grid.innerHTML = '';
             
             if(terms.length === 0) {
-                grid.innerHTML = '<div class="col-span-2 text-center py-10 text-gray-400"><i class="fas fa-file-contract text-4xl mb-2"></i><p>لا توجد شروط مضافة</p></div>';
+                grid.innerHTML = '<div class="col-span-1 md:col-span-2 text-center py-10 text-gray-400"><i class="fas fa-file-contract text-4xl mb-2"></i><p>لا توجد شروط مضافة</p></div>';
                 return;
             }
 
@@ -226,7 +297,7 @@
         });
 
         async function deleteTerm(id) {
-            if(confirm('حذف؟')) {
+            if(confirm('هل أنت متأكد من الحذف؟')) {
                 await supabaseClient.from('general_terms').delete().eq('id', id);
                 fetchTerms();
             }
@@ -238,74 +309,6 @@
             el.classList.toggle('pointer-events-none');
             el.querySelector('.modal-container').classList.toggle('scale-95');
             el.querySelector('.modal-container').classList.toggle('scale-100');
-        }
-    </script>
-<script>
-        document.addEventListener('DOMContentLoaded', () => {
-            initSystemUI();
-        });
-
-        function initSystemUI() {
-            // 1. تحديد الزرار النشط أوتوماتيكياً
-            const currentPath = window.location.pathname;
-            const pageName = currentPath.split("/").pop() || 'index.html';
-            
-            document.querySelectorAll('.sidebar-item').forEach(link => {
-                link.classList.remove('active', 'text-white');
-                if (link.getAttribute('data-page') === pageName) {
-                    link.classList.add('active', 'text-white');
-                    link.classList.remove('text-gray-300');
-                }
-            });
-
-            // 2. تطبيق الصلاحيات وبيانات المستخدم
-            const userDataString = localStorage.getItem('gpack_user');
-            if (!userDataString) return; 
-
-            const userData = JSON.parse(userDataString);
-
-            document.getElementById('sidebarUserName').innerText = userData.name;
-            document.getElementById('sidebarUserRole').innerText = userData.role_name;
-
-            const perms = userData.permissions || {};
-            if (perms.all_access === true) return;
-
-            // إخفاء الصفحات حسب الصلاحيات
-            if (!perms.sales || !perms.sales.view) {
-                hideSidebarLink('clients.html'); hideSidebarLink('quotations.html');
-            }
-            if (!perms.production || !perms.production.view) {
-                hideSidebarLink('production_orders.html'); hideSidebarLink('suppliers.html');
-            }
-            if (!perms.inventory || !perms.inventory.view) {
-                hideSidebarLink('inventory.html'); hideSidebarLink('products.html');
-            }
-            if (!perms.settings) {
-                hideSidebarLink('employees.html'); hideSidebarLink('permissions.html');
-                hideSidebarLink('lists.html'); hideSidebarLink('terms.html');
-            }
-        }
-
-        function hideSidebarLink(page) {
-            const link = document.querySelector(`.sidebar-item[data-page="${page}"]`);
-            if (link) link.style.display = 'none';
-        }
-
-        // تحكم القائمة في الموبايل
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (window.innerWidth < 768) {
-                sidebar.classList.toggle('sidebar-mobile-hidden');
-                overlay.classList.toggle('hidden');
-            } else {
-                sidebar.classList.toggle('sidebar-collapsed');
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('gpack_user');
-            window.location.replace('login.html');
         }
     </script>
 </body>
