@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G.PACK - إدارة الموظفين</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; }
+        .gpack-purple { background-color: #3e206d; }
+        .gpack-yellow { color: #fccf4d; }
+        .gpack-btn { background-color: #fccf4d; color: #3e206d; transition: all 0.3s; }
+        .gpack-btn:hover { background-color: #e6bd45; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
+        .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
+        
+        .modal { transition: opacity 0.2s ease-in-out; }
+        body.modal-active { overflow: hidden; }
+        .input-std { width: 100%; border: 1px solid #d1d5db; padding: 8px; border-radius: 6px; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }
+        .input-std:focus { border-color: #3e206d; box-shadow: 0 0 0 1px #3e206d; }
+
+        #sidebar { transition: width 0.3s ease, transform 0.3s ease; }
+        .sidebar-collapsed { width: 0 !important; overflow: hidden; }
+        @media (max-width: 768px) {
+            .sidebar-mobile-hidden { transform: translateX(100%); }
+            .sidebar-collapsed { width: 16rem !important; }
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden bg-gray-100">
+
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
+
+    <aside id="sidebar" class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-30 fixed md:relative h-full sidebar-mobile-hidden md:transform-none shrink-0">
+        <div class="h-20 flex items-center justify-between px-6 border-b border-purple-800/50">
+            <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2">
+                <i class="fas fa-box-open gpack-yellow"></i> <span class="whitespace-nowrap">G.PACK</span>
+            </h1>
+            <button onclick="toggleSidebar()" class="md:hidden text-white hover:text-red-300"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="p-4 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20 whitespace-nowrap overflow-hidden">
+            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400 shrink-0">
+                <i class="fas fa-user-tie text-yellow-400"></i>
+            </div>
+            <div>
+                <p class="text-sm font-bold">المدير العام</p>
+                <p class="text-xs text-gray-300">Admin</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 space-y-1">
+            <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-th-large w-5"></i> الرئيسية</a>
+            <a href="products.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-box w-5"></i> الأصناف</a>
+            <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-file-invoice-dollar w-5"></i> عروض الأسعار</a>
+            <a href="production_orders.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-industry w-5"></i> أوامر التشغيل</a>
+            <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-cubes w-5"></i> المستودعات</a>
+            <a href="suppliers.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-truck w-5"></i> الموردين</a>
+            <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-users w-5"></i> العملاء</a>
+            <a href="employees.html" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-white font-medium whitespace-nowrap"><i class="fas fa-id-card w-5"></i> الموظفين</a>
+            <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-list-alt w-5"></i> القوائم</a>
+            <a href="permissions.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-user-shield w-5"></i> الصلاحيات</a>
+            <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-tasks w-5"></i> المهام</a>
+            <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-file-signature w-5"></i> الشروط العامة</a>
+        </nav>
+        
+        <div class="p-4 border-t border-purple-800/50">
+            <button class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2 whitespace-nowrap">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-hidden relative w-full transition-all duration-300">
+        <header class="h-20 bg-white shadow-sm flex items-center justify-between px-4 md:px-8 z-10 shrink-0">
+            <div class="flex items-center gap-3 shrink-0">
+                <button onclick="toggleSidebar()" class="text-gray-600 text-xl focus:outline-none hover:text-gpack-purple p-2 rounded-md hover:bg-gray-100">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 class="text-lg md:text-xl font-bold text-gray-800 whitespace-nowrap">إدارة الموظفين والمستخدمين</h2>
+                <div id="loadingIndicator" class="hidden flex items-center gap-2 text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full"><i class="fas fa-sync fa-spin"></i></div>
+            </div>
+            <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar flex-1 justify-end pl-2">
+                <button onclick="openEmployeeModal()" class="gpack-btn px-4 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2">
+                    <i class="fas fa-user-plus"></i><span>إضافة موظف جديد</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px]">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm min-w-[900px]">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr>
+                                <th class="p-4 w-12 text-center">#</th>
+                                <th class="p-4">اسم الموظف</th>
+                                <th class="p-4">البريد الإلكتروني (اليوزر)</th>
+                                <th class="p-4">الدور الوظيفي</th>
+                                <th class="p-4">رقم الجوال</th>
+                                <th class="p-4 text-center">الحالة</th>
+                                <th class="p-4 text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeesTable" class="divide-y divide-gray-100">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="employeeModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-60" onclick="closeModal('employeeModal')"></div>
+        <div class="modal-container bg-white w-full max-w-3xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[90vh]">
+            
+            <div class="bg-purple-900 text-white p-4 flex justify-between items-center rounded-t-xl shrink-0">
+                <h3 class="text-lg font-bold" id="modalTitle"><i class="fas fa-user-tie text-yellow-400 mr-2"></i> إضافة موظف جديد</h3>
+                <button onclick="closeModal('employeeModal')" class="text-white hover:text-red-300"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <input type="hidden" id="empId">
+            
+            <div class="p-6 overflow-y-auto flex-1 bg-gray-50">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="text-sm font-bold text-gray-700 block mb-2">الاسم بالكامل <span class="text-red-500">*</span></label>
+                        <input type="text" id="empName" class="input-std" placeholder="الاسم رباعي">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-gray-700 block mb-2">الدور الوظيفي (الصلاحيات) <span class="text-red-500">*</span></label>
+                        <select id="empRole" class="input-std font-bold text-purple-900">
+                            <option value="">-- جاري التحميل --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-gray-700 block mb-2">البريد الإلكتروني (اسم المستخدم) <span class="text-red-500">*</span></label>
+                        <input type="email" id="empEmail" class="input-std text-left" dir="ltr" placeholder="example@gpack.com">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-gray-700 block mb-2">كلمة المرور <span class="text-red-500" id="passRequiredStar">*</span></label>
+                        <input type="text" id="empPassword" class="input-std text-left" dir="ltr" placeholder="كلمة المرور للدخول">
+                        <p class="text-xs text-gray-500 mt-1" id="passHint">اتركه فارغاً إذا كنت لا تريد تغييره.</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-gray-700 block mb-2">رقم الجوال</label>
+                        <input type="text" id="empPhone" class="input-std text-left" dir="ltr" placeholder="05xxxxxxxx">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-gray-700 block mb-2">الراتب الأساسي (اختياري)</label>
+                        <input type="number" id="empSalary" class="input-std font-bold text-green-700" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-gray-700 block mb-2">حالة الحساب</label>
+                        <select id="empStatus" class="input-std">
+                            <option value="active">نشط (يُسمح له بالدخول)</option>
+                            <option value="inactive">موقوف (ممنوع من الدخول)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="bg-blue-50 p-3 rounded border border-blue-200 text-sm text-blue-800">
+                    <i class="fas fa-info-circle"></i> سيستخدم الموظف <strong>البريد الإلكتروني</strong> و <strong>كلمة المرور</strong> لتسجيل الدخول إلى النظام. ستُطبق عليه الصلاحيات المربوطة بالدور الوظيفي الذي اخترته له أوتوماتيكياً.
+                </div>
+            </div>
+            
+            <div class="p-4 bg-white border-t rounded-b-xl flex justify-end gap-2 shrink-0">
+                <button type="button" onclick="closeModal('employeeModal')" class="bg-gray-200 px-6 py-2 rounded font-bold hover:bg-gray-300">إلغاء</button>
+                <button type="button" onclick="saveEmployee()" id="btnSaveEmployee" class="gpack-btn px-8 py-2 rounded font-bold shadow-lg">حفظ بيانات الموظف</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let employeesList = [];
+        let rolesCache = [];
+
+        window.onload = async () => {
+            await fetchRolesForDropdown();
+            await fetchEmployees();
+        };
+
+        // --- UI Helpers ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (window.innerWidth < 768) {
+                sidebar.classList.toggle('sidebar-mobile-hidden');
+                overlay.classList.toggle('hidden');
+            } else {
+                sidebar.classList.toggle('sidebar-collapsed');
+            }
+        }
+
+        function openModal(id) { 
+            const el = document.getElementById(id);
+            el.classList.remove('opacity-0', 'pointer-events-none');
+            el.querySelector('.modal-container').classList.add('scale-100');
+            el.querySelector('.modal-container').classList.remove('scale-95');
+        }
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            el.querySelector('.modal-container').classList.remove('scale-100');
+            el.querySelector('.modal-container').classList.add('scale-95');
+            setTimeout(() => el.classList.add('opacity-0', 'pointer-events-none'), 200);
+        }
+
+        // --- Core Functions ---
+        async function fetchRolesForDropdown() {
+            try {
+                const { data, error } = await supabaseClient.from('roles').select('id, role_name');
+                if (error) throw error;
+                rolesCache = data || [];
+                
+                const select = document.getElementById('empRole');
+                select.innerHTML = '<option value="">-- اختر الدور الوظيفي --</option>';
+                rolesCache.forEach(r => {
+                    select.innerHTML += `<option value="${r.id}">${r.role_name}</option>`;
+                });
+            } catch (err) {
+                console.error("Error fetching roles:", err);
+            }
+        }
+
+        function getRoleName(roleId) {
+            const role = rolesCache.find(r => r.id === roleId);
+            return role ? role.role_name : '<span class="text-red-500">غير محدد</span>';
+        }
+
+        async function fetchEmployees() {
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            try {
+                const { data, error } = await supabaseClient.from('employees').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                employeesList = data || [];
+                renderEmployeesTable();
+            } catch (err) {
+                console.error("Error fetching employees:", err);
+                alert("حدث خطأ أثناء جلب قائمة الموظفين.");
+            } finally {
+                document.getElementById('loadingIndicator').classList.add('hidden');
+            }
+        }
+
+        function renderEmployeesTable() {
+            const tbody = document.getElementById('employeesTable');
+            tbody.innerHTML = '';
+
+            if (employeesList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center p-8 text-gray-400">لا يوجد موظفين مسجلين في النظام.</td></tr>';
+                return;
+            }
+
+            employeesList.forEach((emp, index) => {
+                const roleName = getRoleName(emp.role_id);
+                const statusBadge = emp.status === 'active' 
+                    ? '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold"><i class="fas fa-check-circle"></i> نشط</span>'
+                    : '<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold"><i class="fas fa-ban"></i> موقوف</span>';
+
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-purple-50/30 transition">
+                        <td class="p-4 text-center text-gray-500">${index + 1}</td>
+                        <td class="p-4 font-bold text-gray-800">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                ${emp.full_name}
+                            </div>
+                        </td>
+                        <td class="p-4 font-mono text-sm">${emp.email}</td>
+                        <td class="p-4 font-bold text-purple-700">${roleName}</td>
+                        <td class="p-4 text-gray-600 font-mono text-sm">${emp.phone || '-'}</td>
+                        <td class="p-4 text-center">${statusBadge}</td>
+                        <td class="p-4 text-center">
+                            <button onclick="editEmployee('${emp.id}')" class="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded transition" title="تعديل بيانات الموظف">
+                                <i class="fas fa-edit"></i> تعديل
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function openEmployeeModal() {
+            document.getElementById('empId').value = '';
+            document.getElementById('empName').value = '';
+            document.getElementById('empEmail').value = '';
+            document.getElementById('empPassword').value = '';
+            document.getElementById('empPhone').value = '';
+            document.getElementById('empSalary').value = '';
+            document.getElementById('empRole').value = '';
+            document.getElementById('empStatus').value = 'active';
+            
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-plus text-yellow-400 mr-2"></i> إضافة موظف جديد';
+            
+            // جعل الباسورد إجباري في الإنشاء
+            document.getElementById('passHint').classList.add('hidden');
+            document.getElementById('passRequiredStar').classList.remove('hidden');
+
+            openModal('employeeModal');
+        }
+
+        function editEmployee(id) {
+            const emp = employeesList.find(e => e.id === id);
+            if (!emp) return;
+
+            document.getElementById('empId').value = emp.id;
+            document.getElementById('empName').value = emp.full_name;
+            document.getElementById('empEmail').value = emp.email;
+            document.getElementById('empPassword').value = ''; // الباسورد مش بيتعرض، بيتدخل لو حابب يغيره بس
+            document.getElementById('empPhone').value = emp.phone || '';
+            document.getElementById('empSalary').value = emp.salary || '';
+            document.getElementById('empRole').value = emp.role_id || '';
+            document.getElementById('empStatus').value = emp.status || 'active';
+            
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-edit text-yellow-400 mr-2"></i> تعديل بيانات الموظف: ' + emp.full_name;
+            
+            // الباسورد اختياري في التعديل
+            document.getElementById('passHint').classList.remove('hidden');
+            document.getElementById('passRequiredStar').classList.add('hidden');
+
+            openModal('employeeModal');
+        }
+
+        async function saveEmployee() {
+            const id = document.getElementById('empId').value;
+            const name = document.getElementById('empName').value.trim();
+            const email = document.getElementById('empEmail').value.trim();
+            const password = document.getElementById('empPassword').value.trim();
+            const roleId = document.getElementById('empRole').value;
+            const phone = document.getElementById('empPhone').value.trim();
+            const salary = parseFloat(document.getElementById('empSalary').value) || 0;
+            const status = document.getElementById('empStatus').value;
+
+            // الفاليديشن
+            if (!name || !email || !roleId) {
+                return alert("الرجاء إدخال الاسم، البريد الإلكتروني، والدور الوظيفي.");
+            }
+            if (!id && !password) {
+                return alert("يجب إدخال كلمة مرور للموظف الجديد لكي يتمكن من الدخول.");
+            }
+
+            const btn = document.getElementById('btnSaveEmployee');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            btn.disabled = true;
+
+            const payload = {
+                full_name: name,
+                email: email,
+                role_id: roleId,
+                phone: phone,
+                salary: salary,
+                status: status
+            };
+
+            // لو كتب باسورد جديد نضيفه للـ Payload
+            if (password) {
+                payload.password = password;
+            }
+
+            try {
+                if (id) {
+                    // Update
+                    const { error } = await supabaseClient.from('employees').update(payload).eq('id', id);
+                    if (error) throw error;
+                    alert("تم تعديل بيانات الموظف بنجاح.");
+                } else {
+                    // Insert
+                    const { error } = await supabaseClient.from('employees').insert([payload]);
+                    if (error) throw error;
+                    alert("تم إنشاء حساب الموظف بنجاح.");
+                }
+
+                closeModal('employeeModal');
+                fetchEmployees(); 
+            } catch (err) {
+                console.error(err);
+                if (err.code === '23505') {
+                    alert("البريد الإلكتروني (اسم المستخدم) مستخدم من قبل، الرجاء اختيار بريد آخر.");
+                } else {
+                    alert("حدث خطأ أثناء الحفظ: " + err.message);
+                }
+            } finally {
+                btn.innerHTML = 'حفظ بيانات الموظف';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
