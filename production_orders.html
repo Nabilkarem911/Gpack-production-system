@@ -1409,8 +1409,7 @@ function openPaymentModal() {
             document.getElementById('paymentNotes').value = '';
             openModal('paymentModal');
         }
-// 1. دالة الحفظ (تم حل مشكلة أعمدة الداتا بيز بدمج البيانات في الوصف)
-// دالة حفظ الدفعة (محدثة لتعمل بـ Real-time بدون ريفريش)
+// 1. دالة حفظ الدفعة (النسخة القياسية بعد ربط الداتا بيز)
         async function submitClientPayment() {
             const amount = parseFloat(document.getElementById('paymentAmount').value);
             const method = document.getElementById('paymentMethod').value;
@@ -1427,7 +1426,7 @@ function openPaymentModal() {
             document.getElementById('btnSubmitPayment').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
             try {
-                // 1. قراءة وتحديث المبلغ في الداتا بيز
+                // تحديث المديونية في الأوامر
                 const { data: orderData, error: err1 } = await supabaseClient.from('orders').select('paid_amount, order_number').eq('id', orderId).single();
                 if(err1) throw new Error("فشل قراءة الأمر: " + err1.message);
 
@@ -1437,34 +1436,34 @@ function openPaymentModal() {
                 const { error: err2 } = await supabaseClient.from('orders').update({ paid_amount: newPaid }).eq('id', orderId);
                 if(err2) throw new Error("فشل تحديث الأمر: " + err2.message);
 
-                // 2. تسجيل السند
+                // حفظ الدفعة في الجداول المنفصلة بشكل نظيف
                 const docNum = `REC-${Date.now().toString().slice(-6)}`;
-                const methodAr = method === 'bank_transfer' ? 'تحويل بنكي' : method === 'cash' ? 'كاش' : method === 'pos' ? 'شبكة' : 'شيك';
                 
                 const { error: err3 } = await supabaseClient.from('client_transactions').insert([{
                     client_id: clientId,
+                    order_id: orderId, // تم الربط المباشر بأمر التشغيل
                     type: 'payment', 
                     amount: amount,
-                    description: `[ORDER_ID:${orderId}] سند قبض (${docNum}) | طريقة الدفع: ${methodAr} | أمر #${orderData?.order_number || ''} | ${notes}`
+                    payment_method: method, // تم حفظ الطريقة في عمود منفصل
+                    document_number: docNum, // تم حفظ رقم السند في عمود منفصل
+                    description: `دفعة مالية لأمر التشغيل #${orderData?.order_number || ''} ${notes ? '- '+notes : ''}`
                 }]);
                 
                 if(err3) throw new Error("فشل الإدراج: " + err3.message);
                 
-                // === السحر هنا: تحديث الواجهة فوراً بدون ريفريش ===
-                
-                // أ) تحديث الحقل المخفي الخاص بالفاتورة عشان تقرأ الدفعة الجديدة فوراً
+                // تحديث الواجهة (الفاتورة والجدول الرئيسي) فوراً بدون ريفريش
                 const advanceInput = document.getElementById('invAdvancePayment');
                 if (advanceInput) advanceInput.value = newPaid;
 
-                // ب) تحديث مصفوفة الأوامر في الذاكرة لتسمع في الجدول الرئيسي فوراً
                 const orderIndex = allOrdersList.findIndex(o => String(o.id) === String(orderId));
                 if (orderIndex !== -1) allOrdersList[orderIndex].paid_amount = newPaid;
                 
                 const activeIndex = activeOrdersList.findIndex(o => String(o.id) === String(orderId));
                 if (activeIndex !== -1) activeOrdersList[activeIndex].paid_amount = newPaid;
 
-                // ج) إعادة رسم الجدول الرئيسي وجدول الدفعات
                 filterClientOrders(); 
+                
+                // تحديث جدول الدفعات
                 if (typeof fetchClientPayments === 'function') {
                     await fetchClientPayments(orderId); 
                 }
@@ -1532,13 +1531,14 @@ function openPaymentModal() {
                 `;
             });
         }
-// دالة جلب الدفعات وعرضها داخل إدارة الأمر
+// 2. دالة عرض الدفعات (بحث قياسي وسريع جداً عبر order_id)
         async function fetchClientPayments(orderId) {
             const tbody = document.getElementById('mgrPaymentsBody');
             if(!tbody) return;
             
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب الدفعات...</td></tr>';
             
+            // البحث الدقيق المباشر باستخدام order_id
             const { data, error } = await supabaseClient.from('client_transactions')
                 .select('*')
                 .eq('order_id', orderId)
@@ -1559,7 +1559,7 @@ function openPaymentModal() {
                     <tr class="border-b hover:bg-green-50/30">
                         <td class="p-2 text-sm">${new Date(p.created_at).toLocaleDateString()}</td>
                         <td class="p-2 font-mono text-xs text-gray-600">${p.document_number || '-'}</td>
-                        <td class="p-2 font-bold">${methodNames[p.payment_method] || p.payment_method}</td>
+                        <td class="p-2 font-bold">${methodNames[p.payment_method] || p.payment_method || '-'}</td>
                         <td class="p-2 font-bold text-green-700 text-lg">${p.amount}</td>
                         <td class="p-2 text-xs text-gray-500">${p.description || '-'}</td>
                     </tr>
