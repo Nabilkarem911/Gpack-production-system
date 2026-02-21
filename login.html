@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G.PACK - تسجيل الدخول</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background-color: #3e206d; overflow: hidden; }
+        
+        /* تأثيرات الإدخال */
+        .input-field { width: 100%; border: 2px solid #e2e8f0; padding: 12px 40px 12px 12px; border-radius: 8px; font-size: 1rem; outline: none; transition: all 0.3s; background-color: #f8fafc; }
+        .input-field:focus { border-color: #fccf4d; background-color: #fff; box-shadow: 0 0 0 4px rgba(252, 207, 77, 0.2); }
+        .input-icon { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); color: #94a3b8; font-size: 1.2rem; transition: color 0.3s; }
+        .input-group:focus-within .input-icon { color: #3e206d; }
+
+        /* الأنيميشن الخاص بالشخصية (SVG) */
+        #character-container { width: 200px; height: 160px; margin: 0 auto -20px auto; position: relative; z-index: 10; }
+        
+        .eye-pupil { transition: transform 0.1s ease-out; }
+        
+        .bear-hand { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: center bottom; }
+        
+        /* حالة تغطية العين */
+        body.password-focused .hand-left { transform: translateY(-75px) rotate(15deg) scaleX(1.1); }
+        body.password-focused .hand-right { transform: translateY(-75px) rotate(-15deg) scaleX(1.1); }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen relative">
+
+    <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+
+    <div class="w-full max-w-md px-4 z-10 relative">
+        
+        <div id="character-container">
+            <svg viewBox="0 0 200 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="70" r="25" fill="#fccf4d" />
+                <circle cx="150" cy="70" r="25" fill="#fccf4d" />
+                <circle cx="50" cy="70" r="15" fill="#3e206d" opacity="0.1" />
+                <circle cx="150" cy="70" r="15" fill="#3e206d" opacity="0.1" />
+                
+                <circle cx="100" cy="110" r="75" fill="#fff" />
+                
+                <circle cx="70" cy="95" r="16" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+                <circle cx="130" cy="95" r="16" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+                
+                <circle id="pupil-left" class="eye-pupil" cx="70" cy="95" r="7" fill="#3e206d" />
+                <circle id="pupil-right" class="eye-pupil" cx="130" cy="95" r="7" fill="#3e206d" />
+                
+                <circle cx="100" cy="125" r="22" fill="#f8fafc" />
+                <ellipse cx="100" cy="120" rx="12" ry="8" fill="#3e206d" />
+                <path d="M 100 128 Q 100 140 90 135 M 100 128 Q 100 140 110 135" stroke="#3e206d" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+                <g class="bear-hand hand-left" transform="translate(0, 0)">
+                    <ellipse cx="60" cy="185" rx="20" ry="25" fill="#fccf4d" stroke="#eab308" stroke-width="2"/>
+                    <circle cx="60" cy="175" r="6" fill="#fff" opacity="0.5"/>
+                </g>
+                <g class="bear-hand hand-right" transform="translate(0, 0)">
+                    <ellipse cx="140" cy="185" rx="20" ry="25" fill="#fccf4d" stroke="#eab308" stroke-width="2"/>
+                    <circle cx="140" cy="175" r="6" fill="#fff" opacity="0.5"/>
+                </g>
+            </svg>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-2xl p-8 relative z-20">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-black text-purple-900 mb-2 tracking-wide">G.PACK</h1>
+                <p class="text-gray-500 font-medium">نظام إدارة الموارد المؤسسية (ERP)</p>
+            </div>
+
+            <div id="errorMsg" class="hidden bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm font-bold text-center border border-red-200">
+                </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-5 relative input-group">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">البريد الإلكتروني أو رقم الجوال</label>
+                    <input type="text" id="loginId" class="input-field" placeholder="example@gpack.com أو 05XXXXXXXX" dir="ltr" required>
+                    <i class="fas fa-user input-icon"></i>
+                </div>
+
+                <div class="mb-6 relative input-group">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">كلمة المرور</label>
+                    <input type="password" id="password" class="input-field font-mono" placeholder="••••••••" dir="ltr" required>
+                    <i class="fas fa-lock input-icon"></i>
+                </div>
+
+                <button type="submit" id="btnLogin" class="w-full bg-yellow-400 text-purple-900 font-black text-lg py-3 rounded-xl hover:bg-yellow-500 transition-colors shadow-lg shadow-yellow-400/30 flex justify-center items-center gap-2">
+                    <span>تسجيل الدخول</span>
+                    <i class="fas fa-sign-in-alt"></i>
+                </button>
+            </form>
+        </div>
+        
+        <p class="text-center text-purple-200 text-sm mt-6 font-medium">© 2026 G.PACK. جميع الحقوق محفوظة.</p>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ipomgnqpmbdzvmmjactv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- 1. برمجة الأنيميشن (حركة العيون وتغطية الوجه) ---
+        const passwordInput = document.getElementById('password');
+        const loginIdInput = document.getElementById('loginId');
+        const pupilL = document.getElementById('pupil-left');
+        const pupilR = document.getElementById('pupil-right');
+
+        // تغطية العين عند التركيز على الباسورد
+        passwordInput.addEventListener('focus', () => { document.body.classList.add('password-focused'); });
+        passwordInput.addEventListener('blur', () => { document.body.classList.remove('password-focused'); });
+
+        // حركة العيون مع الماوس
+        document.addEventListener('mousemove', (e) => {
+            if (document.body.classList.contains('password-focused')) return; // لو مغمي عينه ميتحركش
+
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            // حساب منتصف الشاشة تقريباً لتحديد اتجاه العين
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            // معادلة بسيطة لتحريك البؤبؤ في مساحة صغيرة (أقصى حركة 4 بكسل)
+            const moveX = ((mouseX / windowWidth) - 0.5) * 8; 
+            const moveY = ((mouseY / windowHeight) - 0.5) * 8;
+
+            pupilL.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            pupilR.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        });
+
+        // حركة العيون مع الكتابة في حقل اليوزر (لو الموبايل مفيش ماوس)
+        loginIdInput.addEventListener('input', (e) => {
+            const length = e.target.value.length;
+            const maxMove = 4;
+            // حركه من الشمال لليمين بناء على طول النص
+            const moveX = Math.min((length * 0.5) - 2, maxMove); 
+            pupilL.style.transform = `translate(${moveX}px, 0px)`;
+            pupilR.style.transform = `translate(${moveX}px, 0px)`;
+        });
+
+        // --- 2. برمجة تسجيل الدخول (الربط مع قاعدة البيانات) ---
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const loginId = document.getElementById('loginId').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('btnLogin');
+            const errorBox = document.getElementById('errorMsg');
+            
+            errorBox.classList.add('hidden');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+            btn.disabled = true;
+
+            try {
+                // البحث في جدول الموظفين (إما بالإيميل أو رقم التليفون) وجلب الصلاحيات معاه
+                const { data: employee, error } = await supabaseClient
+                    .from('employees')
+                    .select('*, roles(role_name, permissions)')
+                    .or(`email.eq.${loginId},phone.eq.${loginId}`)
+                    .eq('password', password)
+                    .single();
+
+                if (error || !employee) {
+                    throw new Error("بيانات الدخول غير صحيحة، تأكد من البريد/الجوال وكلمة المرور.");
+                }
+
+                if (employee.status !== 'active') {
+                    throw new Error("عفواً، حسابك موقوف. راجع إدارة النظام.");
+                }
+
+                // تجهيز بيانات المستخدم لحفظها في المتصفح
+                const userData = {
+                    id: employee.id,
+                    name: employee.full_name,
+                    role_id: employee.role_id,
+                    role_name: employee.roles ? employee.roles.role_name : 'بدون دور',
+                    permissions: employee.roles ? employee.roles.permissions : {}
+                };
+
+                // حفظ بيانات الموظف والصلاحيات في الـ LocalStorage
+                localStorage.setItem('gpack_user', JSON.stringify(userData));
+
+                // توجيه الموظف للصفحة الرئيسية
+                btn.innerHTML = '<i class="fas fa-check"></i> تم بنجاح!';
+                btn.classList.replace('bg-yellow-400', 'bg-green-500');
+                btn.classList.replace('text-purple-900', 'text-white');
+                
+                setTimeout(() => {
+                    window.location.href = 'index.html'; // توجيه للرئيسية
+                }, 1000);
+
+            } catch (err) {
+                errorBox.innerText = err.message;
+                errorBox.classList.remove('hidden');
+                
+                // هز الصندوق (Shake effect) للفت الانتباه للخطأ
+                const formBox = document.querySelector('.bg-white.rounded-2xl');
+                formBox.style.transform = 'translateX(-10px)';
+                setTimeout(() => formBox.style.transform = 'translateX(10px)', 100);
+                setTimeout(() => formBox.style.transform = 'translateX(0)', 200);
+
+                btn.innerHTML = 'تسجيل الدخول <i class="fas fa-sign-in-alt"></i>';
+                btn.disabled = false;
+            }
+        }
+
+        // لو هو مسجل دخول أصلاً وحاول يفتح صفحة اللوجين، نرجعه للرئيسية
+        if (localStorage.getItem('gpack_user')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
