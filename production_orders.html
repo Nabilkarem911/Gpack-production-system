@@ -1492,6 +1492,7 @@ function openPaymentModal() {
             }
             fetchClientInvoices(orderId);
             fetchDeliveriesLog(clientId);
+            fetchClientPayments(orderId);
         }
 
         async function openInvoiceModal(type) {
