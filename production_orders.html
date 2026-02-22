@@ -2057,7 +2057,7 @@ async function fetchArchivedOrders() {
             initSystemUI();
         });
 
-        // ✅ المهمة الأولى: استبدال applyUserPermissions بـ initSystemUI
+// ✅ المهمة الأولى: استبدال applyUserPermissions بـ initSystemUI
         function initSystemUI() {
             const userDataString = localStorage.getItem('gpack_user');
             if (!userDataString) return;
@@ -2075,17 +2075,37 @@ async function fetchArchivedOrders() {
             if(nameEl) nameEl.innerText = userData.name || 'مستخدم';
             if(roleEl) roleEl.innerText = userData.role_name || '-';
 
-            // 2. تفعيل الرابط النشط في القائمة الجانبية (Golden Sidebar)
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-            document.querySelectorAll('nav .sidebar-item').forEach(link => {
-                link.classList.remove('active');
+            // 2. تفعيل الرابط النشط بذكاء عالي (صائد الروابط - متوافق مع Netlify)
+            const currentUrl = window.location.href.toLowerCase();
+            let matched = false;
+
+            document.querySelectorAll('.sidebar-item').forEach(link => {
+                // إرجاع كل الروابط للون الرمادي الباهت
+                link.classList.remove('active', 'text-white', 'font-medium');
+                link.classList.add('text-gray-300');
+                
                 const href = link.getAttribute('href');
-                if (href && href === currentPage) {
-                    link.classList.add('active');
+                if (!href) return;
+                
+                const hrefLow = href.toLowerCase();
+                const hrefWithoutExt = hrefLow.replace('.html', '');
+
+                // البحث عن التطابق (سواء الرابط فيه .html أو لأ)
+                if (currentUrl.includes('/' + hrefLow) || currentUrl.endsWith('/' + hrefWithoutExt)) {
+                    link.classList.add('active', 'text-white', 'font-medium');
                     link.classList.remove('text-gray-300');
-                    link.classList.add('text-white', 'font-medium');
+                    matched = true;
                 }
             });
+
+            // لو إنت في الصفحة الرئيسية للموقع من غير أي إضافات
+            if (!matched && (currentUrl.endsWith('/') || currentUrl.endsWith('.app') || currentUrl.endsWith('.com'))) {
+                const homeLink = document.querySelector('.sidebar-item[href="index.html"]');
+                if (homeLink) {
+                    homeLink.classList.add('active', 'text-white', 'font-medium');
+                    homeLink.classList.remove('text-gray-300');
+                }
+            }
 
             const perms = userData.permissions || {};
 
@@ -2125,7 +2145,6 @@ async function fetchArchivedOrders() {
             // 5. تطبيق إخفاء الأعمدة المالية على الصفحة الرئيسية فوراً
             applyCostVisibility('body');
         }
-
         function hideSidebarLink(href) {
             const link = document.querySelector(`a[href="${href}"]`);
             if (link) {
