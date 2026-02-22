@@ -7,17 +7,8 @@
 
     <script>
         // Auth Guard - التحقق من وجود بيانات تسجيل الدخول في المتصفح
-        const loggedInUserStr = localStorage.getItem('gpack_user');
-        if (!loggedInUserStr) {
-            window.location.replace('login.html');
-        }
-        
-        // Parsing Global User Data & Global Permissions
-        let userData = null;
-        let canViewCosts = true; // متغير الصلاحية الجاهز للاستخدام
-        try {
-            userData = JSON.parse(loggedInUserStr);
-        } catch (e) {
+        const loggedInUser = localStorage.getItem('gpack_user');
+        if (!loggedInUser) {
             window.location.replace('login.html');
         }
     </script>
@@ -33,8 +24,7 @@
         .gpack-yellow { color: #fccf4d; }
         .gpack-btn { background-color: #3e206d; color: white; }
         .gpack-btn:hover { background-color: #4e2880; }
-        .sidebar-item { transition: all 0.3s; }
-        .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; color: #fff; }
+        .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
         .search-results { position: absolute; background: white; border: 1px solid #ddd; max-height: 150px; overflow-y: auto; width: 100%; z-index: 50; top: 100%; display: none; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
@@ -48,7 +38,7 @@
         @media print {
             @page { size: A4; margin: 0; }
             body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            aside, header, #listView, #quoteControls, .no-print, .actions-col, #addClientBtn, #topBar, #sidebarOverlay { display: none !important; }
+            aside, header, #listView, #quoteControls, .no-print, .actions-col, #addClientBtn, #topBar { display: none !important; }
             #quoteFormView { display: block !important; position: absolute; top: 0; left: 0; width: 210mm; min-height: 297mm; padding: 0; margin: 0; box-shadow: none; border: none; }
             .print-container { padding: 10mm; }
             .print-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 3px solid #3d1f6b; padding-bottom: 15px; margin-bottom: 20px; }
@@ -90,14 +80,14 @@
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden" onclick="toggleSidebar()"></div>
+    <!-- Sidebar Overlay for Mobile -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-10 hidden md:hidden" onclick="closeSidebar()"></div>
 
-    <aside id="mainSidebar" class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-40 fixed md:relative h-full top-0 right-0 hidden md:flex no-print transition-transform duration-300">
-        <div class="h-20 flex items-center justify-center border-b border-purple-800/50 relative">
+    <aside id="mainSidebar" class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-20 hidden md:flex no-print">
+        <div class="h-20 flex items-center justify-center border-b border-purple-800/50">
             <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2">
                 <i class="fas fa-box-open gpack-yellow"></i> <span>G.PACK</span>
             </h1>
-            <button onclick="toggleSidebar()" class="absolute left-4 top-6 text-white md:hidden"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div class="p-6 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20">
             <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400"><i class="fas fa-user text-yellow-400"></i></div>
@@ -106,19 +96,19 @@
                 <p class="text-xs text-gray-300" id="sidebarUserRole">Admin</p>
             </div>
         </div>
-        <nav class="flex-1 overflow-y-auto py-4 space-y-1 text-sm" id="sidebarNav">
-            <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 whitespace-nowrap"><i class="fas fa-th-large w-5"></i> الرئيسية</a>
-            <a href="products.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 whitespace-nowrap"><i class="fas fa-box w-5"></i> الأصناف</a>
-            <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 whitespace-nowrap"><i class="fas fa-file-invoice-dollar w-5"></i> عروض الأسعار</a>
-            <a href="production_orders.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 whitespace-nowrap"><i class="fas fa-industry w-5"></i> أوامر التشغيل</a>
-            <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 whitespace-nowrap"><i class="fas fa-cubes w-5"></i> المستودعات</a>
-            <a href="suppliers.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 whitespace-nowrap"><i class="fas fa-truck w-5"></i> الموردين</a>
-            <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 whitespace-nowrap"><i class="fas fa-users w-5"></i> العملاء</a>
-            <a href="employees.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 whitespace-nowrap"><i class="fas fa-id-card w-5"></i> الموظفين</a>
-            <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 whitespace-nowrap"><i class="fas fa-list-alt w-5"></i> القوائم</a>
-            <a href="permissions.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 whitespace-nowrap"><i class="fas fa-user-shield w-5"></i> الصلاحيات</a>
-            <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 whitespace-nowrap"><i class="fas fa-tasks w-5"></i> المهام</a>
-            <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 whitespace-nowrap"><i class="fas fa-file-signature w-5"></i> الشروط العامة</a>
+        <nav class="flex-1 overflow-y-auto py-4 space-y-1 text-sm">
+            <a href="index.html" id="nav-index" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-th-large w-5"></i> الرئيسية</a>
+            <a href="products.html" id="nav-products" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-box w-5"></i> الأصناف</a>
+            <a href="quotations.html" id="nav-quotations" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-white font-medium whitespace-nowrap"><i class="fas fa-file-invoice-dollar w-5"></i> عروض الأسعار</a>
+            <a href="production_orders.html" id="nav-production_orders" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-industry w-5"></i> أوامر التشغيل</a>
+            <a href="inventory.html" id="nav-inventory" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-cubes w-5"></i> المستودعات</a>
+            <a href="suppliers.html" id="nav-suppliers" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-truck w-5"></i> الموردين</a>
+            <a href="clients.html" id="nav-clients" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-users w-5"></i> العملاء</a>
+            <a href="employees.html" id="nav-employees" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-id-card w-5"></i> الموظفين</a>
+            <a href="lists.html" id="nav-lists" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-list-alt w-5"></i> القوائم</a>
+            <a href="permissions.html" id="nav-permissions" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-user-shield w-5"></i> الصلاحيات</a>
+            <a href="tasks.html" id="nav-tasks" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-tasks w-5"></i> المهام</a>
+            <a href="terms.html" id="nav-terms" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-file-signature w-5"></i> الشروط العامة</a>
         </nav>
         <div class="p-4 border-t border-purple-800/50">
             <button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2 whitespace-nowrap">
@@ -127,27 +117,26 @@
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col overflow-hidden relative w-full">
-        <header id="topBar" class="h-20 bg-white shadow-sm flex items-center justify-between px-4 md:px-8 z-10 no-print">
+    <main class="flex-1 flex flex-col overflow-hidden relative">
+        <header id="topBar" class="h-20 bg-white shadow-sm flex items-center justify-between px-8 z-10 no-print">
             <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar()" class="md:hidden text-gray-600 hover:text-purple-700 text-xl"><i class="fas fa-bars"></i></button>
                 <h2 class="text-xl font-bold text-gray-800">إدارة عروض الأسعار</h2>
                 <div id="loadingIndicator" class="hidden flex items-center gap-2 text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full"><i class="fas fa-sync fa-spin"></i> جاري التحميل...</div>
             </div>
-            <div class="flex items-center gap-2 md:gap-4">
-                <button onclick="toggleArchiveView()" id="archiveBtn" class="text-gray-500 hover:text-purple-600 font-bold text-xs md:text-sm flex items-center gap-2 border px-2 md:px-3 py-2 rounded-lg transition-colors bg-white">
-                    <i class="fas fa-trash-restore"></i> <span class="hidden md:inline">الأرشيف</span>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleArchiveView()" id="archiveBtn" class="text-gray-500 hover:text-purple-600 font-bold text-sm flex items-center gap-2 border px-3 py-2 rounded-lg transition-colors bg-white">
+                    <i class="fas fa-trash-restore"></i> <span>الأرشيف</span>
                 </button>
-                <button onclick="openCreateView()" id="createBtn" class="gpack-btn px-4 md:px-6 py-2 rounded-lg font-bold text-xs md:text-sm shadow-md flex items-center gap-2">
-                    <i class="fas fa-plus"></i> <span class="hidden md:inline">إنشاء عرض جديد</span>
+                <button onclick="openCreateView()" id="createBtn" class="gpack-btn px-6 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2">
+                    <i class="fas fa-plus"></i> <span>إنشاء عرض جديد</span>
                 </button>
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-4 md:p-8" id="mainContainer">
+        <div class="flex-1 overflow-y-auto p-8" id="mainContainer">
             <div id="listView" class="block no-print">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
-                    <table class="w-full text-right min-w-[600px]">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <table class="w-full text-right">
                         <thead class="bg-gray-50 text-gray-500 text-xs uppercase border-b border-gray-200">
                             <tr>
                                 <th class="px-4 py-3">رقم العرض</th>
@@ -165,12 +154,12 @@
 
             <div id="quoteFormView" class="hidden bg-white rounded-2xl shadow-lg border border-gray-100 p-0 max-w-5xl mx-auto print:p-0 print:border-none print:shadow-none relative">
                 
-                <div class="no-print absolute top-4 left-4 bg-purple-900 text-white px-4 py-2 rounded-lg shadow-lg border-2 border-yellow-400 z-10 flex items-center gap-3 hidden md:flex">
+                <div class="no-print absolute top-4 left-4 bg-purple-900 text-white px-4 py-2 rounded-lg shadow-lg border-2 border-yellow-400 z-10 flex items-center gap-3">
                     <span class="text-sm font-bold text-purple-200">الإجمالي:</span>
                     <span class="text-xl font-bold font-mono" id="floatingTotal">0.00</span>
                 </div>
 
-                <div class="print-container p-4 md:p-10">
+                <div class="print-container p-10">
                     <div class="hidden print-header">
                         <div class="flex items-center gap-4 w-2/3">
                             <img src="https://i.postimg.cc/L6xs5hQh/logo-g-pack.png" alt="G.PACK" style="height: 100px; width: auto;">
@@ -189,7 +178,7 @@
                         </div>
                     </div>
 
-                    <div class="no-print mb-6 bg-purple-50 p-4 rounded-xl border border-purple-100 mt-6 md:mx-6">
+                    <div class="no-print mb-6 bg-purple-50 p-4 rounded-xl border border-purple-100 mt-6 mx-6">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
                             <div>
                                 <label class="block text-sm font-bold mb-1 text-purple-900">العميل</label>
@@ -223,8 +212,8 @@
                         <div class="text-left text-sm text-gray-500"><p>نقدم لكم عرض السعر التالي آملين أن ينال إعجابكم</p></div>
                     </div>
 
-                    <div class="mb-6 md:mx-6 print:mx-0 overflow-x-auto">
-                        <table class="w-full text-right border-collapse print-table min-w-[600px]">
+                    <div class="mb-6 mx-6 print:mx-0">
+                        <table class="w-full text-right border-collapse print-table">
                             <thead style="background-color: #3d1f6b; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
                                 <tr>
                                     <th class="p-3 border w-10 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">#</th>
@@ -239,21 +228,21 @@
                             </thead>
                             <tbody id="itemsContainer" class="text-sm"></tbody>
                         </table>
-                        <div class="flex gap-2 mt-2 no-print flex-col md:flex-row">
+                        <div class="flex gap-2 mt-2 no-print">
                             <button onclick="addItemRow()" class="flex-1 text-sm text-purple-600 font-bold hover:bg-purple-50 px-4 py-2 border border-dashed border-purple-300 rounded transition">+ إضافة بند</button>
                             <button onclick="openMiniProductModal()" class="bg-green-50 text-green-600 px-4 py-2 rounded border border-green-200 hover:bg-green-100 text-sm font-bold"><i class="fas fa-magic"></i> إضافة صنف/مقاس سريع</button>
                         </div>
                     </div>
 
-                    <div class="print-bottom-section md:mx-6 print:mx-0 flex-col md:flex-row gap-6 md:gap-0">
-                        <div class="terms-container-print w-full md:w-1/2">
+                    <div class="print-bottom-section mx-6 print:mx-0">
+                        <div class="terms-container-print">
                             <h3 class="font-bold text-gray-800 mb-2 border-b pb-1">الشروط والأحكام والملاحظات:</h3>
                             <div id="termsList" class="space-y-1 text-sm text-gray-700"></div>
                             <textarea id="customTerms" class="w-full border rounded p-2 mt-4 text-sm bg-gray-50 no-print focus:ring-1 focus:ring-purple-500" rows="3" placeholder="ملاحظات إضافية لهذا العرض فقط..."></textarea>
                             <p id="printCustomTerms" class="hidden text-sm mt-2 font-bold border-t pt-2"></p>
                         </div>
                         
-                        <div class="totals-container-print w-full md:w-5/12 ml-0 md:mr-auto">
+                        <div class="totals-container-print">
                             <table class="totals-table">
                                 <tr>
                                     <td class="totals-label">الإجمالي قبل الضريبة</td>
@@ -291,23 +280,24 @@
                         </div>
                     </div>
 
-                    <div class="mt-8 pt-4 border-t flex justify-end gap-3 no-print md:mx-6 flex-wrap" id="quoteControls">
-                        <button onclick="closeForm()" class="bg-gray-100 px-4 md:px-6 py-2 rounded font-bold hover:bg-gray-200">إلغاء</button>
-                        <button onclick="preparePrint()" class="bg-blue-600 text-white px-4 md:px-6 py-2 rounded font-bold hover:bg-blue-700 shadow-md"><i class="fas fa-print"></i> معاينة وطباعة</button>
-                        <button onclick="saveQuote()" id="saveBtn" class="bg-green-600 text-white px-6 md:px-8 py-2 rounded font-bold shadow-md hover:bg-green-700"><i class="fas fa-save"></i> حفظ</button>
+                    <div class="mt-8 pt-4 border-t flex justify-end gap-3 no-print mx-6" id="quoteControls">
+                        <button onclick="closeForm()" class="bg-gray-100 px-6 py-2 rounded font-bold hover:bg-gray-200">إلغاء</button>
+                        <button onclick="preparePrint()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700 shadow-md"><i class="fas fa-print"></i> معاينة وطباعة</button>
+                        <button onclick="saveQuote()" id="saveBtn" class="bg-green-600 text-white px-8 py-2 rounded font-bold shadow-md hover:bg-green-700"><i class="fas fa-save"></i> حفظ</button>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- Client Info Modal -->
     <div id="clientInfoModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('clientInfoModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-3xl mx-auto rounded-2xl shadow-lg z-50 p-6">
             <h3 class="font-bold text-lg mb-4 border-b pb-2 text-purple-800 flex justify-between">
                 <span id="infoName">...</span><span class="text-xs bg-purple-100 px-2 py-1 rounded">تفاصيل العميل</span>
             </h3>
-            <div class="bg-gray-50 p-3 rounded mb-4 text-sm grid grid-cols-1 md:grid-cols-2 gap-4 border border-gray-100">
+            <div class="bg-gray-50 p-3 rounded mb-4 text-sm grid grid-cols-2 gap-4 border border-gray-100">
                 <div><span class="text-gray-500 block">المسؤول:</span> <span id="infoContact" class="font-bold">-</span></div>
                 <div><span class="text-gray-500 block">الجوال:</span> <span id="infoPhone" class="font-bold font-mono">-</span></div>
                 <div><span class="text-gray-500 block">المدينة:</span> <span id="infoCity" class="font-bold">-</span></div>
@@ -315,7 +305,7 @@
             </div>
             <h4 class="font-bold text-xs text-gray-500 mb-2">آخر الطلبات / الفواتير (آخر 50):</h4>
             <div class="overflow-x-auto max-h-72 overflow-y-auto border rounded-lg">
-                <table class="w-full text-right text-sm min-w-[500px]">
+                <table class="w-full text-right text-sm">
                     <thead class="bg-purple-50 text-purple-900 sticky top-0">
                         <tr>
                             <th class="p-2">رقم الطلب</th>
@@ -331,6 +321,7 @@
         </div>
     </div>
 
+    <!-- Order Items Modal -->
     <div id="orderItemsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[60] no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('orderItemsModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-[60] p-6 transform transition-all scale-95">
@@ -343,7 +334,7 @@
             </div>
             <div id="orderItemsLoading" class="text-center py-6 text-gray-400 hidden"><i class="fas fa-spinner fa-spin mr-2"></i> جاري التحميل...</div>
             <div class="overflow-x-auto border rounded-lg">
-                <table class="w-full text-right text-sm min-w-[500px]">
+                <table class="w-full text-right text-sm">
                     <thead class="bg-purple-50 text-purple-900 sticky top-0">
                         <tr>
                             <th class="p-2">#</th>
@@ -358,12 +349,13 @@
                 </table>
             </div>
             <div class="mt-4 pt-2 border-t flex justify-between items-center">
-                <div id="orderItemsTotal" class="text-xs md:text-sm font-bold text-purple-700 flex flex-wrap gap-2"></div>
+                <div id="orderItemsTotal" class="text-sm font-bold text-purple-700"></div>
                 <button onclick="toggleModal('orderItemsModal')" class="bg-gray-100 px-4 py-1 rounded text-sm font-bold">إغلاق</button>
             </div>
         </div>
     </div>
 
+    <!-- Product History Modal -->
     <div id="productHistoryModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('productHistoryModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6">
@@ -379,19 +371,21 @@
         </div>
     </div>
 
+    <!-- Mini Client Modal -->
     <div id="miniClientModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
-        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('miniClientModal')"></div>
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <h3 class="font-bold text-lg mb-4 text-purple-800">إضافة عميل سريع</h3>
             <input type="text" id="mcName" class="w-full border p-2 rounded mb-2" placeholder="اسم المنشأة *">
             <input type="text" id="mcPerson" class="w-full border p-2 rounded mb-2" placeholder="الشخص المسؤول">
-            <input type="tel" id="mcPhone" class="w-full border p-2 rounded mb-4 text-left" dir="ltr" placeholder="الجوال">
+            <input type="tel" id="mcPhone" class="w-full border p-2 rounded mb-4" placeholder="الجوال">
             <div class="flex justify-end gap-2"><button onclick="toggleModal('miniClientModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button><button onclick="saveMiniClient()" class="gpack-btn px-4 py-2 rounded">حفظ</button></div>
         </div>
     </div>
 
+    <!-- Mini Product Modal -->
     <div id="miniProductModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
-        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('miniProductModal')"></div>
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <h3 class="font-bold text-lg mb-4 text-purple-800">إضافة صنف/مقاس</h3>
             <div class="flex gap-2 mb-4 bg-gray-100 p-1 rounded">
@@ -407,8 +401,9 @@
         </div>
     </div>
 
+    <!-- Convert to Production Modal -->
     <div id="convertModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
-        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('convertModal')"></div>
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h3 class="font-bold text-lg text-purple-800">تحويل لإنتاج</h3>
@@ -419,7 +414,7 @@
             <div class="bg-green-50 p-4 rounded-lg mb-4 border border-green-100">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold mb-1">المبلغ المدفوع (إن وجد)</label>
+                        <label class="block text-xs font-bold mb-1">المبلغ المدفوع</label>
                         <input type="number" id="payAmount" class="w-full border rounded p-2 text-center font-bold" placeholder="0.00">
                     </div>
                     <div>
@@ -433,16 +428,16 @@
                 </div>
             </div>
             <div class="mb-4">
-                <h4 class="font-bold text-gray-800 text-sm mb-2">حدد الأصناف المطلوبة للتشغيل:</h4>
+                <h4 class="font-bold text-gray-800 text-sm mb-2">حدد الأصناف:</h4>
                 <div id="convertLoadingMsg" class="text-center text-sm text-gray-400 py-4 hidden"><i class="fas fa-spinner fa-spin mr-2"></i> جاري تحميل الأصناف...</div>
-                <div class="border rounded-lg overflow-x-auto max-h-48 overflow-y-auto">
-                    <table class="w-full text-right text-sm min-w-[400px]">
-                        <thead class="bg-gray-100 sticky top-0">
+                <div class="border rounded-lg overflow-hidden max-h-48 overflow-y-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-gray-100">
                             <tr>
                                 <th class="p-2 w-10 text-center"><input type="checkbox" onchange="toggleAllItems(this)" id="selectAllConvert"></th>
                                 <th class="p-2">الصنف</th>
                                 <th class="p-2">المقاس</th>
-                                <th class="p-2 w-20 text-center">الكمية</th>
+                                <th class="p-2 w-20">الكمية</th>
                             </tr>
                         </thead>
                         <tbody id="convertItemsTable"></tbody>
@@ -479,62 +474,68 @@
         };
 
         // ================================================================
-        // Task 1: initSystemUI - Sniper Logic & Mobile Responsive Sidebar
+        // Task 1: initSystemUI - Sidebar permissions & user display
         // ================================================================
         function initSystemUI() {
-            if (!userData) return;
+            const userDataString = localStorage.getItem('gpack_user');
+            if (!userDataString) return;
 
-            // تحديث اسم وبيانات المستخدم في القائمة الجانبية
+            let userData;
+            try {
+                userData = JSON.parse(userDataString);
+            } catch (e) {
+                console.error('initSystemUI: invalid user data in localStorage');
+                return;
+            }
+
+            // Update sidebar name and role
             const nameEl = document.getElementById('sidebarUserName');
             const roleEl = document.getElementById('sidebarUserRole');
             if (nameEl) nameEl.innerText = userData.name || 'مستخدم';
             if (roleEl) roleEl.innerText = userData.role_name || '-';
 
             const perms = userData.permissions || {};
-            
-            // تهيئة متغير رؤية التكلفة (يُستخدم لاحقاً للأسعار إذا أردت)
-            canViewCosts = perms.view_costs !== false; 
 
-            // Sniper Logic: إنارة الزر النشط بغض النظر عن طريقة كتابة الرابط (بدون .html)
-            const currentPath = window.location.pathname.split('/').pop().replace('.html', '') || 'index';
-            document.querySelectorAll('.sidebar-item').forEach(link => {
-                const linkPage = link.getAttribute('href').replace('.html', '');
-                if (linkPage === currentPath) {
-                    link.classList.add('active');
-                    link.classList.remove('text-gray-300');
-                } else {
-                    link.classList.remove('active');
-                    link.classList.add('text-gray-300');
-                }
-            });
-
-            // إخفاء الروابط ديناميكياً بناءً على الصلاحيات
+            // If user has full access (General Manager), show everything
             if (perms.all_access === true) return;
 
+            // Sales permissions - clients & quotations
             if (!perms.sales || !perms.sales.view) {
-                hideSidebarLink('clients'); hideSidebarLink('quotations');
+                hideSidebarLink('clients.html');
+                hideSidebarLink('quotations.html');
             }
+
+            // Production permissions - production orders & suppliers
             if (!perms.production || !perms.production.view) {
-                hideSidebarLink('production_orders'); hideSidebarLink('suppliers');
+                hideSidebarLink('production_orders.html');
+                hideSidebarLink('suppliers.html');
             }
+
+            // Inventory permissions - inventory & products
             if (!perms.inventory || !perms.inventory.view) {
-                hideSidebarLink('inventory'); hideSidebarLink('products');
+                hideSidebarLink('inventory.html');
+                hideSidebarLink('products.html');
             }
+
+            // Settings & system management - employees, permissions, lists, terms
             if (!perms.settings) {
-                hideSidebarLink('employees'); hideSidebarLink('permissions'); hideSidebarLink('lists'); hideSidebarLink('terms');
+                hideSidebarLink('employees.html');
+                hideSidebarLink('permissions.html');
+                hideSidebarLink('lists.html');
+                hideSidebarLink('terms.html');
             }
         }
 
-        function hideSidebarLink(pageName) {
-            const link = document.querySelector(`a[href^="${pageName}"]`);
+        function hideSidebarLink(href) {
+            const link = document.querySelector(`a[href="${href}"]`);
             if (link) link.style.display = 'none';
         }
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById('mainSidebar');
+        function closeSidebar() {
             const overlay = document.getElementById('sidebarOverlay');
-            sidebar.classList.toggle('hidden');
-            overlay.classList.toggle('hidden');
+            const sidebar = document.getElementById('mainSidebar');
+            if (overlay) overlay.classList.add('hidden');
+            if (sidebar) sidebar.classList.add('hidden');
         }
 
         function logout() {
@@ -558,7 +559,10 @@
                     opt.dataset.json = JSON.stringify(c);
                     select.add(opt);
                 });
-            } catch (e) { console.error('loadClients error:', e); }
+            } catch (e) {
+                console.error('loadClients error:', e);
+                alert('خطأ في تحميل العملاء: ' + (e.message || e));
+            }
         }
 
         async function loadProducts() {
@@ -569,7 +573,11 @@
                 const existSel = document.getElementById('mpExistSelect');
                 existSel.innerHTML = '<option value="">اختر الصنف...</option>';
                 productsList.forEach(p => { existSel.innerHTML += `<option value="${p.id}">${p.name}</option>`; });
-            } catch (e) { console.error('loadProducts error:', e); }
+            } catch (e) {
+                console.error('loadProducts error:', e);
+                if (e.message && e.message.includes('unit')) alert('تنبيه: يبدو أن عمود "unit" غير موجود في جدول "products". لن تعمل ميزة الوحدة الافتراضية بشكل صحيح.');
+                else alert('خطأ في تحميل الأصناف: ' + (e.message || e));
+            }
         }
 
         async function loadTerms() {
@@ -580,24 +588,13 @@
             } catch (e) { console.error('loadTerms error:', e); }
         }
 
-        // ================================================================
-        // Task: Data Scope - Personal Only (created_by)
-        // ================================================================
         async function fetchQuotes() {
             document.getElementById('loadingIndicator').classList.remove('hidden');
             const tbody = document.getElementById('quotesTableBody');
             tbody.innerHTML = '';
             try {
                 const statusFilter = isArchiveView ? ORDER_STATUS.ARCHIVED : ORDER_STATUS.QUOTE;
-                let query = supabaseClient.from('orders').select('*, clients(name)').eq('status', statusFilter).order('created_at', { ascending: false });
-
-                // الشرط المطلوب: إذا كان يملك صلاحية personal_only يعرض أرقامه فقط
-                const perms = userData?.permissions || {};
-                if (!perms.all_access && perms.personal_only) {
-                    query = query.eq('created_by', userData.id);
-                }
-
-                const { data: orders, error } = await query;
+                const { data: orders, error } = await supabaseClient.from('orders').select('*, clients(name)').eq('status', statusFilter).order('created_at', { ascending: false });
                 if (error) throw error;
                 if (orders && orders.length > 0) {
                     orders.forEach(o => {
@@ -612,11 +609,11 @@
                                <button onclick="openConvertModal('${o.id}', '${o.client_id}')" class="text-green-600 hover:bg-green-100 p-2 rounded" title="تحويل لإنتاج"><i class="fas fa-money-bill-wave"></i></button>
                                <button onclick="archiveQuote('${o.id}')" class="text-orange-500 hover:bg-orange-100 p-2 rounded" title="أرشفة"><i class="fas fa-archive"></i></button>`;
                         tr.innerHTML = `
-                            <td class="px-4 py-3 font-bold whitespace-nowrap">#${o.order_number}</td>
-                            <td class="px-4 py-3 whitespace-nowrap">${o.clients?.name || '-'}</td>
-                            <td class="px-4 py-3 whitespace-nowrap">${new Date(o.created_at).toLocaleDateString('en-GB')}</td>
-                            <td class="px-4 py-3 font-bold text-purple-700 whitespace-nowrap">${o.grand_total || '0.00'}</td>
-                            <td class="px-4 py-3 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-xs font-bold ${statusColor}">${isArchiveView ? 'مؤرشف' : statusLabel}</span></td>
+                            <td class="px-4 py-3 font-bold">#${o.order_number}</td>
+                            <td class="px-4 py-3">${o.clients?.name || '-'}</td>
+                            <td class="px-4 py-3">${new Date(o.created_at).toLocaleDateString('en-GB')}</td>
+                            <td class="px-4 py-3 font-bold text-purple-700">${o.grand_total || '0.00'}</td>
+                            <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs font-bold ${statusColor}">${isArchiveView ? 'مؤرشف' : statusLabel}</span></td>
                             <td class="px-4 py-3 flex gap-2 actions-col">${btns}</td>`;
                         tbody.appendChild(tr);
                     });
@@ -649,11 +646,11 @@
                     </div>
                     <div id="res-${rowId}" class="search-results shadow-lg hidden"></div>
                 </td>
-                <td class="p-2 border"><select id="var-${rowId}" onchange="onVariantSelect(this, '${rowId}')" class="w-full border-none bg-transparent text-sm outline-none var-select min-w-[100px]"><option value="">...</option></select></td>
+                <td class="p-2 border"><select id="var-${rowId}" onchange="onVariantSelect(this, '${rowId}')" class="w-full border-none bg-transparent text-sm outline-none var-select"><option value="">...</option></select></td>
                 <td class="p-2 border"><input type="text" class="w-full text-center bg-transparent border-none text-sm unit-input" placeholder=""></td>
-                <td class="p-2 border"><input type="number" id="qty-${rowId}" oninput="calcRow('${rowId}')" value="1" min="1" class="w-full border-none bg-transparent text-center font-bold outline-none qty-input min-w-[60px]"></td>
-                <td class="p-2 border"><input type="number" id="price-${rowId}" oninput="calcRow('${rowId}')" value="0" class="w-full border-none bg-transparent text-center outline-none price-input min-w-[80px]"></td>
-                <td class="p-2 border text-center font-bold text-gray-700 row-total whitespace-nowrap" id="total-${rowId}">0.00</td>
+                <td class="p-2 border"><input type="number" id="qty-${rowId}" oninput="calcRow('${rowId}')" value="1" min="1" class="w-full border-none bg-transparent text-center font-bold outline-none qty-input"></td>
+                <td class="p-2 border"><input type="number" id="price-${rowId}" oninput="calcRow('${rowId}')" value="0" class="w-full border-none bg-transparent text-center outline-none price-input"></td>
+                <td class="p-2 border text-center font-bold text-gray-700 row-total" id="total-${rowId}">0.00</td>
                 <td class="p-2 border text-center no-print"><button onclick="this.closest('tr').remove(); reindexRows(); calculateTotals()" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></td>`;
             container.appendChild(tr);
 
@@ -764,6 +761,8 @@
             document.getElementById('subTotal').innerText = sub.toFixed(2);
             document.getElementById('vatTotal').innerText = vat.toFixed(2);
             document.getElementById('grandTotal').innerText = grand.toFixed(2);
+
+            // Update Floating UI
             document.getElementById('floatingTotal').innerText = grand.toFixed(2) + ' ر.س';
 
             updatePrintTotals();
@@ -786,12 +785,13 @@
         }
 
         // ================================================================
-        // Terms & Quotes Management
+        // Task 2: renderTermsList - Supports frozen/snapshotted terms
         // ================================================================
         function renderTermsList(frozenTerms = null) {
             const list = document.getElementById('termsList');
             list.innerHTML = '';
 
+            // If frozen terms exist (editing old quote), render them as static read-only text
             if (frozenTerms && Array.isArray(frozenTerms) && frozenTerms.length > 0) {
                 list.innerHTML += `<div class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2 flex items-center gap-1">
                     <i class="fas fa-lock"></i> الشروط محفوظة وقت إنشاء العرض
@@ -807,6 +807,7 @@
                 return;
             }
 
+            // Otherwise render live general terms from DB
             generalTerms.forEach(t => {
                 list.innerHTML += `
                     <div class="term-row flex items-start gap-2 mb-1">
@@ -817,6 +818,9 @@
             });
         }
 
+        // ================================================================
+        // Task 2: saveQuote - Capture checked terms text as snapshot
+        // ================================================================
         async function saveQuote() {
             const clientId = document.getElementById('qClient').value;
             if (!clientId) return alert("اختر العميل");
@@ -841,6 +845,7 @@
 
             if (!items.length) return alert("أضف صنف واحد على الأقل");
 
+            // Capture the text content of checked terms for true snapshotting
             const savedTerms = [];
             document.querySelectorAll('#termsList .term-row').forEach(termRow => {
                 const checkbox = termRow.querySelector('.term-checkbox');
@@ -864,11 +869,6 @@
                 grand_total: parseFloat((sub * 1.15).toFixed(2)),
                 snapshotted_terms: JSON.stringify(metaConfig)
             };
-
-            // إعطاء ملكية العرض للمستخدم المُنشئ في الداتابيز
-            if (!currentQuoteId && userData) {
-                data.created_by = userData.id;
-            }
 
             try {
                 let oid = currentQuoteId;
@@ -894,6 +894,9 @@
             }
         }
 
+        // ================================================================
+        // Task 2: editQuote - Restore frozen terms if available
+        // ================================================================
         async function editQuote(id) {
             currentQuoteId = id;
             document.getElementById('listView').classList.add('hidden');
@@ -913,22 +916,27 @@
                 document.getElementById('qDate').value = order.created_at.split('T')[0];
                 document.getElementById('pRef').innerText = '#' + order.order_number;
 
+                // Parse Meta Config and restore frozen terms if present
                 let frozenTerms = null;
                 try {
                     const meta = JSON.parse(order.snapshotted_terms || '{}');
                     document.getElementById('customTerms').value = meta.notes || '';
                     document.getElementById('qDownPayment').value = meta.downPayment || '';
                     document.getElementById('qShowDownPayment').checked = meta.showDownPayment !== false;
+                    // Check for saved (snapshotted) terms from the time of creation
                     if (meta.savedTerms && Array.isArray(meta.savedTerms) && meta.savedTerms.length > 0) {
                         frozenTerms = meta.savedTerms;
                     }
                 } catch (e) {
+                    // Backward compatibility: old string format before JSON metaConfig
                     document.getElementById('customTerms').value = order.snapshotted_terms || '';
                     document.getElementById('qDownPayment').value = '';
                     document.getElementById('qShowDownPayment').checked = true;
                 }
 
+                // Render terms - frozen if available, otherwise live from DB
                 renderTermsList(frozenTerms);
+
                 document.getElementById('itemsContainer').innerHTML = '';
                 itemsRes.data.forEach(i => {
                     if (i.product_variants && i.product_variants.products) {
@@ -947,12 +955,12 @@
                     }
                 });
                 calculateTotals();
-            } catch (e) { console.error('editQuote error:', e); alert('خطأ في التحميل: ' + (e.message || e)); }
+            } catch (e) {
+                console.error('editQuote error:', e);
+                alert('خطأ في تحميل بيانات العرض: ' + (e.message || e));
+            }
         }
 
-        // ================================================================
-        // Task 3: Accounting Sync & Convert
-        // ================================================================
         async function openConvertModal(orderId, clientId) {
             document.getElementById('convQuoteId').value = orderId;
             document.getElementById('convClientId').value = clientId;
@@ -979,9 +987,9 @@
                         tr.className = 'border-b hover:bg-gray-50';
                         tr.innerHTML = `
                             <td class="p-2 text-center"><input type="checkbox" checked class="conv-check w-4 h-4 text-purple-600" data-item-id="${itemId}" data-variant-id="${item.variant_id}"></td>
-                            <td class="p-2 font-medium whitespace-nowrap">${productName}</td>
-                            <td class="p-2 text-gray-600 whitespace-nowrap">${sizeName}</td>
-                            <td class="p-2 text-center"><input type="number" value="${qty}" min="1" class="w-16 mx-auto border rounded p-1 text-center text-sm conv-qty" data-item-id="${itemId}"></td>`;
+                            <td class="p-2 font-medium">${productName}</td>
+                            <td class="p-2 text-gray-600">${sizeName}</td>
+                            <td class="p-2 text-center"><input type="number" value="${qty}" min="1" class="w-16 border rounded p-1 text-center text-sm conv-qty" data-item-id="${itemId}"></td>`;
                         tbody.appendChild(tr);
                     });
                 } else {
@@ -999,6 +1007,9 @@
             document.querySelectorAll('.conv-check').forEach(c => c.checked = checkbox.checked);
         }
 
+        // ================================================================
+        // Task 3: executeConversion - Convert to PO + Financial Sync
+        // ================================================================
         async function executeConversion() {
             const orderId = document.getElementById('convQuoteId').value;
             const clientId = document.getElementById('convClientId').value;
@@ -1030,9 +1041,11 @@
                     .eq('id', orderId);
                 if (orderErr) throw orderErr;
 
-                // Step 2: Financial Sync - Insert payment into client_transactions (الربط المحاسبي)
+                // Step 2: Financial Sync - Insert payment into client_transactions if amount > 0
                 if (payAmount > 0) {
+                    // Generate receipt number: REC-XXXXXX (timestamp based for uniqueness)
                     const receiptNumber = 'REC-' + Date.now().toString().slice(-6);
+
                     const transactionData = {
                         client_id: clientId,
                         order_id: orderId,
@@ -1048,6 +1061,7 @@
                         .insert([transactionData]);
 
                     if (transErr) {
+                        // Log the error but don't block the conversion - the order was already converted
                         console.error('client_transactions insert error:', transErr);
                         alert('تم تحويل الأمر للإنتاج بنجاح، ولكن فشل تسجيل الدفعة في كشف الحساب: ' + (transErr.message || transErr));
                     } else {
@@ -1065,9 +1079,6 @@
             }
         }
 
-        // ================================================================
-        // Minor Functions & Modals
-        // ================================================================
         async function showClientInfo() {
             const cId = document.getElementById('qClient').value;
             if (!cId) return alert('اختر العميل أولاً');
@@ -1097,10 +1108,10 @@
                         const total = o.grand_total ? parseFloat(o.grand_total).toFixed(2) + ' ر.س' : '0.00 ر.س';
                         tbody.innerHTML += `
                             <tr class="hover:bg-gray-50">
-                                <td class="p-2 border-b whitespace-nowrap"><button onclick="openOrderItemsModal('${o.id}', '${o.order_number}', '${dateStr}')" class="font-bold text-purple-700 hover:underline">#${o.order_number || '-'}</button></td>
-                                <td class="p-2 border-b whitespace-nowrap">${dateStr}</td>
-                                <td class="p-2 border-b font-mono font-bold whitespace-nowrap">${total}</td>
-                                <td class="p-2 border-b whitespace-nowrap"><span class="px-2 py-0.5 rounded text-xs font-bold ${statusColor}">${statusLabel}</span></td>
+                                <td class="p-2 border-b"><button onclick="openOrderItemsModal('${o.id}', '${o.order_number}', '${dateStr}')" class="font-bold text-purple-700 hover:underline">#${o.order_number || '-'}</button></td>
+                                <td class="p-2 border-b">${dateStr}</td>
+                                <td class="p-2 border-b font-mono font-bold">${total}</td>
+                                <td class="p-2 border-b"><span class="px-2 py-0.5 rounded text-xs font-bold ${statusColor}">${statusLabel}</span></td>
                             </tr>`;
                     });
                 } else { tbody.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-gray-400">لا يوجد طلبات سابقة</td></tr>'; }
@@ -1244,7 +1255,7 @@
 
         function toggleArchiveView() {
             isArchiveView = !isArchiveView;
-            document.getElementById('archiveBtn').innerHTML = isArchiveView ? '<i class="fas fa-arrow-right"></i> <span class="hidden md:inline">العودة</span>' : '<i class="fas fa-trash-restore"></i> <span class="hidden md:inline">الأرشيف</span>';
+            document.getElementById('archiveBtn').innerHTML = isArchiveView ? '<i class="fas fa-arrow-right"></i> <span>العودة</span>' : '<i class="fas fa-trash-restore"></i> <span>الأرشيف</span>';
             fetchQuotes();
         }
 
@@ -1259,6 +1270,7 @@
             document.getElementById('qDownPayment').value = '';
             document.getElementById('qShowDownPayment').checked = true;
             document.getElementById('pRef').innerText = 'NEW';
+            // New quote uses live terms from DB
             renderTermsList(null);
             addItemRow();
             calculateTotals();
