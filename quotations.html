@@ -6,12 +6,8 @@
     <title>G.PACK - إدارة عروض الأسعار</title>
 
     <script>
-        // التحقق من وجود بيانات تسجيل الدخول في المتصفح
         const loggedInUser = localStorage.getItem('gpack_user');
-        
-        // لو مفيش بيانات (يعني مش مسجل دخول)
         if (!loggedInUser) {
-            // اطرده فوراً لصفحة تسجيل الدخول قبل ما الصفحة تحمل
             window.location.replace('login.html');
         }
     </script>
@@ -22,26 +18,41 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; }
+        /* --- Styles & Print Rules --- */
+        body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; overflow: hidden; }
         .gpack-purple { background-color: #3e206d; }
         .gpack-yellow { color: #fccf4d; }
-        .gpack-btn { background-color: #3e206d; color: white; }
-        .gpack-btn:hover { background-color: #4e2880; }
-        .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
-        .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
+        .gpack-btn { background-color: #fccf4d; color: #3e206d; transition: all 0.3s; }
+        .gpack-btn:hover { background-color: #e6bd45; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* Sidebar Styles */
+        .sidebar-item { border-right: 4px solid transparent; transition: all 0.2s ease; }
+        .sidebar-item:hover { background-color: rgba(255,255,255,0.05); border-right-color: rgba(252, 207, 77, 0.5); }
+        .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right-color: #fccf4d; color: #fff; font-weight: bold; }
+        .nav-scroll::-webkit-scrollbar { width: 4px; }
+        .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .nav-scroll:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); }
+        #sidebar { transition: width 0.3s ease, transform 0.3s ease; flex-shrink: 0; }
+        .sidebar-collapsed { width: 0 !important; overflow: hidden; }
+        @media (max-width: 768px) {
+            .sidebar-mobile-hidden { transform: translateX(100%); }
+            .sidebar-collapsed { width: 16rem !important; }
+        }
+
+        /* Search & Components */
         .search-results { position: absolute; background: white; border: 1px solid #ddd; max-height: 150px; overflow-y: auto; width: 100%; z-index: 50; top: 100%; display: none; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
         .search-item:hover { background-color: #f9f9f9; }
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
-        
-        /* Checkbox styling */
         .custom-checkbox { width: 1.2rem; height: 1.2rem; accent-color: #3e206d; cursor: pointer; }
 
+        /* Print Specific Rules */
         @media print {
             @page { size: A4; margin: 0; }
-            body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            aside, header, #listView, #quoteControls, .no-print, .actions-col, #addClientBtn, #topBar { display: none !important; }
+            body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: visible; }
+            aside, header, #listView, #quoteControls, .no-print, .actions-col, #sidebarOverlay { display: none !important; }
+            #mainContainer { overflow: visible !important; height: auto !important; padding: 0 !important; }
             #quoteFormView { display: block !important; position: absolute; top: 0; left: 0; width: 210mm; min-height: 297mm; padding: 0; margin: 0; box-shadow: none; border: none; }
             .print-container { padding: 10mm; }
             .print-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 3px solid #3d1f6b; padding-bottom: 15px; margin-bottom: 20px; }
@@ -49,26 +60,23 @@
                 background-color: #3d1f6b !important; background: #3d1f6b !important; color: white !important;
                 -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
             }
-            table thead tr th {
-                background-color: #3d1f6b !important; background: #3d1f6b !important; color: #ffffff !important;
-                -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; border: 1px solid #3d1f6b !important;
-            }
-            .print-table th { padding: 8px; font-size: 12px; border: 1px solid #3d1f6b; }
+            table thead tr th { border: 1px solid #3d1f6b !important; }
+            .print-table th { padding: 8px; font-size: 12px; }
             .print-table td { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
             .print-table tr:nth-child(even) { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
             input, select, textarea { border: none !important; background: transparent !important; resize: none; appearance: none; padding: 0; }
+            
             .term-row { display: flex; align-items: flex-start; margin-bottom: 5px; }
             .term-bullet {
-                display: inline-block !important; width: 8px; height: 8px;
+                display: inline-block !important; width: 6px; height: 6px;
                 background-color: #3d1f6b !important; border-radius: 50%;
-                margin-left: 10px; margin-top: 6px; flex-shrink: 0;
+                margin-left: 8px; margin-top: 6px; flex-shrink: 0;
                 -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
             }
             .term-row input { display: none; }
             .term-row:has(input:not(:checked)) { display: none; }
-            .term-text { font-size: 11px; width: 100%; font-weight: 600; color: #374151; }
+            .term-text { font-size: 12px; width: 100%; font-weight: 600; color: #374151; }
             
-            /* Print Totals Alignment Fix */
             .print-bottom-section { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px; page-break-inside: avoid; }
             .terms-container-print { width: 55%; padding-left: 20px; }
             .totals-container-print { width: 40%; }
@@ -83,72 +91,86 @@
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <aside class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-20 hidden md:flex no-print">
-        <div class="h-20 flex items-center justify-center border-b border-purple-800/50">
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
+
+    <aside id="sidebar" class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-30 fixed md:relative h-full sidebar-mobile-hidden md:transform-none">
+        <div class="h-20 flex items-center justify-between px-6 border-b border-purple-800/50 shrink-0">
             <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2">
-                <i class="fas fa-box-open gpack-yellow"></i> <span>G.PACK</span>
+                <i class="fas fa-box-open gpack-yellow"></i> <span class="whitespace-nowrap">G.PACK</span>
             </h1>
+            <button onclick="toggleSidebar()" class="md:hidden text-white hover:text-red-300 text-xl"><i class="fas fa-times"></i></button>
         </div>
-        <div class="p-6 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20">
-            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400"><i class="fas fa-user text-yellow-400"></i></div>
+        
+        <div class="p-4 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20 whitespace-nowrap overflow-hidden shrink-0">
+            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400 shrink-0">
+                <i class="fas fa-user text-yellow-400"></i>
+            </div>
             <div>
-                <p class="text-sm font-bold" id="sidebarUserName">المدير العام</p>
-                <p class="text-xs text-gray-300" id="sidebarUserRole">Admin</p>
+                <p class="text-sm font-bold" id="sidebarUserName">جاري التحميل...</p>
+                <p class="text-xs text-gray-300" id="sidebarUserRole">...</p>
             </div>
         </div>
-        <nav class="flex-1 overflow-y-auto py-4 space-y-1 text-sm">
-            <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-th-large w-5"></i> الرئيسية</a>
-            <a href="products.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-box w-5"></i> الأصناف</a>
-            <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-file-invoice-dollar w-5"></i> عروض الأسعار</a>
-            <a href="production_orders.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-industry w-5"></i> أوامر التشغيل</a>
-            <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-cubes w-5"></i> المستودعات</a>
-            <a href="suppliers.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-truck w-5"></i> الموردين</a>
-            <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-users w-5"></i> العملاء</a>
-            <a href="employees.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-id-card w-5"></i> الموظفين</a>
-            <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-list-alt w-5"></i> القوائم</a>
-            <a href="permissions.html" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-white font-medium whitespace-nowrap"><i class="fas fa-user-shield w-5"></i> الصلاحيات</a>
-            <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-tasks w-5"></i> المهام</a>
-            <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-file-signature w-5"></i> الشروط العامة</a>الشروط العامة</a>
+
+        <nav class="flex-1 overflow-y-auto py-4 space-y-1 nav-scroll">
+            <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="index.html"><i class="fas fa-th-large w-5 text-center"></i> الرئيسية</a>
+            <a href="products.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="products.html"><i class="fas fa-box w-5 text-center"></i> الأصناف</a>
+            <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="quotations.html"><i class="fas fa-file-invoice-dollar w-5 text-center"></i> عروض الأسعار</a>
+            <a href="production_orders.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="production_orders.html"><i class="fas fa-industry w-5 text-center"></i> أوامر التشغيل</a>
+            <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="inventory.html"><i class="fas fa-cubes w-5 text-center"></i> المستودعات</a>
+            <a href="suppliers.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="suppliers.html"><i class="fas fa-truck w-5 text-center"></i> الموردين</a>
+            <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="clients.html"><i class="fas fa-users w-5 text-center"></i> العملاء</a>
+            <a href="employees.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="employees.html"><i class="fas fa-id-card w-5 text-center"></i> الموظفين</a>
+            <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="lists.html"><i class="fas fa-list-alt w-5 text-center"></i> القوائم</a>
+            <a href="permissions.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="permissions.html"><i class="fas fa-user-shield w-5 text-center"></i> الصلاحيات</a>
+            <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="tasks.html"><i class="fas fa-tasks w-5 text-center"></i> المهام</a>
+            <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="terms.html"><i class="fas fa-file-signature w-5 text-center"></i> الشروط العامة</a>
         </nav>
-        <div class="p-4 border-t border-purple-800/50">
-            <button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2 whitespace-nowrap">
-    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-</button>
+        
+        <div class="p-4 border-t border-purple-800/50 shrink-0">
+            <button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2 whitespace-nowrap font-bold bg-purple-900/50 rounded-lg hover:bg-purple-900">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col overflow-hidden relative">
-        <header id="topBar" class="h-20 bg-white shadow-sm flex items-center justify-between px-8 z-10 no-print">
-            <div class="flex items-center gap-4">
-                <h2 class="text-xl font-bold text-gray-800">إدارة عروض الأسعار</h2>
+    <main class="flex-1 flex flex-col overflow-hidden relative w-full transition-all duration-300">
+        <header id="topBar" class="h-20 bg-white shadow-sm flex items-center justify-between px-4 md:px-8 z-10 shrink-0 no-print">
+            <div class="flex items-center gap-3 shrink-0">
+                <button onclick="toggleSidebar()" class="text-gray-600 text-xl focus:outline-none hover:text-gpack-purple p-2 rounded-md hover:bg-gray-100 md:hidden">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 class="text-lg md:text-xl font-bold text-gray-800 whitespace-nowrap">إدارة عروض الأسعار</h2>
                 <div id="loadingIndicator" class="hidden flex items-center gap-2 text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full"><i class="fas fa-sync fa-spin"></i> جاري التحميل...</div>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar flex-1 justify-end pl-2">
                 <button onclick="toggleArchiveView()" id="archiveBtn" class="text-gray-500 hover:text-purple-600 font-bold text-sm flex items-center gap-2 border px-3 py-2 rounded-lg transition-colors bg-white">
                     <i class="fas fa-trash-restore"></i> <span>الأرشيف</span>
                 </button>
-                <button onclick="openCreateView()" id="createBtn" class="gpack-btn px-6 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2">
+                <button onclick="openCreateView()" id="createBtn" class="gpack-btn px-4 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2">
                     <i class="fas fa-plus"></i> <span>إنشاء عرض جديد</span>
                 </button>
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-8" id="mainContainer">
+        <div class="flex-1 overflow-y-auto p-4 md:p-8" id="mainContainer">
+            
             <div id="listView" class="block no-print">
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <table class="w-full text-right">
-                        <thead class="bg-gray-50 text-gray-500 text-xs uppercase border-b border-gray-200">
-                            <tr>
-                                <th class="px-4 py-3">رقم العرض</th>
-                                <th class="px-4 py-3">العميل</th>
-                                <th class="px-4 py-3">التاريخ</th>
-                                <th class="px-4 py-3">الإجمالي</th>
-                                <th class="px-4 py-3">الحالة</th>
-                                <th class="px-4 py-3 actions-col">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="quotesTableBody" class="divide-y divide-gray-100 text-sm bg-white"></tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right min-w-[800px]">
+                            <thead class="bg-gray-50 text-gray-500 text-xs uppercase border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 py-3">رقم العرض</th>
+                                    <th class="px-4 py-3">العميل</th>
+                                    <th class="px-4 py-3">التاريخ</th>
+                                    <th class="px-4 py-3">الإجمالي</th>
+                                    <th class="px-4 py-3">الحالة</th>
+                                    <th class="px-4 py-3 text-center actions-col">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quotesTableBody" class="divide-y divide-gray-100 text-sm bg-white"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -159,7 +181,7 @@
                     <span class="text-xl font-bold font-mono" id="floatingTotal">0.00</span>
                 </div>
 
-                <div class="print-container p-10">
+                <div class="print-container p-4 md:p-10">
                     <div class="hidden print-header">
                         <div class="flex items-center gap-4 w-2/3">
                             <img src="https://i.postimg.cc/L6xs5hQh/logo-g-pack.png" alt="G.PACK" style="height: 100px; width: auto;" class="filter brightness-0 invert">
@@ -178,14 +200,14 @@
                         </div>
                     </div>
 
-                    <div class="no-print mb-6 bg-purple-50 p-4 rounded-xl border border-purple-100 mt-6 mx-6">
+                    <div class="no-print mb-6 bg-purple-50 p-4 rounded-xl border border-purple-100 mt-6 mx-2 md:mx-6">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
                             <div>
                                 <label class="block text-sm font-bold mb-1 text-purple-900">العميل</label>
                                 <div class="flex gap-2">
                                     <select id="qClient" class="w-full border rounded p-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
-                                    <button onclick="showClientInfo()" class="bg-blue-100 text-blue-600 px-3 rounded hover:bg-blue-200" title="سجل وتفاصيل العميل"><i class="fas fa-address-card"></i></button>
-                                    <button onclick="openMiniClientModal()" class="bg-purple-100 text-purple-700 px-3 rounded hover:bg-purple-200" title="عميل جديد"><i class="fas fa-plus"></i></button>
+                                    <button onclick="showClientInfo()" class="bg-blue-100 text-blue-600 px-3 rounded hover:bg-blue-200 shadow-sm" title="سجل وتفاصيل العميل"><i class="fas fa-address-card"></i></button>
+                                    <button onclick="openMiniClientModal()" class="bg-purple-100 text-purple-700 px-3 rounded hover:bg-purple-200 shadow-sm" title="عميل جديد"><i class="fas fa-plus"></i></button>
                                 </div>
                             </div>
                             <div>
@@ -212,44 +234,44 @@
                         <div class="text-left text-sm text-gray-500"><p>نقدم لكم عرض السعر التالي آملين أن ينال إعجابكم</p></div>
                     </div>
 
-                    <div class="mb-6 mx-6 print:mx-0">
-                        <table class="w-full text-right border-collapse print-table">
+                    <div class="mb-6 mx-2 md:mx-6 print:mx-0 overflow-x-auto">
+                        <table class="w-full text-right border-collapse print-table min-w-[700px]">
                             <thead style="background-color: #3d1f6b; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
                                 <tr>
-                                    <th class="p-3 border w-10 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">#</th>
-                                    <th class="p-3 border w-1/3" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">البيان / الصنف</th>
-                                    <th class="p-3 border w-1/6" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">المقاس</th>
-                                    <th class="p-3 border w-20 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">الوحدة</th>
-                                    <th class="p-3 border w-20 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">الكمية</th>
-                                    <th class="p-3 border w-24 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">السعر</th>
-                                    <th class="p-3 border w-24 text-center" style="background-color: #3d1f6b !important; color: white !important; -webkit-print-color-adjust: exact !important;">الإجمالي</th>
+                                    <th class="p-3 border w-10 text-center" style="background-color: #3d1f6b !important; color: white !important;">#</th>
+                                    <th class="p-3 border w-1/3" style="background-color: #3d1f6b !important; color: white !important;">البيان / الصنف</th>
+                                    <th class="p-3 border w-1/6" style="background-color: #3d1f6b !important; color: white !important;">المقاس</th>
+                                    <th class="p-3 border w-20 text-center" style="background-color: #3d1f6b !important; color: white !important;">الوحدة</th>
+                                    <th class="p-3 border w-20 text-center" style="background-color: #3d1f6b !important; color: white !important;">الكمية</th>
+                                    <th class="p-3 border w-24 text-center" style="background-color: #3d1f6b !important; color: white !important;">السعر</th>
+                                    <th class="p-3 border w-24 text-center" style="background-color: #3d1f6b !important; color: white !important;">الإجمالي</th>
                                     <th class="p-3 border w-10 no-print" style="background: white; border: none;"></th>
                                 </tr>
                             </thead>
-                            <tbody id="itemsContainer" class="text-sm"></tbody>
+                            <tbody id="itemsContainer" class="text-sm bg-white"></tbody>
                         </table>
-                        <div class="flex gap-2 mt-2 no-print">
-                            <button onclick="addItemRow()" class="flex-1 text-sm text-purple-600 font-bold hover:bg-purple-50 px-4 py-2 border border-dashed border-purple-300 rounded transition">+ إضافة بند</button>
-                            <button onclick="openMiniProductModal()" class="bg-green-50 text-green-600 px-4 py-2 rounded border border-green-200 hover:bg-green-100 text-sm font-bold"><i class="fas fa-magic"></i> إضافة صنف/مقاس سريع</button>
+                        <div class="flex flex-wrap gap-2 mt-2 no-print">
+                            <button onclick="addItemRow()" class="flex-1 text-sm text-purple-600 font-bold hover:bg-purple-50 px-4 py-2 border border-dashed border-purple-300 rounded transition whitespace-nowrap">+ إضافة بند</button>
+                            <button onclick="openMiniProductModal()" class="bg-green-50 text-green-600 px-4 py-2 rounded border border-green-200 hover:bg-green-100 text-sm font-bold whitespace-nowrap"><i class="fas fa-magic"></i> إضافة صنف/مقاس سريع</button>
                         </div>
                     </div>
 
-                    <div class="print-bottom-section mx-6 print:mx-0">
-                        <div class="terms-container-print">
+                    <div class="print-bottom-section mx-2 md:mx-6 print:mx-0 flex-col md:flex-row gap-6">
+                        <div class="terms-container-print w-full md:w-3/5">
                             <h3 class="font-bold text-gray-800 mb-2 border-b pb-1">الشروط والأحكام والملاحظات:</h3>
                             <div id="termsList" class="space-y-1 text-sm text-gray-700"></div>
                             <textarea id="customTerms" class="w-full border rounded p-2 mt-4 text-sm bg-gray-50 no-print focus:ring-1 focus:ring-purple-500" rows="3" placeholder="ملاحظات إضافية لهذا العرض فقط..."></textarea>
                             <p id="printCustomTerms" class="hidden text-sm mt-2 font-bold border-t pt-2"></p>
                         </div>
                         
-                        <div class="totals-container-print">
-                            <table class="totals-table">
+                        <div class="totals-container-print w-full md:w-2/5">
+                            <table class="totals-table w-full">
                                 <tr>
-                                    <td class="totals-label">الإجمالي قبل الضريبة</td>
+                                    <td class="totals-label text-sm md:text-base">الإجمالي قبل الضريبة</td>
                                     <td class="totals-value" id="subTotal">0.00</td>
                                 </tr>
                                 <tr>
-                                    <td class="totals-label text-red-600">ضريبة القيمة المضافة 15%</td>
+                                    <td class="totals-label text-red-600 text-sm md:text-base">ضريبة القيمة المضافة 15%</td>
                                     <td class="totals-value text-red-600" id="vatTotal">0.00</td>
                                 </tr>
                                 <tr style="background-color: #fce7f3 !important; -webkit-print-color-adjust: exact;">
@@ -280,8 +302,8 @@
                         </div>
                     </div>
 
-                    <div class="mt-8 pt-4 border-t flex justify-end gap-3 no-print mx-6" id="quoteControls">
-                        <button onclick="closeForm()" class="bg-gray-100 px-6 py-2 rounded font-bold hover:bg-gray-200">إلغاء</button>
+                    <div class="mt-8 pt-4 border-t flex flex-wrap justify-end gap-3 no-print mx-2 md:mx-6" id="quoteControls">
+                        <button onclick="closeForm()" class="bg-gray-100 text-gray-700 px-6 py-2 rounded font-bold hover:bg-gray-200">إلغاء</button>
                         <button onclick="preparePrint()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700 shadow-md"><i class="fas fa-print"></i> معاينة وطباعة</button>
                         <button onclick="saveQuote()" id="saveBtn" class="bg-green-600 text-white px-8 py-2 rounded font-bold shadow-md hover:bg-green-700"><i class="fas fa-save"></i> حفظ</button>
                     </div>
@@ -292,19 +314,19 @@
 
     <div id="clientInfoModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('clientInfoModal')"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-3xl mx-auto rounded-2xl shadow-lg z-50 p-6">
+        <div class="modal-container bg-white w-11/12 md:max-w-3xl mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <h3 class="font-bold text-lg mb-4 border-b pb-2 text-purple-800 flex justify-between">
                 <span id="infoName">...</span><span class="text-xs bg-purple-100 px-2 py-1 rounded">تفاصيل العميل</span>
             </h3>
-            <div class="bg-gray-50 p-3 rounded mb-4 text-sm grid grid-cols-2 gap-4 border border-gray-100">
+            <div class="bg-gray-50 p-3 rounded mb-4 text-sm grid grid-cols-1 md:grid-cols-2 gap-4 border border-gray-100">
                 <div><span class="text-gray-500 block">المسؤول:</span> <span id="infoContact" class="font-bold">-</span></div>
                 <div><span class="text-gray-500 block">الجوال:</span> <span id="infoPhone" class="font-bold font-mono">-</span></div>
                 <div><span class="text-gray-500 block">المدينة:</span> <span id="infoCity" class="font-bold">-</span></div>
                 <div><span class="text-gray-500 block">الرصيد (عليه):</span> <span class="font-bold text-red-600">0.00 ر.س</span></div>
             </div>
             <h4 class="font-bold text-xs text-gray-500 mb-2">آخر الطلبات / الفواتير (آخر 50):</h4>
-            <div class="overflow-x-auto max-h-72 overflow-y-auto border rounded-lg">
-                <table class="w-full text-right text-sm">
+            <div class="overflow-x-auto max-h-72 border rounded-lg">
+                <table class="w-full text-right text-sm min-w-[500px]">
                     <thead class="bg-purple-50 text-purple-900 sticky top-0">
                         <tr>
                             <th class="p-2">رقم الطلب</th>
@@ -316,7 +338,7 @@
                     <tbody id="infoHistoryList" class="bg-white text-gray-700 divide-y"></tbody>
                 </table>
             </div>
-            <div class="mt-4 pt-2 border-t text-right"><button onclick="toggleModal('clientInfoModal')" class="bg-gray-100 px-4 py-1 rounded text-sm font-bold">إغلاق</button></div>
+            <div class="mt-4 pt-2 border-t text-right"><button onclick="toggleModal('clientInfoModal')" class="bg-gray-100 px-4 py-2 rounded text-sm font-bold">إغلاق</button></div>
         </div>
     </div>
 
@@ -332,7 +354,7 @@
             </div>
             <div id="orderItemsLoading" class="text-center py-6 text-gray-400 hidden"><i class="fas fa-spinner fa-spin mr-2"></i> جاري التحميل...</div>
             <div class="overflow-x-auto border rounded-lg">
-                <table class="w-full text-right text-sm">
+                <table class="w-full text-right text-sm min-w-[500px]">
                     <thead class="bg-purple-50 text-purple-900 sticky top-0">
                         <tr>
                             <th class="p-2">#</th>
@@ -346,25 +368,25 @@
                     <tbody id="orderItemsBody" class="bg-white divide-y"></tbody>
                 </table>
             </div>
-            <div class="mt-4 pt-2 border-t flex justify-between items-center">
+            <div class="mt-4 pt-2 border-t flex justify-between items-center flex-wrap gap-2">
                 <div id="orderItemsTotal" class="text-sm font-bold text-purple-700"></div>
-                <button onclick="toggleModal('orderItemsModal')" class="bg-gray-100 px-4 py-1 rounded text-sm font-bold">إغلاق</button>
+                <button onclick="toggleModal('orderItemsModal')" class="bg-gray-100 px-4 py-2 rounded text-sm font-bold">إغلاق</button>
             </div>
         </div>
     </div>
 
     <div id="productHistoryModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('productHistoryModal')"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6">
+        <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <h3 class="font-bold text-lg mb-2 text-purple-800" id="histProdName">...</h3>
             <p class="text-sm text-gray-500 mb-4" id="histClientName">...</p>
             <div class="overflow-x-auto border rounded-lg">
-                <table class="w-full text-right text-sm">
-                    <thead class="bg-gray-100 text-gray-700"><tr><th class="p-2">التاريخ</th><th class="p-2">الكمية</th><th class="p-2">السعر</th><th class="p-2">الحالة</th></tr></thead>
+                <table class="w-full text-right text-sm min-w-[400px]">
+                    <thead class="bg-gray-100 text-gray-700"><tr><th class="p-2">التاريخ</th><th class="p-2 text-center">الكمية</th><th class="p-2 text-center">السعر</th><th class="p-2 text-center">الحالة</th></tr></thead>
                     <tbody id="productHistoryBody" class="bg-white"></tbody>
                 </table>
             </div>
-            <div class="mt-4 pt-2 border-t text-right"><button onclick="toggleModal('productHistoryModal')" class="bg-gray-100 px-4 py-1 rounded text-sm">إغلاق</button></div>
+            <div class="mt-4 pt-2 border-t text-right"><button onclick="toggleModal('productHistoryModal')" class="bg-gray-100 px-4 py-2 rounded text-sm font-bold">إغلاق</button></div>
         </div>
     </div>
 
@@ -372,10 +394,13 @@
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <h3 class="font-bold text-lg mb-4 text-purple-800">إضافة عميل سريع</h3>
-            <input type="text" id="mcName" class="w-full border p-2 rounded mb-2" placeholder="اسم المنشأة *">
-            <input type="text" id="mcPerson" class="w-full border p-2 rounded mb-2" placeholder="الشخص المسؤول">
-            <input type="tel" id="mcPhone" class="w-full border p-2 rounded mb-4" placeholder="الجوال">
-            <div class="flex justify-end gap-2"><button onclick="toggleModal('miniClientModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button><button onclick="saveMiniClient()" class="gpack-btn px-4 py-2 rounded">حفظ</button></div>
+            <input type="text" id="mcName" class="w-full border p-2 rounded mb-3 bg-gray-50" placeholder="اسم المنشأة *" required>
+            <input type="text" id="mcPerson" class="w-full border p-2 rounded mb-3 bg-gray-50" placeholder="الشخص المسؤول">
+            <input type="tel" id="mcPhone" class="w-full border p-2 rounded mb-4 bg-gray-50" placeholder="الجوال">
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleModal('miniClientModal')" class="bg-gray-100 px-4 py-2 rounded font-bold">إلغاء</button>
+                <button onclick="saveMiniClient()" class="gpack-btn px-6 py-2 rounded font-bold">حفظ</button>
+            </div>
         </div>
     </div>
 
@@ -383,64 +408,73 @@
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <h3 class="font-bold text-lg mb-4 text-purple-800">إضافة صنف/مقاس</h3>
-            <div class="flex gap-2 mb-4 bg-gray-100 p-1 rounded">
-                <button onclick="toggleProductMode('new')" id="btnNewProd" class="flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800">صنف جديد</button>
-                <button onclick="toggleProductMode('exist')" id="btnExistProd" class="flex-1 py-1 rounded text-sm text-gray-500">إضافة مقاس</button>
+            <div class="flex gap-2 mb-4 bg-gray-100 p-1 rounded-lg">
+                <button onclick="toggleProductMode('new')" id="btnNewProd" class="flex-1 py-1.5 rounded-md bg-white shadow text-sm font-bold text-purple-800 transition">صنف جديد</button>
+                <button onclick="toggleProductMode('exist')" id="btnExistProd" class="flex-1 py-1.5 rounded-md text-sm text-gray-500 font-bold transition">إضافة مقاس</button>
             </div>
-            <div id="newProdInputs"><input type="text" id="mpName" class="w-full border p-2 rounded mb-2" placeholder="اسم الصنف"></div>
-            <div id="existProdInputs" class="hidden"><select id="mpExistSelect" class="w-full border p-2 rounded mb-2 bg-white"></select></div>
-            <input type="text" id="mpSize" class="w-full border p-2 rounded mb-2" placeholder="المقاس">
-            <input type="number" id="mpPrice" class="w-full border p-2 rounded mb-2" placeholder="السعر">
-            <input type="text" id="mpUnit" class="w-full border p-2 rounded mb-4" placeholder="الوحدة (مثال: حبة، كرتون)">
-            <div class="flex justify-end gap-2"><button onclick="toggleModal('miniProductModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button><button onclick="saveMiniProduct()" class="gpack-btn px-4 py-2 rounded font-bold">حفظ</button></div>
+            <div id="newProdInputs"><input type="text" id="mpName" class="w-full border p-2 rounded mb-3 bg-gray-50" placeholder="اسم الصنف الجديد"></div>
+            <div id="existProdInputs" class="hidden"><select id="mpExistSelect" class="w-full border p-2 rounded mb-3 bg-white"></select></div>
+            <input type="text" id="mpSize" class="w-full border p-2 rounded mb-3 bg-gray-50" placeholder="المقاس">
+            <input type="number" id="mpPrice" class="w-full border p-2 rounded mb-3 bg-gray-50 text-center" placeholder="السعر الافتراضي">
+            <input type="text" id="mpUnit" class="w-full border p-2 rounded mb-4 bg-gray-50 text-center" placeholder="الوحدة (مثال: حبة، كرتون)">
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleModal('miniProductModal')" class="bg-gray-100 px-4 py-2 rounded font-bold">إلغاء</button>
+                <button onclick="saveMiniProduct()" class="gpack-btn px-6 py-2 rounded font-bold">حفظ</button>
+            </div>
         </div>
     </div>
 
     <div id="convertModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 no-print">
-        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('convertModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 p-6 transform transition-all scale-95">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 class="font-bold text-lg text-purple-800">تحويل لإنتاج</h3>
-                <button onclick="toggleModal('convertModal')"><i class="fas fa-times text-gray-500"></i></button>
+                <h3 class="font-bold text-lg text-purple-800"><i class="fas fa-industry text-yellow-500 mr-2"></i> تحويل إلى أمر تشغيل</h3>
+                <button onclick="toggleModal('convertModal')"><i class="fas fa-times text-gray-500 hover:text-red-500"></i></button>
             </div>
+            
             <input type="hidden" id="convQuoteId">
             <input type="hidden" id="convClientId">
-            <div class="bg-green-50 p-4 rounded-lg mb-4 border border-green-100">
-                <div class="grid grid-cols-2 gap-4">
+            
+            <div class="bg-yellow-50 p-4 rounded-lg mb-4 border border-yellow-200">
+                <p class="text-sm text-yellow-800 font-bold mb-3"><i class="fas fa-info-circle"></i> هل قام العميل بدفع دفعة أولية لتعميد هذا الطلب؟</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold mb-1">المبلغ المدفوع</label>
-                        <input type="number" id="payAmount" class="w-full border rounded p-2 text-center font-bold" placeholder="0.00">
+                        <label class="block text-xs font-bold mb-1 text-gray-700">المبلغ المدفوع (اختياري)</label>
+                        <input type="number" id="payAmount" class="w-full border border-gray-300 rounded p-2 text-center font-bold text-green-700 focus:ring-2 focus:ring-yellow-400 outline-none" placeholder="0.00">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold mb-1">طريقة الدفع</label>
-                        <select id="payMethod" class="w-full border rounded p-2 bg-white">
-                            <option value="bank">تحويل بنكي</option>
-                            <option value="cash">كاش</option>
-                            <option value="network">شبكة</option>
+                        <label class="block text-xs font-bold mb-1 text-gray-700">طريقة الدفع</label>
+                        <select id="payMethod" class="w-full border border-gray-300 rounded p-2 bg-white focus:ring-2 focus:ring-yellow-400 outline-none">
+                            <option value="bank_transfer">تحويل بنكي</option>
+                            <option value="cash">كاش / نقدي</option>
+                            <option value="pos">شبكة / نقاط بيع</option>
+                            <option value="check">شيك</option>
                         </select>
                     </div>
                 </div>
             </div>
+            
             <div class="mb-4">
-                <h4 class="font-bold text-gray-800 text-sm mb-2">حدد الأصناف:</h4>
+                <h4 class="font-bold text-gray-800 text-sm mb-2">أصناف العرض (ستنتقل للإنتاج):</h4>
                 <div id="convertLoadingMsg" class="text-center text-sm text-gray-400 py-4 hidden"><i class="fas fa-spinner fa-spin mr-2"></i> جاري تحميل الأصناف...</div>
                 <div class="border rounded-lg overflow-hidden max-h-48 overflow-y-auto">
                     <table class="w-full text-right text-sm">
                         <thead class="bg-gray-100">
                             <tr>
-                                <th class="p-2 w-10 text-center"><input type="checkbox" onchange="toggleAllItems(this)" id="selectAllConvert"></th>
+                                <th class="p-2 w-10 text-center"><input type="checkbox" onchange="toggleAllItems(this)" id="selectAllConvert" class="custom-checkbox"></th>
                                 <th class="p-2">الصنف</th>
                                 <th class="p-2">المقاس</th>
-                                <th class="p-2 w-20">الكمية</th>
+                                <th class="p-2 w-20 text-center">الكمية</th>
                             </tr>
                         </thead>
-                        <tbody id="convertItemsTable"></tbody>
+                        <tbody id="convertItemsTable" class="divide-y"></tbody>
                     </table>
                 </div>
             </div>
+            
             <div class="flex justify-end gap-2 pt-4 border-t">
-                <button onclick="toggleModal('convertModal')" class="bg-gray-100 px-4 py-2 rounded">إلغاء</button>
-                <button onclick="executeConversion()" class="gpack-btn px-6 py-2 rounded font-bold shadow">تأكيد وتحويل</button>
+                <button onclick="toggleModal('convertModal')" class="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg font-bold hover:bg-gray-200 transition">إلغاء</button>
+                <button onclick="executeConversion()" id="btnExecuteConvert" class="bg-purple-800 text-white px-8 py-2 rounded-lg font-bold shadow-md hover:bg-purple-900 transition"><i class="fas fa-rocket ml-1"></i> تأكيد وتحويل</button>
             </div>
         </div>
     </div>
@@ -450,7 +484,7 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const STATUS_AR = { 'quote': 'عرض سعر', 'production': 'قيد التشغيل', 'completed': 'أمر منتهي', 'archived': 'مؤرشف' };
+        const STATUS_AR = { 'quote': 'عرض سعر', 'production': 'أمر تشغيل (نشط)', 'completed': 'أمر منتهي', 'archived': 'مؤرشف' };
         const STATUS_COLOR = { 'quote': 'bg-blue-100 text-blue-700', 'production': 'bg-yellow-100 text-yellow-800', 'completed': 'bg-green-100 text-green-800', 'archived': 'bg-gray-100 text-gray-600' };
         const ORDER_STATUS = { QUOTE: 'quote', ARCHIVED: 'archived', PRODUCTION: 'production', COMPLETED: 'completed' };
 
@@ -459,12 +493,76 @@
         let currentQuoteId = null;
         let isArchiveView = false;
         let productMode = 'new';
+        let loggedUser = {};
 
-        window.onload = async () => {
+        // --- 1. System UI & Permissions ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initSystemUI();
+        });
+
+        function initSystemUI() {
+            // Highlighting the active link correctly for Netlify
+            let pageName = window.location.pathname.split("/").pop();
+            if (pageName === '' || pageName === '/') pageName = 'index.html';
+            if (!pageName.includes('.html')) pageName += '.html';
+            
+            document.querySelectorAll('.sidebar-item').forEach(link => {
+                link.classList.remove('active', 'text-white');
+                if (link.getAttribute('data-page') === pageName) {
+                    link.classList.add('active', 'text-white');
+                    link.classList.remove('text-gray-300');
+                }
+            });
+
+            const userDataString = localStorage.getItem('gpack_user');
+            if (!userDataString) return; 
+
+            loggedUser = JSON.parse(userDataString);
+            document.getElementById('sidebarUserName').innerText = loggedUser.name;
+            document.getElementById('sidebarUserRole').innerText = loggedUser.role_name;
+
+            const perms = loggedUser.permissions || {};
+            if (perms.all_access === true) { loadCoreData(); return; }
+
+            // Hide unauthorized pages
+            if (!perms.sales || !perms.sales.view) { hideSidebarLink('clients.html'); hideSidebarLink('quotations.html'); }
+            if (!perms.production || !perms.production.view) { hideSidebarLink('production_orders.html'); hideSidebarLink('suppliers.html'); }
+            if (!perms.inventory || !perms.inventory.view) { hideSidebarLink('inventory.html'); hideSidebarLink('products.html'); }
+            if (!perms.settings) { hideSidebarLink('employees.html'); hideSidebarLink('permissions.html'); hideSidebarLink('lists.html'); hideSidebarLink('terms.html'); }
+            
+            // Check specific module creation permission before loading
+            if(perms.sales && perms.sales.view) { loadCoreData(); } 
+            else { document.getElementById('mainContainer').innerHTML = '<div class="p-8 text-center text-red-500 font-bold text-xl">غير مصرح لك برؤية هذا القسم</div>'; }
+            if(perms.sales && !perms.sales.create) { document.getElementById('createBtn').remove(); }
+        }
+
+        function hideSidebarLink(page) {
+            const link = document.querySelector(`.sidebar-item[data-page="${page}"]`);
+            if (link) link.style.display = 'none';
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (window.innerWidth < 768) {
+                sidebar.classList.toggle('sidebar-mobile-hidden');
+                overlay.classList.toggle('hidden');
+            } else {
+                sidebar.classList.toggle('sidebar-collapsed');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('gpack_user');
+            window.location.replace('login.html');
+        }
+
+        // --- 2. Core Logic ---
+        async function loadCoreData() {
             document.getElementById('qDate').valueAsDate = new Date();
             await Promise.all([loadClients(), loadProducts(), loadTerms()]);
             fetchQuotes();
-        };
+        }
 
         async function loadClients() {
             try {
@@ -474,15 +572,10 @@
                 select.innerHTML = '<option value="">اختر العميل...</option>';
                 if (data) data.forEach(c => {
                     const opt = document.createElement('option');
-                    opt.value = c.id;
-                    opt.text = c.name;
-                    opt.dataset.json = JSON.stringify(c);
+                    opt.value = c.id; opt.text = c.name; opt.dataset.json = JSON.stringify(c);
                     select.add(opt);
                 });
-            } catch (e) {
-                console.error('loadClients error:', e);
-                alert('خطأ في تحميل العملاء: ' + (e.message || e));
-            }
+            } catch (e) { console.error(e); }
         }
 
         async function loadProducts() {
@@ -493,11 +586,7 @@
                 const existSel = document.getElementById('mpExistSelect');
                 existSel.innerHTML = '<option value="">اختر الصنف...</option>';
                 productsList.forEach(p => { existSel.innerHTML += `<option value="${p.id}">${p.name}</option>`; });
-            } catch (e) {
-                console.error('loadProducts error:', e);
-                if (e.message && e.message.includes('unit')) alert('تنبيه: يبدو أن عمود "unit" غير موجود في جدول "products". لن تعمل ميزة الوحدة الافتراضية بشكل صحيح.');
-                else alert('خطأ في تحميل الأصناف: ' + (e.message || e));
-            }
+            } catch (e) { console.error(e); }
         }
 
         async function loadTerms() {
@@ -505,7 +594,7 @@
                 const { data, error } = await supabaseClient.from('general_terms').select('*').eq('is_active', true);
                 if (error) throw error;
                 generalTerms = data || [];
-            } catch (e) { console.error('loadTerms error:', e); }
+            } catch (e) { console.error(e); }
         }
 
         async function fetchQuotes() {
@@ -514,64 +603,76 @@
             tbody.innerHTML = '';
             try {
                 const statusFilter = isArchiveView ? ORDER_STATUS.ARCHIVED : ORDER_STATUS.QUOTE;
-                const { data: orders, error } = await supabaseClient.from('orders').select('*, clients(name)').eq('status', statusFilter).order('created_at', { ascending: false });
+                
+                // RLS Logic: If personal_only, fetch only quotes made by this user
+                let query = supabaseClient.from('orders').select('*, clients(name)').eq('status', statusFilter).order('created_at', { ascending: false });
+                
+                if(loggedUser.permissions && !loggedUser.permissions.all_access && loggedUser.permissions.data_scope === 'personal_only') {
+                    query = query.eq('created_by', loggedUser.id); // Assuming we added created_by to orders
+                }
+
+                const { data: orders, error } = await query;
                 if (error) throw error;
+
                 if (orders && orders.length > 0) {
                     orders.forEach(o => {
                         const tr = document.createElement('tr');
-                        tr.className = "hover:bg-gray-50 border-b";
+                        tr.className = "hover:bg-purple-50 transition border-b";
                         const statusLabel = STATUS_AR[o.status] || o.status || '-';
                         const statusColor = STATUS_COLOR[o.status] || 'bg-gray-100 text-gray-600';
+                        
+                        // Check deletion permission
+                        const canDelete = loggedUser.permissions?.all_access || loggedUser.permissions?.sales?.delete;
+                        const delBtn = canDelete ? `<button onclick="deleteQuotePermanent('${o.id}')" class="text-red-500 hover:bg-red-100 p-2 rounded transition" title="حذف نهائي"><i class="fas fa-trash"></i></button>` : '';
+
                         let btns = isArchiveView
-                            ? `<button onclick="restoreQuote('${o.id}')" class="text-green-600 hover:bg-green-100 p-2 rounded" title="استرجاع"><i class="fas fa-undo"></i></button>
-                               <button onclick="deleteQuotePermanent('${o.id}')" class="text-red-600 hover:bg-red-100 p-2 rounded" title="حذف نهائي"><i class="fas fa-times"></i></button>`
-                            : `<button onclick="editQuote('${o.id}')" class="text-blue-600 hover:bg-blue-100 p-2 rounded" title="تعديل"><i class="fas fa-edit"></i></button>
-                               <button onclick="openConvertModal('${o.id}', '${o.client_id}')" class="text-green-600 hover:bg-green-100 p-2 rounded" title="تحويل لإنتاج"><i class="fas fa-money-bill-wave"></i></button>
-                               <button onclick="archiveQuote('${o.id}')" class="text-orange-500 hover:bg-orange-100 p-2 rounded" title="أرشفة"><i class="fas fa-archive"></i></button>`;
+                            ? `<button onclick="restoreQuote('${o.id}')" class="text-green-600 hover:bg-green-100 p-2 rounded transition" title="استرجاع"><i class="fas fa-undo"></i></button>${delBtn}`
+                            : `<button onclick="editQuote('${o.id}')" class="text-blue-600 hover:bg-blue-100 p-2 rounded transition" title="فتح / تعديل"><i class="fas fa-folder-open"></i></button>
+                               <button onclick="openConvertModal('${o.id}', '${o.client_id}')" class="text-yellow-600 hover:bg-yellow-100 p-2 rounded transition font-bold" title="تعميد الطلب لإنتاج"><i class="fas fa-bolt"></i></button>
+                               <button onclick="archiveQuote('${o.id}')" class="text-gray-500 hover:bg-gray-200 p-2 rounded transition" title="أرشفة"><i class="fas fa-archive"></i></button>`;
+                        
                         tr.innerHTML = `
-                            <td class="px-4 py-3 font-bold">#${o.order_number}</td>
-                            <td class="px-4 py-3">${o.clients?.name || '-'}</td>
-                            <td class="px-4 py-3">${new Date(o.created_at).toLocaleDateString('en-GB')}</td>
-                            <td class="px-4 py-3 font-bold text-purple-700">${o.grand_total || '0.00'}</td>
-                            <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs font-bold ${statusColor}">${isArchiveView ? 'مؤرشف' : statusLabel}</span></td>
-                            <td class="px-4 py-3 flex gap-2 actions-col">${btns}</td>`;
+                            <td class="px-4 py-3 font-bold text-purple-900">#${o.order_number}</td>
+                            <td class="px-4 py-3 font-bold">${o.clients?.name || '-'}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">${new Date(o.created_at).toLocaleDateString('en-GB')}</td>
+                            <td class="px-4 py-3 font-bold text-green-700">${o.grand_total || '0.00'}</td>
+                            <td class="px-4 py-3"><span class="px-3 py-1 rounded-full text-xs font-bold shadow-sm ${statusColor}">${isArchiveView ? 'مؤرشف' : statusLabel}</span></td>
+                            <td class="px-4 py-3 flex gap-2 justify-center actions-col">${btns}</td>`;
                         tbody.appendChild(tr);
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center p-6 text-gray-400">لا توجد بيانات</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-gray-400">لا توجد عروض أسعار متاحة.</td></tr>';
                 }
             } catch (e) {
                 console.error('fetchQuotes error:', e);
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-6 text-red-400">خطأ في تحميل البيانات</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-red-500 font-bold">حدث خطأ أثناء تحميل البيانات.</td></tr>';
             }
             document.getElementById('loadingIndicator').classList.add('hidden');
         }
 
-        // ================================================================
-        // Items Logic
-        // ================================================================
+        // --- 3. Quote Items Operations ---
         function addItemRow(data = null) {
             const container = document.getElementById('itemsContainer');
             const rowId = 'row-' + Date.now() + Math.random().toString(36).substr(2, 5);
             const tr = document.createElement('tr');
             tr.id = rowId;
-            tr.className = "border-b hover:bg-gray-50";
+            tr.className = "border-b hover:bg-purple-50 transition";
             tr.innerHTML = `
-                <td class="p-2 border text-center w-10 index-cell"></td>
+                <td class="p-2 border text-center w-10 index-cell text-gray-500 font-bold"></td>
                 <td class="p-2 border relative">
-                    <input type="text" class="w-full border-none bg-transparent p-1 text-sm prod-search outline-none" placeholder="ابحث..." oninput="searchProduct(this, '${rowId}')" onfocus="searchProduct(this, '${rowId}')">
+                    <input type="text" class="w-full border-none bg-transparent p-1 text-sm prod-search outline-none font-bold text-purple-900" placeholder="ابحث بالاسم..." oninput="searchProduct(this, '${rowId}')" onfocus="searchProduct(this, '${rowId}')">
                     <div class="absolute left-2 top-2 flex gap-1 no-print">
-                        <button type="button" class="text-gray-400 hover:text-purple-600" onclick="showProductHistory('${rowId}')" title="تاريخ المنتج"><i class="fas fa-eye"></i></button>
-                        <button type="button" class="text-gray-300 hover:text-red-500 text-xs" onclick="clearSearch('${rowId}')" title="مسح"><i class="fas fa-times"></i></button>
+                        <button type="button" class="text-gray-400 hover:text-purple-600 transition" onclick="showProductHistory('${rowId}')" title="تاريخ أسعار المنتج مع هذا العميل"><i class="fas fa-history"></i></button>
+                        <button type="button" class="text-gray-300 hover:text-red-500 text-xs transition" onclick="clearSearch('${rowId}')" title="مسح"><i class="fas fa-times"></i></button>
                     </div>
-                    <div id="res-${rowId}" class="search-results shadow-lg hidden"></div>
+                    <div id="res-${rowId}" class="search-results shadow-xl border-purple-100 hidden"></div>
                 </td>
-                <td class="p-2 border"><select id="var-${rowId}" onchange="onVariantSelect(this, '${rowId}')" class="w-full border-none bg-transparent text-sm outline-none var-select"><option value="">...</option></select></td>
-                <td class="p-2 border"><input type="text" class="w-full text-center bg-transparent border-none text-sm unit-input" placeholder=""></td>
-                <td class="p-2 border"><input type="number" id="qty-${rowId}" oninput="calcRow('${rowId}')" value="1" min="1" class="w-full border-none bg-transparent text-center font-bold outline-none qty-input"></td>
-                <td class="p-2 border"><input type="number" id="price-${rowId}" oninput="calcRow('${rowId}')" value="0" class="w-full border-none bg-transparent text-center outline-none price-input"></td>
-                <td class="p-2 border text-center font-bold text-gray-700 row-total" id="total-${rowId}">0.00</td>
-                <td class="p-2 border text-center no-print"><button onclick="this.closest('tr').remove(); reindexRows(); calculateTotals()" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></td>`;
+                <td class="p-2 border"><select id="var-${rowId}" onchange="onVariantSelect(this, '${rowId}')" class="w-full border-none bg-transparent text-sm font-bold text-gray-700 outline-none var-select"><option value="">...</option></select></td>
+                <td class="p-2 border"><input type="text" class="w-full text-center bg-transparent border-none text-sm text-gray-500 unit-input outline-none" placeholder="-"></td>
+                <td class="p-2 border bg-white"><input type="number" id="qty-${rowId}" oninput="calcRow('${rowId}')" value="1" min="1" class="w-full border-none bg-transparent text-center font-bold text-blue-700 outline-none qty-input"></td>
+                <td class="p-2 border bg-white"><input type="number" id="price-${rowId}" oninput="calcRow('${rowId}')" value="0" class="w-full border-none bg-transparent text-center font-bold text-green-700 outline-none price-input"></td>
+                <td class="p-2 border text-center font-extrabold text-purple-800 row-total" id="total-${rowId}">0.00</td>
+                <td class="p-2 border text-center no-print bg-gray-50"><button onclick="this.closest('tr').remove(); reindexRows(); calculateTotals()" class="text-red-400 hover:text-red-600 transition p-1"><i class="fas fa-trash-alt"></i></button></td>`;
             container.appendChild(tr);
 
             if (data) {
@@ -590,13 +691,11 @@
             const row = document.getElementById(rowId);
             row.querySelector('.prod-search').value = '';
             const resList = document.getElementById(`res-${rowId}`);
-            resList.style.display = 'none';
-            resList.classList.add('hidden');
+            resList.style.display = 'none'; resList.classList.add('hidden');
         }
 
         function reindexRows() {
-            let i = 1;
-            document.querySelectorAll('.index-cell').forEach(c => c.innerText = i++);
+            let i = 1; document.querySelectorAll('.index-cell').forEach(c => c.innerText = i++);
         }
 
         function searchProduct(input, rowId) {
@@ -605,35 +704,32 @@
             list.innerHTML = '';
             const filtered = val ? productsList.filter(p => p.name.toLowerCase().includes(val)) : productsList;
             if (filtered.length > 0) {
-                list.style.display = 'block';
-                list.classList.remove('hidden');
+                list.style.display = 'block'; list.classList.remove('hidden');
                 filtered.forEach(p => {
                     const div = document.createElement('div');
-                    div.className = 'search-item p-2 hover:bg-gray-100 cursor-pointer text-sm';
+                    div.className = 'search-item p-3 border-b hover:bg-purple-50 font-bold text-purple-900 cursor-pointer text-sm transition';
                     div.innerText = p.name;
                     div.onclick = () => {
                         input.value = p.name;
-                        list.style.display = 'none';
-                        list.classList.add('hidden');
+                        list.style.display = 'none'; list.classList.add('hidden');
                         fillVariants(document.getElementById(`var-${rowId}`), p, p.unit);
                     };
                     list.appendChild(div);
                 });
             } else {
-                list.style.display = 'none';
-                list.classList.add('hidden');
+                list.style.display = 'none'; list.classList.add('hidden');
             }
+            
             const closeHandler = (e) => {
                 if (!input.contains(e.target) && !list.contains(e.target)) {
-                    list.style.display = 'none';
-                    document.removeEventListener('click', closeHandler);
+                    list.style.display = 'none'; document.removeEventListener('click', closeHandler);
                 }
             };
             document.addEventListener('click', closeHandler, { once: false });
         }
 
         function fillVariants(select, product, parentDefaultUnit = '', selectedId = null) {
-            select.innerHTML = '<option value="">اختر...</option>';
+            select.innerHTML = '<option value="">اختر المقاس...</option>';
             select.dataset.parentUnit = parentDefaultUnit || '';
             if (product.product_variants) {
                 product.product_variants.forEach(v => {
@@ -681,14 +777,11 @@
             document.getElementById('subTotal').innerText = sub.toFixed(2);
             document.getElementById('vatTotal').innerText = vat.toFixed(2);
             document.getElementById('grandTotal').innerText = grand.toFixed(2);
-            
-            // Update Floating UI
             document.getElementById('floatingTotal').innerText = grand.toFixed(2) + ' ر.س';
             
             updatePrintTotals();
         }
 
-        // NEW: Handles Down Payment logic for Print
         function updatePrintTotals() {
             const downPayInput = document.getElementById('qDownPayment').value;
             const showDownPay = document.getElementById('qShowDownPayment').checked;
@@ -698,29 +791,45 @@
             if (downPayInput && showDownPay && parseFloat(downPayInput) > 0) {
                 printDownPayVal.innerText = parseFloat(downPayInput).toFixed(2);
                 printDownPayRow.classList.remove('hidden');
-                printDownPayRow.style.display = 'table-row'; // force for print
+                printDownPayRow.style.display = 'table-row'; 
             } else {
                 printDownPayRow.classList.add('hidden');
                 printDownPayRow.style.display = 'none';
             }
         }
 
+        // --- 4. Terms Snapshotting Logic (التعديل الجوهري) ---
         function renderTermsList() {
             const list = document.getElementById('termsList');
             list.innerHTML = '';
             generalTerms.forEach(t => {
                 list.innerHTML += `
-                    <div class="term-row flex items-start gap-2 mb-1">
+                    <div class="term-row flex items-start gap-2 mb-2">
                         <span class="term-bullet hidden print-only w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style="background-color: #3d1f6b; display:none;"></span>
-                        <input type="checkbox" checked class="term-checkbox w-4 h-4 text-purple-600 mt-1 no-print flex-shrink-0">
-                        <div class="term-text">${t.content}</div>
+                        <input type="checkbox" checked class="term-checkbox custom-checkbox mt-0.5 no-print flex-shrink-0">
+                        <div class="term-text text-sm font-medium text-gray-700 leading-relaxed">${t.content}</div>
                     </div>`;
             });
         }
 
+        // دالة مخصصة لطباعة الشروط المجمدة قديماً
+        function renderSnapshottedTerms(savedTermsArray) {
+            const list = document.getElementById('termsList');
+            list.innerHTML = '';
+            savedTermsArray.forEach(termText => {
+                list.innerHTML += `
+                    <div class="term-row flex items-start gap-2 mb-2">
+                        <span class="term-bullet hidden print-only w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style="background-color: #3d1f6b; display:none;"></span>
+                        <input type="checkbox" checked class="term-checkbox custom-checkbox mt-0.5 no-print flex-shrink-0">
+                        <div class="term-text text-sm font-medium text-gray-700 leading-relaxed">${termText}</div>
+                    </div>`;
+            });
+        }
+
+        // --- 5. Save & Edit ---
         async function saveQuote() {
             const clientId = document.getElementById('qClient').value;
-            if (!clientId) return alert("اختر العميل");
+            if (!clientId) return alert("الرجاء اختيار العميل لإصدار العرض.");
 
             const items = [];
             let sub = 0;
@@ -730,23 +839,32 @@
                 const priceInput = row.querySelector('.price-input');
                 const unitInput = row.querySelector('.unit-input');
                 if (!varSelect || !qtyInput || !priceInput) return;
+                
                 const vId = varSelect.value;
                 const qty = Number(qtyInput.value);
                 const price = Number(priceInput.value);
                 const unit = unitInput ? unitInput.value : '';
+                
                 if (vId && qty > 0) {
                     items.push({ variant_id: vId, quantity: qty, unit_price: price, unit: unit });
                     sub += qty * price;
                 }
             });
 
-            if (!items.length) return alert("أضف صنف واحد على الأقل");
+            if (!items.length) return alert("الرجاء إضافة صنف واحد على الأقل للعرض.");
 
-            // Save JSON config for custom terms & down payment config
+            // تجميع نص الشروط المحددة لتجميدها (Snapshotted)
+            const checkedTerms = [];
+            document.querySelectorAll('.term-checkbox:checked').forEach(cb => {
+                const termText = cb.nextElementSibling.innerText;
+                checkedTerms.push(termText);
+            });
+
             const metaConfig = {
                 notes: document.getElementById('customTerms').value,
                 downPayment: document.getElementById('qDownPayment').value,
-                showDownPayment: document.getElementById('qShowDownPayment').checked
+                showDownPayment: document.getElementById('qShowDownPayment').checked,
+                savedTerms: checkedTerms // هنا بيتم حفظ نص الشروط لحمايته من التغيير مستقبلاً
             };
 
             const data = {
@@ -754,8 +872,13 @@
                 status: ORDER_STATUS.QUOTE,
                 total_amount: sub,
                 grand_total: parseFloat((sub * 1.15).toFixed(2)),
-                snapshotted_terms: JSON.stringify(metaConfig) // Store as JSON string to not alter DB Schema
+                snapshotted_terms: JSON.stringify(metaConfig),
+                created_by: loggedUser.id // تسجيل مين عمل العرض
             };
+
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            btn.disabled = true;
 
             try {
                 let oid = currentQuoteId;
@@ -769,15 +892,20 @@
                     if (insertErr) throw insertErr;
                     oid = newO.id;
                 }
+                
                 const itemsWithId = items.map(i => ({ ...i, order_id: oid }));
                 const { error: itemsErr } = await supabaseClient.from('order_items').insert(itemsWithId);
                 if (itemsErr) throw itemsErr;
-                alert("تم الحفظ بنجاح");
+                
+                alert("تم حفظ عرض السعر بنجاح!");
                 closeForm();
                 fetchQuotes();
             } catch (e) {
                 console.error('saveQuote error:', e);
-                alert("خطأ في الحفظ: " + (e.message || e));
+                alert("خطأ أثناء الحفظ، يرجى المحاولة مرة أخرى.");
+            } finally {
+                btn.innerHTML = '<i class="fas fa-save"></i> حفظ';
+                btn.disabled = false;
             }
         }
 
@@ -792,6 +920,7 @@
                     supabaseClient.from('orders').select('*').eq('id', id).single(),
                     supabaseClient.from('order_items').select('*, product_variants(id, size_name, unit, products(name, unit))').eq('order_id', id)
                 ]);
+                
                 if (orderRes.error) throw orderRes.error;
                 if (itemsRes.error) throw itemsRes.error;
 
@@ -800,29 +929,31 @@
                 document.getElementById('qDate').value = order.created_at.split('T')[0];
                 document.getElementById('pRef').innerText = '#' + order.order_number;
                 
-                // Parse Meta Config (Backward compatibility included)
+                // Parse Meta Config (With Backward compatibility)
                 try {
                     const meta = JSON.parse(order.snapshotted_terms || '{}');
                     document.getElementById('customTerms').value = meta.notes || '';
                     document.getElementById('qDownPayment').value = meta.downPayment || '';
-                    document.getElementById('qShowDownPayment').checked = meta.showDownPayment !== false; // default true
+                    document.getElementById('qShowDownPayment').checked = meta.showDownPayment !== false; 
+                    
+                    // إذا كان العرض قديم ومحفوظ فيه شروط مجمدة، اعرضها هي.. غير كده اعرض الشروط الحالية من الداتا بيز
+                    if (meta.savedTerms && meta.savedTerms.length > 0) {
+                        renderSnapshottedTerms(meta.savedTerms);
+                    } else {
+                        renderTermsList();
+                    }
                 } catch(e) {
-                    // Old string format
+                    // Old string format fallback
                     document.getElementById('customTerms').value = order.snapshotted_terms || '';
                     document.getElementById('qDownPayment').value = '';
                     document.getElementById('qShowDownPayment').checked = true;
+                    renderTermsList();
                 }
-
-                renderTermsList();
 
                 document.getElementById('itemsContainer').innerHTML = '';
                 itemsRes.data.forEach(i => {
                     if (i.product_variants && i.product_variants.products) {
-                        let finalUnit = '';
-                        if (i.unit) finalUnit = i.unit;
-                        else if (i.product_variants.unit) finalUnit = i.product_variants.unit;
-                        else if (i.product_variants.products.unit) finalUnit = i.product_variants.products.unit;
-
+                        let finalUnit = i.unit || i.product_variants.unit || i.product_variants.products.unit || '';
                         addItemRow({
                             pName: i.product_variants.products.name,
                             variant_id: i.variant_id,
@@ -835,253 +966,155 @@
                 calculateTotals();
             } catch (e) {
                 console.error('editQuote error:', e);
-                alert('خطأ في تحميل بيانات العرض: ' + (e.message || e));
+                alert('خطأ في تحميل بيانات العرض، تأكد من الاتصال بالإنترنت.');
             }
         }
 
+        // --- 6. Convert to Production (التعديل الجوهري للتعميد) ---
         async function openConvertModal(orderId, clientId) {
             document.getElementById('convQuoteId').value = orderId;
             document.getElementById('convClientId').value = clientId;
             document.getElementById('payAmount').value = '';
+            
             const tbody = document.getElementById('convertItemsTable');
             const loadingMsg = document.getElementById('convertLoadingMsg');
-            tbody.innerHTML = '';
-            loadingMsg.classList.remove('hidden');
+            tbody.innerHTML = ''; loadingMsg.classList.remove('hidden');
             toggleModal('convertModal');
+            
             try {
                 const { data: items, error } = await supabaseClient
                     .from('order_items')
-                    .select('id, quantity, unit_price, unit, variant_id, product_variants(id, size_name, products(id, name))')
+                    .select('id, quantity, unit_price, unit, variant_id, product_variants(size_name, products(name))')
                     .eq('order_id', orderId);
+                
                 if (error) throw error;
                 loadingMsg.classList.add('hidden');
+                
                 if (items && items.length > 0) {
                     items.forEach(item => {
-                        const productName = item.product_variants?.products?.name || 'غير معروف';
+                        const productName = item.product_variants?.products?.name || 'صنف غير معروف';
                         const sizeName = item.product_variants?.size_name || '-';
                         const qty = item.quantity || 0;
                         const itemId = item.id;
+                        
                         const tr = document.createElement('tr');
-                        tr.className = 'border-b hover:bg-gray-50';
+                        tr.className = 'border-b hover:bg-gray-50 transition';
                         tr.innerHTML = `
-                            <td class="p-2 text-center"><input type="checkbox" checked class="conv-check w-4 h-4 text-purple-600" data-item-id="${itemId}" data-variant-id="${item.variant_id}"></td>
-                            <td class="p-2 font-medium">${productName}</td>
-                            <td class="p-2 text-gray-600">${sizeName}</td>
-                            <td class="p-2 text-center"><input type="number" value="${qty}" min="1" class="w-16 border rounded p-1 text-center text-sm conv-qty" data-item-id="${itemId}"></td>`;
+                            <td class="p-2 text-center"><input type="checkbox" checked class="conv-check custom-checkbox" data-item-id="${itemId}" data-variant-id="${item.variant_id}"></td>
+                            <td class="p-2 font-bold text-purple-900">${productName}</td>
+                            <td class="p-2 text-gray-600 text-sm">${sizeName}</td>
+                            <td class="p-2 text-center"><input type="number" value="${qty}" min="1" class="w-16 border border-gray-300 rounded p-1 text-center font-bold text-blue-700 outline-none conv-qty" data-item-id="${itemId}"></td>`;
                         tbody.appendChild(tr);
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-gray-400">لا توجد أصناف في هذا العرض</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-gray-400">لا توجد أصناف قابلة للتحويل.</td></tr>';
                 }
                 document.getElementById('selectAllConvert').checked = true;
             } catch (e) {
                 loadingMsg.classList.add('hidden');
-                console.error('openConvertModal error:', e);
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-red-400">خطأ في تحميل الأصناف</td></tr>';
+                console.error(e); tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-red-400 font-bold">خطأ في تحميل الأصناف.</td></tr>';
             }
         }
 
         function toggleAllItems(checkbox) { document.querySelectorAll('.conv-check').forEach(c => c.checked = checkbox.checked); }
 
-        async function showClientInfo() {
-            const cId = document.getElementById('qClient').value;
-            if (!cId) return alert('اختر العميل أولاً');
-            const sel = document.getElementById('qClient');
-            const opt = sel.options[sel.selectedIndex];
-            let clientData = {};
-            try { clientData = JSON.parse(opt.dataset.json); } catch (e) { clientData = { name: opt.text }; }
-
-            document.getElementById('infoName').innerText = clientData.name || '-';
-            document.getElementById('infoContact').innerText = clientData.contact_person || '-';
-            document.getElementById('infoPhone').innerText = clientData.phone || '-';
-            document.getElementById('infoCity').innerText = clientData.city || 'غير محدد';
-
-            const tbody = document.getElementById('infoHistoryList');
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center p-2 text-gray-400"><i class="fas fa-spinner fa-spin mr-1"></i> جاري التحميل...</td></tr>';
-            toggleModal('clientInfoModal');
-
-            try {
-                const { data: orders, error } = await supabaseClient.from('orders').select('id, order_number, created_at, grand_total, status').eq('client_id', cId).order('created_at', { ascending: false }).limit(50);
-                if (error) throw error;
-                tbody.innerHTML = '';
-                if (orders && orders.length > 0) {
-                    orders.forEach(o => {
-                        const statusLabel = STATUS_AR[o.status] || o.status || '-';
-                        const statusColor = STATUS_COLOR[o.status] || 'bg-gray-100 text-gray-600';
-                        const dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString('ar-SA') : '-';
-                        const total = o.grand_total ? parseFloat(o.grand_total).toFixed(2) + ' ر.س' : '0.00 ر.س';
-                        tbody.innerHTML += `
-                            <tr class="hover:bg-gray-50">
-                                <td class="p-2 border-b"><button onclick="openOrderItemsModal('${o.id}', '${o.order_number}', '${dateStr}')" class="font-bold text-purple-700 hover:underline">#${o.order_number || '-'}</button></td>
-                                <td class="p-2 border-b">${dateStr}</td>
-                                <td class="p-2 border-b font-mono font-bold">${total}</td>
-                                <td class="p-2 border-b"><span class="px-2 py-0.5 rounded text-xs font-bold ${statusColor}">${statusLabel}</span></td>
-                            </tr>`;
-                    });
-                } else { tbody.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-gray-400">لا يوجد طلبات سابقة</td></tr>'; }
-            } catch (e) { console.error(e); tbody.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-red-400">خطأ في التحميل</td></tr>'; }
-        }
-
-        async function openOrderItemsModal(orderId, orderNumber, dateStr) {
-            document.getElementById('orderItemsTitle').innerText = `تفاصيل الطلب #${orderNumber}`;
-            document.getElementById('orderItemsDate').innerText = dateStr;
-            const tbody = document.getElementById('orderItemsBody');
-            const loading = document.getElementById('orderItemsLoading');
-            tbody.innerHTML = ''; loading.classList.remove('hidden');
-            toggleModal('orderItemsModal');
-            try {
-                const { data: items, error } = await supabaseClient.from('order_items').select('id, quantity, unit_price, unit, product_variants(size_name, products(name))').eq('order_id', orderId);
-                if (error) throw error;
-                loading.classList.add('hidden');
-                if (items && items.length > 0) {
-                    let grandSub = 0;
-                    items.forEach((item, idx) => {
-                        const productName = item.product_variants?.products?.name || '-';
-                        const sizeName = item.product_variants?.size_name || '-';
-                        const qty = item.quantity || 0;
-                        const price = parseFloat(item.unit_price) || 0;
-                        const lineTotal = qty * price;
-                        grandSub += lineTotal;
-                        tbody.innerHTML += `<tr class="hover:bg-gray-50"><td class="p-2 border-b text-center text-gray-400">${idx + 1}</td><td class="p-2 border-b font-medium">${productName}</td><td class="p-2 border-b text-gray-600">${sizeName}</td><td class="p-2 border-b text-center">${qty}</td><td class="p-2 border-b text-center font-mono">${price.toFixed(2)}</td><td class="p-2 border-b text-center font-mono font-bold text-purple-700">${lineTotal.toFixed(2)}</td></tr>`;
-                    });
-                    document.getElementById('orderItemsTotal').innerHTML = `<span class="text-gray-500">الإجمالي قبل الضريبة:</span> <span class="mr-2 text-purple-800">${grandSub.toFixed(2)} ر.س</span> <span class="text-gray-400 text-xs mr-2">| شامل الضريبة:</span> <span class="font-bold text-purple-900">${(grandSub * 1.15).toFixed(2)} ر.س</span>`;
-                } else { loading.classList.add('hidden'); tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-gray-400">لا توجد أصناف لهذا الطلب</td></tr>'; }
-            } catch (e) { loading.classList.add('hidden'); console.error(e); tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-red-400">خطأ في التحميل</td></tr>'; }
-        }
-
-        async function showProductHistory(rowId) {
-            const cId = document.getElementById('qClient').value;
-            const varSelect = document.getElementById(`var-${rowId}`);
-            const vId = varSelect ? varSelect.value : null;
-            if (!cId) return alert('اختر العميل أولاً');
-            if (!vId) return alert('اختر المقاس أولاً');
-            const variantName = varSelect.options[varSelect.selectedIndex]?.text || '-';
-            const rowEl = document.getElementById(rowId);
-            const productName = rowEl ? rowEl.querySelector('.prod-search').value : '-';
-            document.getElementById('histProdName').innerText = productName + ' - ' + variantName;
-            document.getElementById('histClientName').innerText = 'سجل التعاملات مع العميل المحدد';
-            const tb = document.getElementById('productHistoryBody');
-            tb.innerHTML = '<tr><td colspan="4" class="text-center p-2 text-gray-400"><i class="fas fa-spinner fa-spin"></i></td></tr>';
-            toggleModal('productHistoryModal');
-            try {
-                const { data: clientOrders, error: ordersError } = await supabaseClient.from('orders').select('id, status').eq('client_id', cId);
-                if (ordersError) throw ordersError;
-                tb.innerHTML = '';
-                if (!clientOrders || clientOrders.length === 0) return tb.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-gray-400">لا يوجد سجل</td></tr>';
-                const orderIds = clientOrders.map(o => o.id);
-                const orderStatusMap = {};
-                clientOrders.forEach(o => { orderStatusMap[o.id] = o.status; });
-                const { data: items, error: itemsError } = await supabaseClient.from('order_items').select('quantity, unit_price, created_at, order_id').eq('variant_id', vId).in('order_id', orderIds).order('created_at', { ascending: false });
-                if (itemsError) throw itemsError;
-                if (items && items.length > 0) {
-                    items.forEach(h => {
-                        const statusLabel = STATUS_AR[orderStatusMap[h.order_id]] || orderStatusMap[h.order_id] || '-';
-                        const statusColor = STATUS_COLOR[orderStatusMap[h.order_id]] || 'bg-gray-100 text-gray-600';
-                        const dateStr = h.created_at ? new Date(h.created_at).toLocaleDateString('ar-SA') : '-';
-                        tb.innerHTML += `<tr class="hover:bg-gray-50"><td class="p-2 border-b">${dateStr}</td><td class="p-2 border-b text-center">${h.quantity}</td><td class="p-2 border-b text-center font-mono">${h.unit_price}</td><td class="p-2 border-b"><span class="px-2 py-0.5 rounded text-xs font-bold ${statusColor}">${statusLabel}</span></td></tr>`;
-                    });
-                } else { tb.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-gray-400">لا يوجد سجل لهذا المنتج</td></tr>'; }
-            } catch (e) { console.error(e); tb.innerHTML = '<tr><td colspan="4" class="text-center p-3 text-red-400">خطأ في التحميل</td></tr>'; }
-        }
-
-        async function saveMiniProduct() {
-            const size = document.getElementById('mpSize').value.trim();
-            const price = parseFloat(document.getElementById('mpPrice').value) || 0;
-            const unit = document.getElementById('mpUnit').value.trim();
-            if (!size) return alert('أدخل المقاس');
-            try {
-                let productId = null;
-                if (productMode === 'new') {
-                    const name = document.getElementById('mpName').value.trim();
-                    if (!name) return alert('أدخل اسم الصنف');
-                    const { data: newProduct, error: prodError } = await supabaseClient.from('products').insert([{ name }]).select().single();
-                    if (prodError) throw prodError;
-                    productId = newProduct.id;
-                } else {
-                    productId = document.getElementById('mpExistSelect').value;
-                    if (!productId) return alert('اختر الصنف');
-                }
-                const { error: varError } = await supabaseClient.from('product_variants').insert([{ product_id: productId, size_name: size, selling_price: price, unit: unit || null }]);
-                if (varError) throw varError;
-                alert('تم الحفظ بنجاح');
-                toggleModal('miniProductModal');
-                await loadProducts();
-                document.getElementById('mpName').value = ''; document.getElementById('mpSize').value = ''; document.getElementById('mpPrice').value = ''; document.getElementById('mpUnit').value = '';
-            } catch (e) { console.error(e); alert('خطأ في حفظ الصنف: ' + (e.message || e)); }
-        }
-
-        async function saveMiniClient() {
-            const name = document.getElementById('mcName').value.trim();
-            if (!name) return alert('أدخل اسم المنشأة');
-            const person = document.getElementById('mcPerson').value.trim();
-            const phone = document.getElementById('mcPhone').value.trim();
-            try {
-                const { data: newClient, error } = await supabaseClient.from('clients').insert([{ name, contact_person: person, phone }]).select().single();
-                if (error) throw error;
-                const select = document.getElementById('qClient');
-                const opt = document.createElement('option');
-                opt.value = newClient.id; opt.text = newClient.name; opt.dataset.json = JSON.stringify(newClient);
-                select.add(opt); select.value = newClient.id;
-                alert('تم إضافة العميل');
-                toggleModal('miniClientModal');
-                document.getElementById('mcName').value = ''; document.getElementById('mcPerson').value = ''; document.getElementById('mcPhone').value = '';
-            } catch (e) { console.error(e); alert('خطأ في حفظ العميل: ' + (e.message || e)); }
-        }
-
         async function executeConversion() {
             const orderId = document.getElementById('convQuoteId').value;
+            const clientId = document.getElementById('convClientId').value;
             const payAmount = parseFloat(document.getElementById('payAmount').value) || 0;
             const payMethod = document.getElementById('payMethod').value;
+            
             const checkedItems = [];
             document.querySelectorAll('.conv-check:checked').forEach(checkbox => {
                 const itemId = checkbox.dataset.itemId;
-                const variantId = checkbox.dataset.variantId;
                 const qtyInput = document.querySelector(`.conv-qty[data-item-id="${itemId}"]`);
                 const qty = qtyInput ? Number(qtyInput.value) : 0;
-                if (qty > 0) checkedItems.push({ item_id: itemId, variant_id: variantId, quantity: qty });
+                if (qty > 0) checkedItems.push(itemId); // We only verify they selected something
             });
-            if (!checkedItems.length) return alert('اختر صنفاً واحداً على الأقل');
+            
+            if (!checkedItems.length) return alert('الرجاء اختيار صنف واحد على الأقل للتشغيل.');
+
+            const btn = document.getElementById('btnExecuteConvert');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحويل...';
+            btn.disabled = true;
+
             try {
-                const { error } = await supabaseClient.from('orders').update({ status: ORDER_STATUS.PRODUCTION, paid_amount: payAmount, payment_method: payMethod }).eq('id', orderId);
-                if (error) throw error;
-                alert('تم التحويل لأوامر التشغيل بنجاح');
+                // 1. تحديث حالة العرض إلى أمر إنتاج، وإضافة الدفعة إن وجدت
+                const orderUpdateData = { 
+                    status: ORDER_STATUS.PRODUCTION 
+                };
+                
+                // لو دخل مبلغ دفعة، هنحدثه في الطلب عشان يسمّع في الفواتير
+                if (payAmount > 0) {
+                    orderUpdateData.paid_amount = payAmount;
+                    orderUpdateData.payment_method = payMethod;
+                }
+
+                const { error: orderErr } = await supabaseClient.from('orders').update(orderUpdateData).eq('id', orderId);
+                if (orderErr) throw orderErr;
+
+                // 2. تسجيل عملية الدفع في كشف الحساب (لو في مبلغ مدفعوع)
+                if (payAmount > 0) {
+                    const docNum = `REC-${Date.now().toString().slice(-6)}`;
+                    const methodNames = { 'bank_transfer': 'تحويل بنكي', 'cash': 'كاش', 'pos': 'شبكة', 'check': 'شيك' };
+                    const { error: txErr } = await supabaseClient.from('client_transactions').insert([{
+                        client_id: clientId,
+                        order_id: orderId,
+                        type: 'payment',
+                        amount: payAmount,
+                        payment_method: payMethod,
+                        document_number: docNum,
+                        description: `دفعة مقدمة - تعميد أمر التشغيل [ORDER_ID:${orderId}] | طريقة الدفع: ${methodNames[payMethod] || payMethod}`
+                    }]);
+                    if (txErr) console.error("لم يتم تسجيل الدفعة في كشف الحساب:", txErr);
+                }
+
+                alert('تم تعميد الطلب وتحويله لأوامر التشغيل بنجاح! 🚀');
                 toggleModal('convertModal');
                 fetchQuotes();
-            } catch (e) { console.error(e); alert('خطأ في التحويل: ' + (e.message || e)); }
+            } catch (e) { 
+                console.error(e); 
+                alert('حدث خطأ أثناء التحويل: ' + (e.message || e)); 
+            } finally {
+                btn.innerHTML = '<i class="fas fa-rocket ml-1"></i> تأكيد وتحويل';
+                btn.disabled = false;
+            }
         }
 
+        // --- 7. Archive & Delete ---
         async function archiveQuote(id) {
-            if (!confirm('هل تريد أرشفة هذا العرض؟')) return;
+            if (!confirm('هل تريد أرشفة هذا العرض؟ (سيختفي من القائمة الرئيسية)')) return;
             try {
                 const { error } = await supabaseClient.from('orders').update({ status: ORDER_STATUS.ARCHIVED }).eq('id', id);
                 if (error) throw error;
                 fetchQuotes();
-            } catch (e) { alert('خطأ في الأرشفة: ' + (e.message || e)); }
+            } catch (e) { alert('خطأ في الأرشفة.'); }
         }
 
         async function restoreQuote(id) {
-            if (!confirm('هل تريد استرجاع هذا العرض؟')) return;
+            if (!confirm('هل تريد استرجاع هذا العرض ليكون نشطاً؟')) return;
             try {
                 const { error } = await supabaseClient.from('orders').update({ status: ORDER_STATUS.QUOTE }).eq('id', id);
                 if (error) throw error;
                 fetchQuotes();
-            } catch (e) { alert('خطأ في الاسترجاع: ' + (e.message || e)); }
+            } catch (e) { alert('خطأ في الاسترجاع.'); }
         }
 
         async function deleteQuotePermanent(id) {
-            if (!confirm('حذف نهائي؟ لا يمكن التراجع!')) return;
+            if (!confirm('هل أنت متأكد من الحذف النهائي؟ لا يمكن التراجع عن هذه الخطوة أبداً!')) return;
             try {
                 const { error: e1 } = await supabaseClient.from('order_items').delete().eq('order_id', id);
                 if (e1) throw e1;
                 const { error: e2 } = await supabaseClient.from('orders').delete().eq('id', id);
                 if (e2) throw e2;
                 fetchQuotes();
-            } catch (e) { alert('خطأ في الحذف: ' + (e.message || e)); }
+            } catch (e) { alert('خطأ أثناء الحذف.'); }
         }
 
+        // --- 8. Modals & Helpers ---
         function toggleArchiveView() {
             isArchiveView = !isArchiveView;
-            document.getElementById('archiveBtn').innerHTML = isArchiveView ? '<i class="fas fa-arrow-right"></i> <span>العودة</span>' : '<i class="fas fa-trash-restore"></i> <span>الأرشيف</span>';
+            document.getElementById('archiveBtn').innerHTML = isArchiveView ? '<i class="fas fa-arrow-right"></i> <span class="text-blue-600">العودة للعروض النشطة</span>' : '<i class="fas fa-trash-restore"></i> <span>الأرشيف</span>';
             fetchQuotes();
         }
 
@@ -1109,24 +1142,131 @@
         }
 
         function preparePrint() {
-            updatePrintTotals(); // Ensure print UI is up to date before firing dialog
+            updatePrintTotals();
             const sel = document.getElementById('qClient');
             if (sel.selectedIndex >= 0 && sel.value) document.getElementById('printClientName').innerText = sel.options[sel.selectedIndex].text;
             document.getElementById('pDate').innerText = document.getElementById('qDate').value;
             const custom = document.getElementById('customTerms').value;
             const pCustom = document.getElementById('printCustomTerms');
-            if (custom) { pCustom.innerText = "ملاحظات: " + custom; pCustom.classList.remove('hidden'); } else pCustom.classList.add('hidden');
+            if (custom) { pCustom.innerText = "ملاحظات إضافية: " + custom; pCustom.classList.remove('hidden'); } else pCustom.classList.add('hidden');
             window.print();
         }
 
         function toggleModal(id) {
             const el = document.getElementById(id);
-            el.classList.toggle('opacity-0');
-            el.classList.toggle('pointer-events-none');
+            el.classList.toggle('opacity-0'); el.classList.toggle('pointer-events-none');
             const c = el.querySelector('.modal-container');
             if (c) { c.classList.toggle('scale-95'); c.classList.toggle('scale-100'); }
         }
 
+        async function showClientInfo() {
+            const cId = document.getElementById('qClient').value;
+            if (!cId) return alert('الرجاء اختيار العميل أولاً لعرض بياناته.');
+            const sel = document.getElementById('qClient');
+            const opt = sel.options[sel.selectedIndex];
+            let clientData = {};
+            try { clientData = JSON.parse(opt.dataset.json); } catch (e) { clientData = { name: opt.text }; }
+
+            document.getElementById('infoName').innerText = clientData.name || '-';
+            document.getElementById('infoContact').innerText = clientData.contact_person || '-';
+            document.getElementById('infoPhone').innerText = clientData.phone || '-';
+            document.getElementById('infoCity').innerText = clientData.city || 'غير محدد';
+
+            const tbody = document.getElementById('infoHistoryList');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i> جاري التحميل...</td></tr>';
+            toggleModal('clientInfoModal');
+
+            try {
+                const { data: orders, error } = await supabaseClient.from('orders').select('id, order_number, created_at, grand_total, status').eq('client_id', cId).order('created_at', { ascending: false }).limit(50);
+                if (error) throw error;
+                tbody.innerHTML = '';
+                if (orders && orders.length > 0) {
+                    orders.forEach(o => {
+                        const statusLabel = STATUS_AR[o.status] || o.status || '-';
+                        const statusColor = STATUS_COLOR[o.status] || 'bg-gray-100 text-gray-600';
+                        const dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString('ar-SA') : '-';
+                        const total = o.grand_total ? parseFloat(o.grand_total).toFixed(2) + ' ر.س' : '0.00 ر.س';
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-purple-50 transition border-b">
+                                <td class="p-3"><button onclick="openOrderItemsModal('${o.id}', '${o.order_number}', '${dateStr}')" class="font-bold text-purple-700 hover:underline">#${o.order_number || '-'}</button></td>
+                                <td class="p-3">${dateStr}</td>
+                                <td class="p-3 font-mono font-bold">${total}</td>
+                                <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-bold shadow-sm ${statusColor}">${statusLabel}</span></td>
+                            </tr>`;
+                    });
+                } else { tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-gray-400">لا يوجد سجل طلبات أو فواتير سابقة لهذا العميل.</td></tr>'; }
+            } catch (e) { console.error(e); tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-red-400">حدث خطأ في تحميل السجل.</td></tr>'; }
+        }
+
+        async function openOrderItemsModal(orderId, orderNumber, dateStr) {
+            document.getElementById('orderItemsTitle').innerText = `تفاصيل الطلب #${orderNumber}`;
+            document.getElementById('orderItemsDate').innerText = dateStr;
+            const tbody = document.getElementById('orderItemsBody');
+            const loading = document.getElementById('orderItemsLoading');
+            tbody.innerHTML = ''; loading.classList.remove('hidden');
+            toggleModal('orderItemsModal');
+            try {
+                const { data: items, error } = await supabaseClient.from('order_items').select('id, quantity, unit_price, unit, product_variants(size_name, products(name))').eq('order_id', orderId);
+                if (error) throw error;
+                loading.classList.add('hidden');
+                if (items && items.length > 0) {
+                    let grandSub = 0;
+                    items.forEach((item, idx) => {
+                        const productName = item.product_variants?.products?.name || '-';
+                        const sizeName = item.product_variants?.size_name || '-';
+                        const qty = item.quantity || 0;
+                        const price = parseFloat(item.unit_price) || 0;
+                        const lineTotal = qty * price;
+                        grandSub += lineTotal;
+                        tbody.innerHTML += `<tr class="hover:bg-purple-50 border-b"><td class="p-2 text-center text-gray-400 font-bold">${idx + 1}</td><td class="p-2 font-bold text-purple-900">${productName}</td><td class="p-2 text-gray-600">${sizeName}</td><td class="p-2 text-center font-bold">${qty}</td><td class="p-2 text-center font-mono">${price.toFixed(2)}</td><td class="p-2 text-center font-mono font-bold text-green-700">${lineTotal.toFixed(2)}</td></tr>`;
+                    });
+                    document.getElementById('orderItemsTotal').innerHTML = `<span class="text-gray-500">الإجمالي:</span> <span class="mr-2 text-purple-800 font-mono">${grandSub.toFixed(2)}</span> <span class="text-gray-400 text-xs mx-2">| شامل 15%:</span> <span class="font-bold text-purple-900 text-lg font-mono">${(grandSub * 1.15).toFixed(2)} ر.س</span>`;
+                } else { loading.classList.add('hidden'); tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-gray-400">لا توجد تفاصيل لهذا الطلب</td></tr>'; }
+            } catch (e) { loading.classList.add('hidden'); console.error(e); tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-red-400">خطأ في تحميل الأصناف</td></tr>'; }
+        }
+
+        async function showProductHistory(rowId) {
+            const cId = document.getElementById('qClient').value;
+            const varSelect = document.getElementById(`var-${rowId}`);
+            const vId = varSelect ? varSelect.value : null;
+            if (!cId) return alert('الرجاء اختيار العميل لتتبع أسعاره السابقة.');
+            if (!vId) return alert('الرجاء تحديد الصنف والمقاس أولاً.');
+            
+            const variantName = varSelect.options[varSelect.selectedIndex]?.text || '-';
+            const rowEl = document.getElementById(rowId);
+            const productName = rowEl ? rowEl.querySelector('.prod-search').value : '-';
+            document.getElementById('histProdName').innerText = productName + ' - ' + variantName;
+            document.getElementById('histClientName').innerText = 'أسعار هذا الصنف في فواتير العميل المحدّد سابقاً';
+            
+            const tb = document.getElementById('productHistoryBody');
+            tb.innerHTML = '<tr><td colspan="4" class="text-center p-6 text-gray-400"><i class="fas fa-spinner fa-spin text-2xl"></i></td></tr>';
+            toggleModal('productHistoryModal');
+            
+            try {
+                const { data: clientOrders, error: ordersError } = await supabaseClient.from('orders').select('id, status').eq('client_id', cId);
+                if (ordersError) throw ordersError;
+                tb.innerHTML = '';
+                if (!clientOrders || clientOrders.length === 0) return tb.innerHTML = '<tr><td colspan="4" class="text-center p-6 text-gray-400">لم يقم هذا العميل بشراء أي أصناف من قبل.</td></tr>';
+                
+                const orderIds = clientOrders.map(o => o.id);
+                const orderStatusMap = {};
+                clientOrders.forEach(o => { orderStatusMap[o.id] = o.status; });
+                
+                const { data: items, error: itemsError } = await supabaseClient.from('order_items').select('quantity, unit_price, created_at, order_id').eq('variant_id', vId).in('order_id', orderIds).order('created_at', { ascending: false });
+                if (itemsError) throw itemsError;
+                
+                if (items && items.length > 0) {
+                    items.forEach(h => {
+                        const statusLabel = STATUS_AR[orderStatusMap[h.order_id]] || orderStatusMap[h.order_id] || '-';
+                        const statusColor = STATUS_COLOR[orderStatusMap[h.order_id]] || 'bg-gray-100 text-gray-600';
+                        const dateStr = h.created_at ? new Date(h.created_at).toLocaleDateString('en-GB') : '-';
+                        tb.innerHTML += `<tr class="hover:bg-purple-50 transition border-b"><td class="p-3 text-gray-600">${dateStr}</td><td class="p-3 text-center font-bold">${h.quantity}</td><td class="p-3 text-center font-mono font-bold text-green-700">${h.unit_price}</td><td class="p-3 text-center"><span class="px-2 py-1 rounded-full text-xs font-bold shadow-sm ${statusColor}">${statusLabel}</span></td></tr>`;
+                    });
+                } else { tb.innerHTML = '<tr><td colspan="4" class="text-center p-6 text-gray-400">هذا العميل لم يطلب هذا المقاس تحديداً من قبل.</td></tr>'; }
+            } catch (e) { console.error(e); tb.innerHTML = '<tr><td colspan="4" class="text-center p-6 text-red-500 font-bold">حدث خطأ في جلب السجل.</td></tr>'; }
+        }
+
+        // Mini Modals Functions (Products & Clients)
         function openMiniClientModal() { toggleModal('miniClientModal'); }
         function openMiniProductModal() { toggleModal('miniProductModal'); toggleProductMode('new'); }
 
@@ -1135,75 +1275,55 @@
             const isNew = mode === 'new';
             document.getElementById('newProdInputs').classList.toggle('hidden', !isNew);
             document.getElementById('existProdInputs').classList.toggle('hidden', isNew);
-            document.getElementById('btnNewProd').className = isNew ? 'flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800' : 'flex-1 py-1 rounded text-sm text-gray-500';
-            document.getElementById('btnExistProd').className = !isNew ? 'flex-1 py-1 rounded bg-white shadow text-sm font-bold text-purple-800' : 'flex-1 py-1 rounded text-sm text-gray-500';
-        }
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            applyUserPermissions();
-        });
-
-        function applyUserPermissions() {
-            // 1. جلب بيانات الموظف من المتصفح
-            const userDataString = localStorage.getItem('gpack_user');
-            if (!userDataString) return; 
-
-            const userData = JSON.parse(userDataString);
-
-            // 2. تغيير الاسم والمسمى الوظيفي في القائمة الجانبية
-            const nameEl = document.getElementById('sidebarUserName');
-            const roleEl = document.getElementById('sidebarUserRole');
-            if(nameEl) nameEl.innerText = userData.name;
-            if(roleEl) roleEl.innerText = userData.role_name;
-
-            // 3. تطبيق الصلاحيات (إخفاء الصفحات الممنوعة)
-            const perms = userData.permissions || {};
-
-            // لو الموظف "مدير عام" (عنده صلاحيات مطلقة)، متخفيش حاجة واخرج من الدالة
-            if (perms.all_access === true) return;
-
-            // --- إذا لم يكن مديراً، نبدأ في فلترة القائمة الجانبية ---
-
-            // المبيعات (العملاء، عروض الأسعار)
-            if (!perms.sales || !perms.sales.view) {
-                hideSidebarLink('clients.html');
-                hideSidebarLink('quotations.html');
-            }
-
-            // الإنتاج (أوامر التشغيل، الموردين)
-            if (!perms.production || !perms.production.view) {
-                hideSidebarLink('production_orders.html');
-                hideSidebarLink('suppliers.html');
-            }
-
-            // المستودعات (المستودعات، الأصناف)
-            if (!perms.inventory || !perms.inventory.view) {
-                hideSidebarLink('inventory.html');
-                hideSidebarLink('products.html');
-            }
-
-            // الإعدادات وإدارة النظام (الموظفين، الصلاحيات، القوائم، الشروط)
-            if (!perms.settings) {
-                hideSidebarLink('employees.html');
-                hideSidebarLink('permissions.html');
-                hideSidebarLink('lists.html');
-                hideSidebarLink('terms.html');
-            }
+            document.getElementById('btnNewProd').className = isNew ? 'flex-1 py-1.5 rounded-md bg-white shadow text-sm font-bold text-purple-800 transition' : 'flex-1 py-1.5 rounded-md text-sm text-gray-500 font-bold transition';
+            document.getElementById('btnExistProd').className = !isNew ? 'flex-1 py-1.5 rounded-md bg-white shadow text-sm font-bold text-purple-800 transition' : 'flex-1 py-1.5 rounded-md text-sm text-gray-500 font-bold transition';
         }
 
-        // دالة مساعدة لإخفاء الرابط من القائمة الجانبية
-        function hideSidebarLink(href) {
-            const link = document.querySelector(`a[href="${href}"]`);
-            if (link) {
-                link.style.display = 'none';
-            }
+        async function saveMiniProduct() {
+            const size = document.getElementById('mpSize').value.trim();
+            const price = parseFloat(document.getElementById('mpPrice').value) || 0;
+            const unit = document.getElementById('mpUnit').value.trim();
+            if (!size) return alert('الرجاء إدخال المقاس.');
+            
+            try {
+                let productId = null;
+                if (productMode === 'new') {
+                    const name = document.getElementById('mpName').value.trim();
+                    if (!name) return alert('الرجاء إدخال اسم الصنف الجديد.');
+                    const { data: newProduct, error: prodError } = await supabaseClient.from('products').insert([{ name, unit }]).select().single();
+                    if (prodError) throw prodError;
+                    productId = newProduct.id;
+                } else {
+                    productId = document.getElementById('mpExistSelect').value;
+                    if (!productId) return alert('الرجاء اختيار الصنف الموجود.');
+                }
+                const { error: varError } = await supabaseClient.from('product_variants').insert([{ product_id: productId, size_name: size, selling_price: price, unit: unit || null }]);
+                if (varError) throw varError;
+                
+                alert('تم إضافة الصنف/المقاس بنجاح!');
+                toggleModal('miniProductModal');
+                await loadProducts();
+                document.getElementById('mpName').value = ''; document.getElementById('mpSize').value = ''; document.getElementById('mpPrice').value = ''; document.getElementById('mpUnit').value = '';
+            } catch (e) { console.error(e); alert('خطأ أثناء الحفظ.'); }
         }
-        
-        // دالة تسجيل الخروج (مربوطة بزر تسجيل الخروج في القائمة)
-        function logout() {
-            localStorage.removeItem('gpack_user');
-            window.location.replace('login.html');
+
+        async function saveMiniClient() {
+            const name = document.getElementById('mcName').value.trim();
+            if (!name) return alert('الرجاء إدخال اسم المنشأة.');
+            const person = document.getElementById('mcPerson').value.trim();
+            const phone = document.getElementById('mcPhone').value.trim();
+            try {
+                const { data: newClient, error } = await supabaseClient.from('clients').insert([{ name, contact_person: person, phone }]).select().single();
+                if (error) throw error;
+                const select = document.getElementById('qClient');
+                const opt = document.createElement('option');
+                opt.value = newClient.id; opt.text = newClient.name; opt.dataset.json = JSON.stringify(newClient);
+                select.add(opt); select.value = newClient.id;
+                
+                alert('تم تسجيل العميل بنجاح!');
+                toggleModal('miniClientModal');
+                document.getElementById('mcName').value = ''; document.getElementById('mcPerson').value = ''; document.getElementById('mcPhone').value = '';
+            } catch (e) { console.error(e); alert('خطأ في حفظ بيانات العميل.'); }
         }
     </script>
 </body>
