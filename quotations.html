@@ -501,7 +501,6 @@
         });
 
         function initSystemUI() {
-            // Highlighting the active link correctly for Netlify
             let pageName = window.location.pathname.split("/").pop();
             if (pageName === '' || pageName === '/') pageName = 'index.html';
             if (!pageName.includes('.html')) pageName += '.html';
@@ -524,13 +523,11 @@
             const perms = loggedUser.permissions || {};
             if (perms.all_access === true) { loadCoreData(); return; }
 
-            // Hide unauthorized pages
             if (!perms.sales || !perms.sales.view) { hideSidebarLink('clients.html'); hideSidebarLink('quotations.html'); }
             if (!perms.production || !perms.production.view) { hideSidebarLink('production_orders.html'); hideSidebarLink('suppliers.html'); }
             if (!perms.inventory || !perms.inventory.view) { hideSidebarLink('inventory.html'); hideSidebarLink('products.html'); }
             if (!perms.settings) { hideSidebarLink('employees.html'); hideSidebarLink('permissions.html'); hideSidebarLink('lists.html'); hideSidebarLink('terms.html'); }
             
-            // Check specific module creation permission before loading
             if(perms.sales && perms.sales.view) { loadCoreData(); } 
             else { document.getElementById('mainContainer').innerHTML = '<div class="p-8 text-center text-red-500 font-bold text-xl">غير مصرح لك برؤية هذا القسم</div>'; }
             if(perms.sales && !perms.sales.create) { document.getElementById('createBtn').remove(); }
@@ -604,11 +601,11 @@
             try {
                 const statusFilter = isArchiveView ? ORDER_STATUS.ARCHIVED : ORDER_STATUS.QUOTE;
                 
-                // RLS Logic: If personal_only, fetch only quotes made by this user
+                // RLS Logic: Data Scope Filtering
                 let query = supabaseClient.from('orders').select('*, clients(name)').eq('status', statusFilter).order('created_at', { ascending: false });
                 
                 if(loggedUser.permissions && !loggedUser.permissions.all_access && loggedUser.permissions.data_scope === 'personal_only') {
-                    query = query.eq('created_by', loggedUser.id); // Assuming we added created_by to orders
+                    query = query.eq('created_by', loggedUser.id);
                 }
 
                 const { data: orders, error } = await query;
@@ -621,7 +618,6 @@
                         const statusLabel = STATUS_AR[o.status] || o.status || '-';
                         const statusColor = STATUS_COLOR[o.status] || 'bg-gray-100 text-gray-600';
                         
-                        // Check deletion permission
                         const canDelete = loggedUser.permissions?.all_access || loggedUser.permissions?.sales?.delete;
                         const delBtn = canDelete ? `<button onclick="deleteQuotePermanent('${o.id}')" class="text-red-500 hover:bg-red-100 p-2 rounded transition" title="حذف نهائي"><i class="fas fa-trash"></i></button>` : '';
 
@@ -798,7 +794,7 @@
             }
         }
 
-        // --- 4. Terms Snapshotting Logic (التعديل الجوهري) ---
+        // --- 4. Terms Snapshotting Logic ---
         function renderTermsList() {
             const list = document.getElementById('termsList');
             list.innerHTML = '';
@@ -812,7 +808,7 @@
             });
         }
 
-        // دالة مخصصة لطباعة الشروط المجمدة قديماً
+        // دالة طباعة الشروط المجمدة (استعادة)
         function renderSnapshottedTerms(savedTermsArray) {
             const list = document.getElementById('termsList');
             list.innerHTML = '';
@@ -853,7 +849,7 @@
 
             if (!items.length) return alert("الرجاء إضافة صنف واحد على الأقل للعرض.");
 
-            // تجميع نص الشروط المحددة لتجميدها (Snapshotted)
+            // تجميع نص الشروط المحددة لتجميدها (Snapshotting restored)
             const checkedTerms = [];
             document.querySelectorAll('.term-checkbox:checked').forEach(cb => {
                 const termText = cb.nextElementSibling.innerText;
@@ -864,7 +860,7 @@
                 notes: document.getElementById('customTerms').value,
                 downPayment: document.getElementById('qDownPayment').value,
                 showDownPayment: document.getElementById('qShowDownPayment').checked,
-                savedTerms: checkedTerms // هنا بيتم حفظ نص الشروط لحمايته من التغيير مستقبلاً
+                savedTerms: checkedTerms // حفظ الشروط مجمدة
             };
 
             const data = {
@@ -873,7 +869,7 @@
                 total_amount: sub,
                 grand_total: parseFloat((sub * 1.15).toFixed(2)),
                 snapshotted_terms: JSON.stringify(metaConfig),
-                created_by: loggedUser.id // تسجيل مين عمل العرض
+                created_by: loggedUser.id // تسجيل الموظف المنشئ
             };
 
             const btn = document.getElementById('saveBtn');
@@ -929,21 +925,19 @@
                 document.getElementById('qDate').value = order.created_at.split('T')[0];
                 document.getElementById('pRef').innerText = '#' + order.order_number;
                 
-                // Parse Meta Config (With Backward compatibility)
+                // Parse Meta Config & Render Snapshotted Terms
                 try {
                     const meta = JSON.parse(order.snapshotted_terms || '{}');
                     document.getElementById('customTerms').value = meta.notes || '';
                     document.getElementById('qDownPayment').value = meta.downPayment || '';
                     document.getElementById('qShowDownPayment').checked = meta.showDownPayment !== false; 
                     
-                    // إذا كان العرض قديم ومحفوظ فيه شروط مجمدة، اعرضها هي.. غير كده اعرض الشروط الحالية من الداتا بيز
                     if (meta.savedTerms && meta.savedTerms.length > 0) {
-                        renderSnapshottedTerms(meta.savedTerms);
+                        renderSnapshottedTerms(meta.savedTerms); // عرض الشروط القديمة
                     } else {
                         renderTermsList();
                     }
                 } catch(e) {
-                    // Old string format fallback
                     document.getElementById('customTerms').value = order.snapshotted_terms || '';
                     document.getElementById('qDownPayment').value = '';
                     document.getElementById('qShowDownPayment').checked = true;
@@ -970,7 +964,7 @@
             }
         }
 
-        // --- 6. Convert to Production (التعديل الجوهري للتعميد) ---
+        // --- 6. Convert to Production (التحويل وتسجيل المعاملات المالية) ---
         async function openConvertModal(orderId, clientId) {
             document.getElementById('convQuoteId').value = orderId;
             document.getElementById('convClientId').value = clientId;
@@ -1029,7 +1023,7 @@
                 const itemId = checkbox.dataset.itemId;
                 const qtyInput = document.querySelector(`.conv-qty[data-item-id="${itemId}"]`);
                 const qty = qtyInput ? Number(qtyInput.value) : 0;
-                if (qty > 0) checkedItems.push(itemId); // We only verify they selected something
+                if (qty > 0) checkedItems.push(itemId); 
             });
             
             if (!checkedItems.length) return alert('الرجاء اختيار صنف واحد على الأقل للتشغيل.');
@@ -1039,12 +1033,7 @@
             btn.disabled = true;
 
             try {
-                // 1. تحديث حالة العرض إلى أمر إنتاج، وإضافة الدفعة إن وجدت
-                const orderUpdateData = { 
-                    status: ORDER_STATUS.PRODUCTION 
-                };
-                
-                // لو دخل مبلغ دفعة، هنحدثه في الطلب عشان يسمّع في الفواتير
+                const orderUpdateData = { status: ORDER_STATUS.PRODUCTION };
                 if (payAmount > 0) {
                     orderUpdateData.paid_amount = payAmount;
                     orderUpdateData.payment_method = payMethod;
@@ -1053,7 +1042,7 @@
                 const { error: orderErr } = await supabaseClient.from('orders').update(orderUpdateData).eq('id', orderId);
                 if (orderErr) throw orderErr;
 
-                // 2. تسجيل عملية الدفع في كشف الحساب (لو في مبلغ مدفعوع)
+                // تسجيل المعاملات (ميزة الكود الثاني)
                 if (payAmount > 0) {
                     const docNum = `REC-${Date.now().toString().slice(-6)}`;
                     const methodNames = { 'bank_transfer': 'تحويل بنكي', 'cash': 'كاش', 'pos': 'شبكة', 'check': 'شيك' };
@@ -1066,7 +1055,7 @@
                         document_number: docNum,
                         description: `دفعة مقدمة - تعميد أمر التشغيل [ORDER_ID:${orderId}] | طريقة الدفع: ${methodNames[payMethod] || payMethod}`
                     }]);
-                    if (txErr) console.error("لم يتم تسجيل الدفعة في كشف الحساب:", txErr);
+                    if (txErr) console.error("لم يتم تسجيل الدفعة:", txErr);
                 }
 
                 alert('تم تعميد الطلب وتحويله لأوامر التشغيل بنجاح! 🚀');
