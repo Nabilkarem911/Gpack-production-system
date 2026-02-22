@@ -6,12 +6,8 @@
     <title>G.PACK - أوامر التشغيل والإنتاج</title>
 
     <script>
-        // التحقق من وجود بيانات تسجيل الدخول في المتصفح
         const loggedInUser = localStorage.getItem('gpack_user');
-        
-        // لو مفيش بيانات (يعني مش مسجل دخول)
         if (!loggedInUser) {
-            // اطرده فوراً لصفحة تسجيل الدخول قبل ما الصفحة تحمل
             window.location.replace('login.html');
         }
     </script>
@@ -29,14 +25,14 @@
         .gpack-btn:hover { background-color: #e6bd45; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
         .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
-        
+
         .modal { transition: opacity 0.2s ease-in-out; }
         body.modal-active { overflow: hidden; }
         .tab-btn { border-bottom: 3px solid transparent; color: #6b7280; font-weight: 500; cursor: pointer; padding: 10px 15px; white-space: nowrap; }
         .tab-btn.active { border-bottom-color: #3e206d; color: #3e206d; font-weight: bold; background-color: #f9fafb; }
         .input-std { width: 100%; border: 1px solid #d1d5db; padding: 8px; border-radius: 6px; font-size: 0.875rem; outline: none; }
         .input-std:focus { border-color: #3e206d; box-shadow: 0 0 0 1px #3e206d; }
-        
+
         .serial-num { direction: ltr; unicode-bidi: embed; display: inline-block; text-align: left; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -53,10 +49,10 @@
             body * { visibility: hidden; }
             .printing-po #printablePO, .printing-po #printablePO * { visibility: visible; }
             .printing-inv #printableClientInvoice, .printing-inv #printableClientInvoice * { visibility: visible; }
-            
-            #printablePO, #printableClientInvoice { 
-                position: absolute; left: 0; top: 0; width: 100%; min-height: 100%; 
-                background: white; z-index: 99999; padding: 0; display: block !important; 
+
+            #printablePO, #printableClientInvoice {
+                position: absolute; left: 0; top: 0; width: 100%; min-height: 100%;
+                background: white; z-index: 99999; padding: 0; display: block !important;
             }
             .no-print { display: none !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -74,6 +70,7 @@
 
     <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
 
+    <!-- ✅ المهمة الأولى: توحيد id="sidebar" -->
     <aside id="sidebar" class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-30 fixed md:relative h-full sidebar-mobile-hidden md:transform-none shrink-0">
         <div class="h-20 flex items-center justify-between px-6 border-b border-purple-800/50">
             <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2">
@@ -81,12 +78,12 @@
             </h1>
             <button onclick="toggleSidebar()" class="md:hidden text-white hover:text-red-300"><i class="fas fa-times"></i></button>
         </div>
-        
+
         <div class="p-4 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20 whitespace-nowrap overflow-hidden">
             <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400 shrink-0">
                 <i class="fas fa-user text-yellow-400"></i>
             </div>
-<div>
+            <div>
                 <p class="text-sm font-bold" id="sidebarUserName">المدير العام</p>
                 <p class="text-xs text-gray-300" id="sidebarUserRole">Admin</p>
             </div>
@@ -96,21 +93,22 @@
             <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-th-large w-5"></i> الرئيسية</a>
             <a href="products.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-box w-5"></i> الأصناف</a>
             <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-file-invoice-dollar w-5"></i> عروض الأسعار</a>
-            <a href="production_orders.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-industry w-5"></i> أوامر التشغيل</a>
+            <a href="production_orders.html" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-white font-medium whitespace-nowrap"><i class="fas fa-industry w-5"></i> أوامر التشغيل</a>
             <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-cubes w-5"></i> المستودعات</a>
             <a href="suppliers.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-truck w-5"></i> الموردين</a>
             <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-users w-5"></i> العملاء</a>
             <a href="employees.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-id-card w-5"></i> الموظفين</a>
             <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-list-alt w-5"></i> القوائم</a>
-            <a href="permissions.html" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-white font-medium whitespace-nowrap"><i class="fas fa-user-shield w-5"></i> الصلاحيات</a>
+            <a href="permissions.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-user-shield w-5"></i> الصلاحيات</a>
             <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-tasks w-5"></i> المهام</a>
+            <!-- ✅ المهمة الأولى: حذف التكرار النصي خارج وسم الـ <a> -->
             <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-file-signature w-5"></i> الشروط العامة</a>
         </nav>
-        
+
         <div class="p-4 border-t border-purple-800/50">
-<button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2 whitespace-nowrap">
-    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-</button>
+            <button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2 whitespace-nowrap">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
         </div>
     </aside>
 
@@ -123,7 +121,7 @@
                 <h2 class="text-lg md:text-xl font-bold text-gray-800 whitespace-nowrap">أوامر التشغيل والإنتاج</h2>
                 <div id="loadingIndicator" class="hidden flex items-center gap-2 text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full"><i class="fas fa-sync fa-spin"></i></div>
             </div>
-            
+
             <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar flex-1 justify-end pl-2">
                 <button onclick="openSmartPOModal()" class="gpack-btn px-4 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2 border border-yellow-500">
                     <i class="fas fa-magic"></i><span>أمر إنتاج مورد (تجميعي)</span>
@@ -140,7 +138,7 @@
             </div>
 
             <div class="bg-white rounded-b-2xl shadow-sm border border-gray-100 p-4 md:p-6 min-h-[500px]">
-                
+
                 <div id="tab-pending_orders" class="tab-content block">
                     <div class="overflow-x-auto">
                         <table class="w-full text-right text-sm min-w-[800px]">
@@ -228,6 +226,7 @@
         </div>
     </main>
 
+    <!-- Modal: Single Order PO -->
     <div id="singleOrderPOModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-60" onclick="closeModal('singleOrderPOModal')"></div>
         <div class="modal-container bg-white w-full max-w-7xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[95vh]">
@@ -250,7 +249,8 @@
                                 <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAllSinglePoItems" onchange="toggleAllSinglePoItems(this)"></th>
                                 <th class="p-3">الصنف / المقاس</th>
                                 <th class="p-3 text-center">الكمية</th>
-                                <th class="p-3 text-center bg-blue-50 text-blue-800">آخر سعر</th>
+                                <!-- ✅ المهمة الثانية: عمود السعر مع class للإخفاء -->
+                                <th class="p-3 text-center bg-blue-50 text-blue-800 cost-col">آخر سعر</th>
                                 <th class="p-3 w-48 text-orange-800 font-bold bg-orange-50">اختيار المورد (إلزامي)</th>
                                 <th class="p-3 w-32">الحالة التصنيعية</th>
                                 <th class="p-3">ملاحظات للمطبعة</th>
@@ -270,6 +270,7 @@
         </div>
     </div>
 
+    <!-- Modal: Smart PO -->
     <div id="smartPOModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-60" onclick="closeModal('smartPOModal')"></div>
         <div class="modal-container bg-white w-full max-w-6xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[95vh]">
@@ -304,7 +305,8 @@
                                 <th class="p-3">رقم الأمر (العميل)</th>
                                 <th class="p-3">الصنف / المقاس</th>
                                 <th class="p-3 text-center">الكمية</th>
-                                <th class="p-3 text-center text-blue-700 bg-blue-50">آخر سعر</th>
+                                <!-- ✅ المهمة الثانية: عمود السعر مع class للإخفاء -->
+                                <th class="p-3 text-center text-blue-700 bg-blue-50 cost-col">آخر سعر</th>
                                 <th class="p-3 w-40">الحالة التصنيعية (إلزامي)</th>
                                 <th class="p-3">ملاحظات للمطبعة</th>
                             </tr>
@@ -323,6 +325,7 @@
         </div>
     </div>
 
+    <!-- Modal: PO Details -->
     <div id="poDetailsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[80]">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-60" onclick="closeModal('poDetailsModal')"></div>
         <div class="modal-container bg-white w-full max-w-4xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[90vh]">
@@ -350,6 +353,7 @@
         </div>
     </div>
 
+    <!-- Modal: Receive PO -->
     <div id="receivePOModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[80]">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-80" onclick="closeModal('receivePOModal')"></div>
         <div class="modal-container bg-white w-full max-w-4xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[90vh]">
@@ -363,14 +367,15 @@
                 <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-4 text-sm text-yellow-800">
                     <strong>ملاحظة هامة:</strong> يمكنك إدخال جزء من الكمية (استلام جزئي) أو استلام كامل الكمية. سيتم ترحيل ما تدخله فقط للمخزن مع إنشاء مديونية للمورد تلقائياً.
                 </div>
+                <!-- ✅ المهمة الثالثة: عمود سعر التوريد مُجبر على الإدخال -->
                 <table class="w-full text-right text-sm border">
-<thead class="bg-gray-50">
+                    <thead class="bg-gray-50">
                         <tr>
                             <th class="p-2 border">العميل</th>
                             <th class="p-2 border">الصنف</th>
                             <th class="p-2 border text-center">المطلوب الأساسي</th>
                             <th class="p-2 border text-center bg-green-50 text-green-800 w-32">المستلم فعلياً (الآن)</th>
-                            <th class="p-2 border text-center bg-blue-50 text-blue-800 w-32">سعر التوريد للوحدة</th>
+                            <th class="p-2 border text-center bg-red-50 text-red-800 w-36 cost-col">سعر التوريد الفعلي (إلزامي)</th>
                         </tr>
                     </thead>
                     <tbody id="receivePOItemsBody"></tbody>
@@ -387,10 +392,11 @@
         </div>
     </div>
 
+    <!-- Modal: Order Manager -->
     <div id="orderManagerModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-80" onclick="closeModal('orderManagerModal')"></div>
         <div class="modal-container bg-white w-full h-full md:w-11/12 md:h-[95vh] mx-auto rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col transform transition-all scale-95">
-            
+
             <div class="bg-purple-900 text-white p-4 flex justify-between items-center shrink-0">
                 <div>
                     <h2 class="text-xl font-bold">إدارة أمر تشغيل <span id="mgrOrderNum" class="text-yellow-400 serial-num">#000</span></h2>
@@ -408,7 +414,7 @@
                     <button onclick="switchMgrTab('invoices')" id="mgr-tab-invoices" class="tab-btn"><i class="fas fa-file-invoice-dollar"></i> الفواتير والحسابات</button>
                     <button onclick="switchMgrTab('deliveries')" id="mgr-tab-deliveries" class="tab-btn"><i class="fas fa-truck-loading"></i> سندات التسليم</button>
                 </div>
-                
+
                 <div class="p-6 overflow-y-auto flex-1 relative">
                     <div id="mgr-content-items" class="block">
                         <div class="bg-white rounded-lg shadow-sm border p-4">
@@ -418,13 +424,13 @@
                             </div>
                             <div id="mgrItemsLoading" class="text-center py-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>
                             <table class="w-full text-right text-sm hidden" id="mgrItemsTable">
-                                <thead class="bg-gray-50"><tr><th class="p-2">الصنف (المقاس)</th><th class="p-2 text-center">الكمية المطلوبة</th><th class="p-2 text-center">سعر الوحدة</th><th class="p-2 text-center">الإجمالي</th></tr></thead>
+                                <thead class="bg-gray-50"><tr><th class="p-2">الصنف (المقاس)</th><th class="p-2 text-center">الكمية المطلوبة</th><th class="p-2 text-center cost-col">سعر الوحدة</th><th class="p-2 text-center cost-col">الإجمالي</th></tr></thead>
                                 <tbody id="mgrItemsBody" class="divide-y"></tbody>
                             </table>
                         </div>
                     </div>
 
-<div id="mgr-content-invoices" class="hidden">
+                    <div id="mgr-content-invoices" class="hidden">
                         <div class="flex flex-wrap gap-4 mb-6">
                             <button onclick="openInvoiceModal('proforma')" class="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700"><i class="fas fa-file-alt"></i> إصدار فاتورة أولية (مالية)</button>
                             <button onclick="openInvoiceModal('final')" class="bg-purple-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-purple-700"><i class="fas fa-check-double"></i> إصدار فاتورة مبيعات (خصم من المخزون)</button>
@@ -433,11 +439,11 @@
                         <div class="bg-white rounded-lg shadow-sm border p-4 mb-4">
                             <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">سجل الفواتير الصادرة</h4>
                             <table class="w-full text-right text-sm">
-                                <thead class="bg-gray-50"><tr><th class="p-2">التاريخ</th><th class="p-2">رقم الفاتورة</th><th class="p-2">النوع</th><th class="p-2">الإجمالي</th><th class="p-2 text-center">إجراء</th></tr></thead>
+                                <thead class="bg-gray-50"><tr><th class="p-2">التاريخ</th><th class="p-2">رقم الفاتورة</th><th class="p-2">النوع</th><th class="p-2 cost-col">الإجمالي</th><th class="p-2 text-center">إجراء</th></tr></thead>
                                 <tbody id="mgrInvoicesBody" class="divide-y"></tbody>
                             </table>
                         </div>
-                        
+
                         <div class="bg-white rounded-lg shadow-sm border p-4">
                             <h4 class="font-bold text-green-700 mb-3 border-b pb-2"><i class="fas fa-money-check-alt"></i> سجل الدفعات المستلمة لهذا الأمر</h4>
                             <table class="w-full text-right text-sm">
@@ -446,11 +452,24 @@
                                         <th class="p-2">التاريخ</th>
                                         <th class="p-2">رقم السند</th>
                                         <th class="p-2">طريقة الدفع</th>
-                                        <th class="p-2">المبلغ</th>
+                                        <th class="p-2 cost-col">المبلغ</th>
                                         <th class="p-2">ملاحظات</th>
                                     </tr>
                                 </thead>
                                 <tbody id="mgrPaymentsBody" class="divide-y"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="mgr-content-deliveries" class="hidden">
+                        <div class="flex justify-end mb-4">
+                            <button onclick="openDeliveryModal()" class="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700"><i class="fas fa-shipping-fast"></i> إصدار سند تسليم</button>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm border p-4">
+                            <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">سجل التسليمات</h4>
+                            <table class="w-full text-right text-sm">
+                                <thead class="bg-gray-50"><tr><th class="p-2">التاريخ</th><th class="p-2 text-center">الكمية</th><th class="p-2">الصنف</th></tr></thead>
+                                <tbody id="mgrDeliveriesBody" class="divide-y"></tbody>
                             </table>
                         </div>
                     </div>
@@ -459,7 +478,8 @@
         </div>
     </div>
 
-<div id="paymentModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[90]">
+    <!-- Modal: Payment -->
+    <div id="paymentModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[90]">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-80" onclick="closeModal('paymentModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col">
             <div class="bg-green-700 text-white p-4 flex justify-between items-center rounded-t-xl shrink-0">
@@ -492,6 +512,7 @@
         </div>
     </div>
 
+    <!-- Modal: Invoice -->
     <div id="invoiceModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[80]">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-80" onclick="closeModal('invoiceModal')"></div>
         <div class="modal-container bg-white w-full max-w-4xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[90vh]">
@@ -507,15 +528,15 @@
                         <tr>
                             <th class="p-2 border">الصنف</th>
                             <th class="p-2 border text-center w-24">الكمية</th>
-                            <th class="p-2 border text-center w-32">السعر</th>
-                            <th class="p-2 border text-center w-32">الإجمالي</th>
+                            <th class="p-2 border text-center w-32 cost-col">السعر</th>
+                            <th class="p-2 border text-center w-32 cost-col">الإجمالي</th>
                         </tr>
                     </thead>
                     <tbody id="invoiceItemsBody"></tbody>
                 </table>
-                
+
                 <div class="flex justify-end">
-                    <div class="w-64 bg-gray-50 p-3 rounded border">
+                    <div class="w-64 bg-gray-50 p-3 rounded border cost-col">
                         <div class="flex justify-between text-sm mb-1"><span>الإجمالي:</span> <span id="invoiceTotalVal" class="font-bold">0.00</span></div>
                         <div class="flex justify-between text-sm mb-1 text-green-700"><span>الدفعة المقدمة (من العرض):</span> <span id="invoiceAdvanceVal" class="font-bold">0.00</span></div>
                         <input type="hidden" id="invAdvancePayment" value="0">
@@ -531,6 +552,7 @@
         </div>
     </div>
 
+    <!-- Modal: Delivery -->
     <div id="deliveryModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[80]">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-80" onclick="closeModal('deliveryModal')"></div>
         <div class="modal-container bg-white w-full max-w-4xl mx-4 rounded-xl shadow-2xl z-50 p-0 transform transition-all scale-95 flex flex-col max-h-[90vh]">
@@ -558,7 +580,8 @@
         </div>
     </div>
 
-<div id="printablePO" class="hidden">
+    <!-- Printable PO -->
+    <div id="printablePO" class="hidden">
         <div class="print-header flex justify-between items-center" id="poPrintContainer">
             <div class="text-right">
                 <h1 class="text-3xl font-bold mb-1">أمر إنتاج / طلب طباعة</h1>
@@ -569,7 +592,7 @@
                 </div>
             </div>
             <div class="text-center">
-                 <img src="https://i.postimg.cc/GHsRS3C1/logo.png" alt="G.PACK Logo" class="h-24 mb-2 mx-auto">
+                <img src="https://i.postimg.cc/GHsRS3C1/logo.png" alt="G.PACK Logo" class="h-24 mb-2 mx-auto">
             </div>
         </div>
         <div class="p-8">
@@ -585,7 +608,8 @@
         </div>
     </div>
 
-<div id="printableClientInvoice" class="hidden">
+    <!-- Printable Client Invoice -->
+    <div id="printableClientInvoice" class="hidden">
         <div class="print-header flex justify-between items-center">
             <div class="text-right">
                 <h1 class="text-3xl font-bold mb-1" id="printInvTitle">فاتورة</h1>
@@ -596,8 +620,8 @@
                 </div>
             </div>
             <div class="text-center">
-                 <img src="https://i.postimg.cc/GHsRS3C1/logo.png" alt="G.PACK Logo" class="h-24 mb-2 mx-auto">
-                 <p class="text-xs text-gray-300 mt-2 font-mono">CR: 4700121038 | VAT: 310033995300003</p>
+                <img src="https://i.postimg.cc/GHsRS3C1/logo.png" alt="G.PACK Logo" class="h-24 mb-2 mx-auto">
+                <p class="text-xs text-gray-300 mt-2 font-mono">CR: 4700121038 | VAT: 310033995300003</p>
             </div>
         </div>
         <div class="p-8">
@@ -630,25 +654,31 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwb21nbnFwbWJkenZtbWphY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjk3NDUsImV4cCI6MjA4Njc0NTc0NX0.99dmOGTc0AmsBGGYV0eM3kKSpbYdb6f-0X2mYLnGPtA';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let allOrdersList = []; 
+        let allOrdersList = [];
         let pendingOrdersList = [];
         let activeOrdersList = [];
-        let availablePOItems = []; 
+        let availablePOItems = [];
         let singleOrderPOItems = [];
-        let currentInvoicesList = []; 
-        
+        let currentInvoicesList = [];
+        let invoiceItemsTemp = [];
+
         let cachedClients = [];
         let cachedProducts = [];
         let cachedVariants = [];
         let suppliersList = [];
 
+        // ✅ المهمة الثانية: متغير عالمي لصلاحية رؤية التكاليف
+        let canViewCosts = true;
+
         window.onload = async () => {
             try {
                 document.getElementById('loadingIndicator').classList.remove('hidden');
+                // تهيئة واجهة النظام أولاً (تحدد صلاحيات canViewCosts)
+                initSystemUI();
                 await fetchBaseCache();
                 await fetchSuppliers();
                 await fetchClientOrders();
-                switchTab('pending_orders'); 
+                switchTab('pending_orders');
             } catch (error) {
                 console.error("Critical Load Error:", error);
             } finally {
@@ -716,14 +746,14 @@
             const btn = document.getElementById(`tab-${tabName}-btn`);
             if(content) content.classList.remove('hidden');
             if(btn) btn.classList.add('active');
-            
+
             if(tabName === 'supplier_pos') fetchSupplierPOs();
             if(tabName === 'archive') fetchArchivedOrders();
             if(tabName === 'client_orders') filterClientOrders();
             if(tabName === 'pending_orders') renderPendingOrdersTable();
         }
 
-        function openModal(id) { 
+        function openModal(id) {
             const el = document.getElementById(id);
             el.classList.remove('opacity-0', 'pointer-events-none');
             el.querySelector('.modal-container').classList.add('scale-100');
@@ -737,13 +767,21 @@
         }
 
         // --- Core Fetching & Separation (Pending vs Active) ---
-        async function fetchClientOrders() {
+async function fetchClientOrders() {
             document.getElementById('loadingIndicator').classList.remove('hidden');
             try {
-                const { data: orders, error } = await supabaseClient.from('orders')
+                // ✅ بناء الاستعلام الأساسي
+                let query = supabaseClient.from('orders')
                     .select('*')
                     .eq('status', 'production')
                     .order('created_at', {ascending: false});
+
+                // 🚨 إصلاح الثغرة: فلترة الطلبات حسب صلاحية الموظف (شغله فقط)
+                if(loggedUser.permissions && !loggedUser.permissions.all_access && loggedUser.permissions.data_scope === 'personal_only') {
+                    query = query.eq('created_by', loggedUser.id);
+                }
+
+                const { data: orders, error } = await query;
                 
                 if(error) throw error;
                 allOrdersList = orders || [];
@@ -787,12 +825,11 @@
                 document.getElementById('loadingIndicator').classList.add('hidden');
             }
         }
-
         // --- Pending Orders Tab ---
         function renderPendingOrdersTable() {
             const tbody = document.getElementById('pendingOrdersTable');
             tbody.innerHTML = '';
-            
+
             if(pendingOrdersList.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-400">لا توجد طلبات معلقة بانتظار الإنتاج.</td></tr>';
                 return;
@@ -813,7 +850,8 @@
             });
         }
 
-async function openSingleOrderPOModal(orderId) {
+        // ✅ المهمة الثانية: تطبيق صلاحية التكلفة على openSingleOrderPOModal
+        async function openSingleOrderPOModal(orderId) {
             document.getElementById('singlePoExpectedDate').value = '';
             const selectAllCheck = document.getElementById('selectAllSinglePoItems');
             if(selectAllCheck) selectAllCheck.checked = false;
@@ -821,6 +859,9 @@ async function openSingleOrderPOModal(orderId) {
             const tbody = document.getElementById('singlePoAvailableItemsBody');
             tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب الأصناف...</td></tr>';
             openModal('singleOrderPOModal');
+
+            // إخفاء عمود السعر إذا لم تكن الصلاحية متاحة
+            applyCostVisibility('#singleOrderPOModal');
 
             try {
                 const { data: items } = await supabaseClient.from('order_items').select('*').eq('order_id', orderId);
@@ -832,12 +873,12 @@ async function openSingleOrderPOModal(orderId) {
                 const itemIds = items.map(i => i.id);
                 const { data: poItemsData } = await supabaseClient.from('supplier_po_items').select('order_item_id').in('order_item_id', itemIds);
                 const orderedItemIds = poItemsData ? poItemsData.map(i => i.order_item_id) : [];
-                
+
                 singleOrderPOItems = items.filter(item => !orderedItemIds.includes(item.id));
-                
+
                 if(singleOrderPOItems.length === 0) {
-                     tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-green-600 font-bold">تم إرسال جميع أصناف هذا الطلب للموردين.</td></tr>';
-                     return;
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-green-600 font-bold">تم إرسال جميع أصناف هذا الطلب للموردين.</td></tr>';
+                    return;
                 }
 
                 const orderData = allOrdersList.find(o => String(o.id) === String(orderId));
@@ -851,16 +892,19 @@ async function openSingleOrderPOModal(orderId) {
                     const varDetails = getVariantDetails(item.variant_id);
                     item._cachedName = varDetails.name;
                     item._cachedClient = clientName;
-                    item._cachedCostPrice = varDetails.price; // <-- حفظ سعر التكلفة (التوريد) هنا وليس سعر البيع
-                    
-                    const priceBadge = varDetails.price > 0 ? `<span class="font-mono text-blue-700 font-bold">${varDetails.price}</span>` : '<span class="text-xs text-red-500 font-bold bg-red-50 px-2 py-1 rounded">أول توريد</span>';
+                    item._cachedCostPrice = varDetails.price;
+
+                    // ✅ المهمة الثانية: إخفاء السعر إذا لم تكن الصلاحية متاحة
+                    const priceCellContent = canViewCosts
+                        ? (varDetails.price > 0 ? `<span class="font-mono text-blue-700 font-bold">${varDetails.price}</span>` : '<span class="text-xs text-red-500 font-bold bg-red-50 px-2 py-1 rounded">أول توريد</span>')
+                        : '<span class="text-gray-400 text-xs">***</span>';
 
                     tbody.innerHTML += `
                         <tr class="border-b hover:bg-orange-50/30 transition">
                             <td class="p-3 text-center"><input type="checkbox" class="single-po-item-checkbox w-4 h-4 text-orange-600 rounded" value="${idx}"></td>
                             <td class="p-3 font-bold">${varDetails.name}</td>
                             <td class="p-3 font-mono font-bold text-lg text-center">${item.quantity}</td>
-                            <td class="p-3 text-center">${priceBadge}</td>
+                            <td class="p-3 text-center cost-col">${priceCellContent}</td>
                             <td class="p-3 bg-orange-50/50">
                                 <select id="singleSupplier_${idx}" class="input-std text-xs font-bold text-orange-900 border-orange-300 focus:border-orange-500">
                                     ${suppliersOptions}
@@ -877,21 +921,24 @@ async function openSingleOrderPOModal(orderId) {
                         </tr>
                     `;
                 });
+
+                // إعادة تطبيق إخفاء الأعمدة بعد رسم الصفوف
+                applyCostVisibility('#singleOrderPOModal');
             } catch (err) {
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-red-500">حدث خطأ أثناء التحميل.</td></tr>';
                 console.error(err);
             }
         }
+
         function toggleAllSinglePoItems(el) { document.querySelectorAll('.single-po-item-checkbox').forEach(cb => cb.checked = el.checked); }
 
-// 1. دالة الحفظ للطلب الفردي (تم إضافة po_quantity)
-async function submitSingleSupplierPO() {
+        async function submitSingleSupplierPO() {
             const expectedDate = document.getElementById('singlePoExpectedDate').value;
             const checkboxes = document.querySelectorAll('.single-po-item-checkbox:checked');
-            
+
             if(checkboxes.length === 0) return alert('يرجى تحديد صنف واحد على الأقل وإرساله.');
 
-            let payloadBySupplier = {}; 
+            let payloadBySupplier = {};
             let validationFailed = false;
 
             checkboxes.forEach(cb => {
@@ -900,7 +947,7 @@ async function submitSingleSupplierPO() {
                 const supplierId = document.getElementById(`singleSupplier_${idx}`).value;
                 const designStatus = document.getElementById(`singleDesignStatus_${idx}`).value;
                 const notes = document.getElementById(`singlePoNotes_${idx}`).value;
-                
+
                 if(!supplierId || !designStatus) validationFailed = true;
 
                 if(supplierId && designStatus) {
@@ -910,7 +957,7 @@ async function submitSingleSupplierPO() {
                         design_status: designStatus,
                         notes: notes,
                         po_quantity: itemData.quantity,
-                        _meta: { product: itemData._cachedName, client: itemData._cachedClient, qty: itemData.quantity, price: itemData._cachedCostPrice || 0 } // <-- استخدام سعر التكلفة للطباعة
+                        _meta: { product: itemData._cachedName, client: itemData._cachedClient, qty: itemData.quantity, price: itemData._cachedCostPrice || 0 }
                     });
                 }
             });
@@ -928,7 +975,7 @@ async function submitSingleSupplierPO() {
 
                 for (const [supplierId, itemsArr] of Object.entries(payloadBySupplier)) {
                     const poNum = `${String(currentSeq).padStart(4, '0')}-PO-300${year}`;
-                    
+
                     const { data: poData, error: poErr } = await supabaseClient.from('supplier_production_orders').insert([{
                         supplier_id: supplierId, po_number: poNum, expected_delivery_date: expectedDate || null, status: 'pending'
                     }]).select().single();
@@ -938,18 +985,18 @@ async function submitSingleSupplierPO() {
                     const itemsToInsert = itemsArr.map(i => ({
                         supplier_po_id: poData.id, order_item_id: i.order_item_id, design_status: i.design_status, notes: i.notes, po_quantity: i.po_quantity
                     }));
-                    
+
                     const { error: insErr } = await supabaseClient.from('supplier_po_items').insert(itemsToInsert);
                     if(insErr) throw insErr;
-                    
-                    currentSeq++; 
+
+                    currentSeq++;
                 }
 
                 alert('تم التوزيع وإنشاء أوامر الإنتاج بنجاح!');
                 closeModal('singleOrderPOModal');
-                
-                await fetchClientOrders(); 
-                switchTab('client_orders'); 
+
+                await fetchClientOrders();
+                switchTab('client_orders');
 
             } catch (err) {
                 alert("حدث خطأ أثناء الحفظ: " + err.message);
@@ -960,47 +1007,6 @@ async function submitSingleSupplierPO() {
             }
         }
 
-async function reprintSupplierPO(poId) {
-            try {
-                const { data: poData } = await supabaseClient.from('supplier_production_orders').select('*').eq('id', poId).single();
-                const { data: poItems } = await supabaseClient.from('supplier_po_items').select('*').eq('supplier_po_id', poId);
-                if (!poItems || poItems.length === 0) return alert("لا توجد بيانات للطباعة.");
-
-                const orderItemIds = poItems.map(i => i.order_item_id);
-                const { data: orderItems } = await supabaseClient.from('order_items').select('*').in('id', orderItemIds);
-
-                const reconstructedItems = poItems.map(i => {
-                    const oi = (orderItems||[]).find(x => x.id === i.order_item_id);
-                    if(!oi) return null;
-                    
-                    const varDetails = getVariantDetails(oi.variant_id);
-                    const parentOrder = allOrdersList.find(o => o.id === oi.order_id);
-                    const clientName = parentOrder ? getClientName(parentOrder.client_id) : 'عميل نقدي';
-                    
-                    return {
-                        design_status: i.design_status, 
-                        notes: i.notes,
-                        _meta: { 
-                            product: varDetails.name, 
-                            client: clientName, 
-                            qty: oi.quantity || 0, 
-                            // هنا بنسحب سعر المورد (التكلفة) للمقاس
-                            price: varDetails.price || 0 
-                        }
-                    };
-                }).filter(Boolean);
-
-                // === هنا بيتم إظهار رسالة التأكيد للمستخدم ===
-                const wantPrices = confirm("هل تريد إظهار الأسعار (السعر المرجعي) في أمر الطباعة للمورد؟ \n\n- اضغط 'موافق' (OK) لإظهار السعر.\n- اضغط 'إلغاء' (Cancel) لإخفائه تماماً.");
-                
-                // تحديد الحالة بناءً على اختيارك
-                const printToggle = wantPrices ? 'show' : 'hide';
-
-                buildAndPrintPO(poData, reconstructedItems, printToggle, poData.supplier_id);
-            } catch(e) { 
-                alert("خطأ في الطباعة: " + e.message); 
-            }
-        }
         // --- Active Orders Tab ---
         function filterClientOrders() {
             const term = document.getElementById('searchClientOrders').value.toLowerCase();
@@ -1038,7 +1044,7 @@ async function reprintSupplierPO(poId) {
         function renderClientOrdersTable(orders) {
             const tbody = document.getElementById('clientOrdersTable');
             tbody.innerHTML = '';
-            
+
             if(orders.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-400">لا توجد أوامر تشغيل سارية</td></tr>';
                 return;
@@ -1048,7 +1054,12 @@ async function reprintSupplierPO(poId) {
                 const paid = o.paid_amount || 0;
                 const remaining = o.grand_total - paid;
                 const clientName = getClientName(o.client_id);
-                
+
+                // ✅ المهمة الثانية: إخفاء الأرقام المالية إذا لم تكن الصلاحية متاحة
+                const grandTotalDisplay = canViewCosts ? o.grand_total : '***';
+                const paidDisplay = canViewCosts ? paid : '***';
+                const remainingDisplay = canViewCosts ? (remaining > 0 ? remaining : 0) : '***';
+
                 let dynStatus = '<span class="bg-yellow-100 text-yellow-800 px-2 rounded text-xs font-bold">قيد التشغيل</span>';
                 if(remaining <= 0) dynStatus += ' <span class="bg-green-100 text-green-800 px-2 rounded text-xs font-bold">خالص مالياً</span>';
                 else dynStatus += ' <span class="bg-red-100 text-red-800 px-2 rounded text-xs font-bold">متبقي دفعة</span>';
@@ -1058,9 +1069,9 @@ async function reprintSupplierPO(poId) {
                         <td class="p-3 font-bold text-purple-800 serial-num">#${o.order_number}</td>
                         <td class="p-3 text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
                         <td class="p-3 font-bold">${clientName}</td>
-                        <td class="p-3">${o.grand_total}</td>
-                        <td class="p-3 text-green-700 font-bold">${paid}</td>
-                        <td class="p-3 text-red-700 font-bold">${remaining > 0 ? remaining : 0}</td>
+                        <td class="p-3 cost-col">${grandTotalDisplay}</td>
+                        <td class="p-3 text-green-700 font-bold cost-col">${paidDisplay}</td>
+                        <td class="p-3 text-red-700 font-bold cost-col">${remainingDisplay}</td>
                         <td class="p-3 text-center">${dynStatus}</td>
                         <td class="p-3 text-center">
                             <button onclick="manageOrder('${o.id}', '${o.client_id}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-1 rounded-full text-xs font-bold transition border border-blue-200">إدارة الأمر</button>
@@ -1075,7 +1086,7 @@ async function reprintSupplierPO(poId) {
             const { data, error } = await supabaseClient.from('supplier_production_orders').select('*').order('created_at', {ascending: false});
             const tbody = document.getElementById('supplierPOTable');
             tbody.innerHTML = '';
-            
+
             if(!data || data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">لا توجد أوامر موردين</td></tr>';
                 return;
@@ -1086,12 +1097,12 @@ async function reprintSupplierPO(poId) {
                 const suppName = supp ? supp.company_name : 'مورد غير معروف';
                 let statusBadge = '<span class="bg-yellow-100 text-yellow-800 px-2 rounded text-xs font-bold">قيد التصنيع</span>';
                 let receiveBtn = `<button onclick="openReceivePOModal('${po.id}')" class="text-green-600 hover:text-white hover:bg-green-600 font-bold text-xs bg-green-50 px-3 py-1 rounded border border-green-200 transition" title="استلام بضاعة"><i class="fas fa-box-open"></i> استلام</button>`;
-                
+
                 if(po.status === 'completed') {
                     statusBadge = '<span class="bg-green-100 text-green-800 px-2 rounded text-xs font-bold"><i class="fas fa-check"></i> تم الاستلام</span>';
-                    receiveBtn = ''; 
+                    receiveBtn = '';
                 }
-                
+
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-blue-50/30">
                         <td class="p-3 font-bold text-blue-800 serial-num">${po.po_number}</td>
@@ -1112,16 +1123,16 @@ async function reprintSupplierPO(poId) {
         async function viewPODetails(poId) {
             const tbody = document.getElementById('poDetailsModalBody');
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>';
-            
+
             const { data: po } = await supabaseClient.from('supplier_production_orders').select('po_number').eq('id', poId).single();
             document.getElementById('viewPoNum').innerText = po ? po.po_number : '';
             openModal('poDetailsModal');
 
             try {
                 const { data: poItems } = await supabaseClient.from('supplier_po_items').select('*').eq('supplier_po_id', poId);
-                
+
                 if(!poItems || poItems.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-500">لا توجد تفاصيل لهذا الأمر</td></tr>'; 
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-500">لا توجد تفاصيل لهذا الأمر</td></tr>';
                     return;
                 }
 
@@ -1137,9 +1148,9 @@ async function reprintSupplierPO(poId) {
                     let clientName = 'غير معروف';
                     const parentOrder = allOrdersList.find(o => o.id === oi.order_id);
                     if(parentOrder) clientName = getClientName(parentOrder.client_id);
-                    
+
                     const dsText = i.design_status === 'new_design' ? '<span class="text-red-600">تصميم جديد</span>' : '<span class="text-blue-600">إعادة طباعة</span>';
-                    
+
                     tbody.innerHTML += `
                         <tr class="border-b hover:bg-gray-50">
                             <td class="p-2 font-bold text-xs">${clientName}</td>
@@ -1151,10 +1162,11 @@ async function reprintSupplierPO(poId) {
                     `;
                 });
             } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-red-500">حدث خطأ في الجلب.</td></tr>'; 
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-red-500">حدث خطأ في الجلب.</td></tr>';
             }
         }
 
+        // ✅ المهمة الثانية: تطبيق صلاحية التكلفة على openSmartPOModal
         async function openSmartPOModal() {
             document.getElementById('poSupplierSelect').value = '';
             document.getElementById('poExpectedDate').value = '';
@@ -1162,14 +1174,16 @@ async function reprintSupplierPO(poId) {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب البيانات...</td></tr>';
             openModal('smartPOModal');
 
-            // جلب أصناف الأوامر السارية
+            // إخفاء عمود السعر إذا لزم
+            applyCostVisibility('#smartPOModal');
+
             const orderIds = activeOrdersList.map(o => o.id);
             const { data: data } = await supabaseClient.from('order_items')
                 .select('*').in('order_id', orderIds);
 
             const itemIds = data ? data.map(i => i.id) : [];
             let orderedItemIds = [];
-            
+
             if(itemIds.length > 0) {
                 const chunkSize = 500;
                 for (let i = 0; i < itemIds.length; i += chunkSize) {
@@ -1180,7 +1194,7 @@ async function reprintSupplierPO(poId) {
             }
 
             availablePOItems = (data || []).filter(item => !orderedItemIds.includes(item.id));
-            
+
             for(let i=0; i < availablePOItems.length; i++) {
                 const varId = availablePOItems[i].variant_id;
                 let lastPrice = 'غير متوفر';
@@ -1193,8 +1207,8 @@ async function reprintSupplierPO(poId) {
 
             tbody.innerHTML = '';
             if(availablePOItems.length === 0) {
-                 tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400">جميع الأصناف تم طلبها من الموردين.</td></tr>';
-                 return;
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400">جميع الأصناف تم طلبها من الموردين.</td></tr>';
+                return;
             }
 
             availablePOItems.forEach((item, idx) => {
@@ -1203,13 +1217,16 @@ async function reprintSupplierPO(poId) {
                 const clientName = getClientName(orderData?.client_id);
                 const orderNum = orderData?.order_number;
 
+                // ✅ المهمة الثانية: إخفاء السعر في الجدول
+                const priceDisplay = canViewCosts ? item.lastPriceStr : '***';
+
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-yellow-50/30 transition">
                         <td class="p-3 text-center"><input type="checkbox" class="po-item-checkbox w-4 h-4 text-purple-600 rounded" value="${idx}"></td>
                         <td class="p-3"><span class="font-bold serial-num text-purple-800">#${orderNum}</span><br><span class="text-xs text-gray-500"><i class="fas fa-user"></i> ${clientName}</span></td>
                         <td class="p-3 font-bold">${varDetails.name}</td>
                         <td class="p-3 font-mono font-bold text-lg text-center">${item.quantity}</td>
-                        <td class="p-3 text-center font-mono text-blue-700 text-xs">${item.lastPriceStr}</td>
+                        <td class="p-3 text-center font-mono text-blue-700 text-xs cost-col">${priceDisplay}</td>
                         <td class="p-3">
                             <select id="designStatus_${idx}" class="input-std text-xs bg-white border-red-200 focus:border-red-500">
                                 <option value="">-- حدد الحالة --</option>
@@ -1221,11 +1238,13 @@ async function reprintSupplierPO(poId) {
                     </tr>
                 `;
             });
+
+            // إعادة تطبيق الإخفاء بعد رسم الصفوف
+            applyCostVisibility('#smartPOModal');
         }
 
         function toggleAllPoItems(el) { document.querySelectorAll('.po-item-checkbox').forEach(cb => cb.checked = el.checked); }
 
-// 2. دالة الحفظ للأمر التجميعي (تم إضافة po_quantity)
         async function submitSupplierPO() {
             const supplierId = document.getElementById('poSupplierSelect').value;
             const expectedDate = document.getElementById('poExpectedDate').value;
@@ -1250,10 +1269,10 @@ async function reprintSupplierPO(poId) {
                 const clientName = getClientName(orderData?.client_id);
 
                 selectedItemsPayload.push({
-                    order_item_id: itemData.id, 
-                    design_status: designStatus, 
+                    order_item_id: itemData.id,
+                    design_status: designStatus,
                     notes: notes,
-                    po_quantity: itemData.quantity, // <--- تم إضافة الكمية هنا
+                    po_quantity: itemData.quantity,
                     _meta: { product: varDetails.name, client: clientName, qty: itemData.quantity || 0, price: itemData.unit_price || 0 }
                 });
             });
@@ -1271,13 +1290,12 @@ async function reprintSupplierPO(poId) {
 
             if(poErr) return alert("خطأ في إنشاء أمر المورد: " + poErr.message);
 
-            // تمرير po_quantity لقاعدة البيانات
-            const itemsToInsert = selectedItemsPayload.map(i => ({ 
-                supplier_po_id: poData.id, 
-                order_item_id: i.order_item_id, 
-                design_status: i.design_status, 
+            const itemsToInsert = selectedItemsPayload.map(i => ({
+                supplier_po_id: poData.id,
+                order_item_id: i.order_item_id,
+                design_status: i.design_status,
                 notes: i.notes,
-                po_quantity: i.po_quantity // <--- تمرير الكمية للـ Database
+                po_quantity: i.po_quantity
             }));
             await supabaseClient.from('supplier_po_items').insert(itemsToInsert);
 
@@ -1285,14 +1303,19 @@ async function reprintSupplierPO(poId) {
             closeModal('smartPOModal');
             buildAndPrintPO(poData, selectedItemsPayload, printToggle, supplierId);
             fetchSupplierPOs();
-            fetchClientOrders(); 
+            fetchClientOrders();
         }
+
         // --- Receiving ---
-async function openReceivePOModal(poId) {
+        // ✅ المهمة الثالثة: openReceivePOModal مع سعر توريد فارغ يجبر المستخدم على الإدخال
+        async function openReceivePOModal(poId) {
             document.getElementById('receivePoId').value = poId;
             const tbody = document.getElementById('receivePOItemsBody');
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري جلب البضاعة...</td></tr>';
             openModal('receivePOModal');
+
+            // تطبيق صلاحية التكلفة على modal الاستلام
+            applyCostVisibility('#receivePOModal');
 
             const { data: poData } = await supabaseClient.from('supplier_production_orders').select('supplier_id').eq('id', poId).single();
             document.getElementById('receiveSupplierId').value = poData ? poData.supplier_id : '';
@@ -1317,34 +1340,39 @@ async function openReceivePOModal(poId) {
                     let clientName = 'غير معروف'; let clientId = null;
                     const parentOrder = allOrdersList.find(o => o.id === oi.order_id);
                     if(parentOrder) { clientName = getClientName(parentOrder.client_id); clientId = parentOrder.client_id; }
-                    
-                    // وضع السعر في Input قابل للتعديل
+
+                    // ✅ المهمة الثالثة: حقل السعر فارغ (0) يجبر المستخدم على إدخال سعر التوريد الفعلي
+                    // لا نضع selling_price هنا أبداً لأنه سعر بيع وليس سعر توريد
                     tbody.innerHTML += `
                         <tr class="border-b">
                             <td class="p-2 font-bold text-xs">${clientName}</td>
                             <td class="p-2 text-xs">${varDetails.name}</td>
                             <td class="p-2 text-center font-bold text-gray-500">${oi.quantity}</td>
                             <td class="p-2 text-center bg-green-50">
-                                <input type="number" id="recQty_${i.id}" value="${oi.quantity}" class="w-20 border rounded p-1 text-center font-bold text-green-700" 
+                                <input type="number" id="recQty_${i.id}" value="${oi.quantity}" class="w-20 border rounded p-1 text-center font-bold text-green-700"
                                 data-var="${oi.variant_id}" data-client="${clientId}">
                             </td>
-                            <td class="p-2 text-center bg-blue-50">
-                                <input type="number" step="0.01" id="recPrice_${i.id}" value="${varDetails.price || 0}" class="w-20 border rounded p-1 text-center font-bold text-blue-700" title="تعديل السعر إذا لزم الأمر">
+                            <td class="p-2 text-center bg-red-50 cost-col">
+                                <input type="number" step="0.01" id="recPrice_${i.id}" value="" placeholder="أدخل سعر التوريد" class="w-28 border-2 border-red-300 rounded p-1 text-center font-bold text-red-700 focus:border-red-500" title="أدخل سعر التوريد الفعلي من المورد (إلزامي)" required>
                             </td>
                         </tr>
                     `;
                 });
+
+                // تطبيق إخفاء بعد رسم الصفوف
+                applyCostVisibility('#receivePOModal');
             } catch (e) {
-                 tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-red-500">حدث خطأ.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-red-500">حدث خطأ.</td></tr>';
             }
         }
 
- async function submitReceivePO() {
+        // ✅ المهمة الثالثة: submitReceivePO مع التحقق من سعر التوريد وحساب الفاتورة بالكمية الفعلية × السعر الفعلي
+        async function submitReceivePO() {
             const poId = document.getElementById('receivePoId').value;
             const supplierId = document.getElementById('receiveSupplierId').value;
             const isCompleted = document.getElementById('markPoCompleted').checked;
             const inputs = document.querySelectorAll('input[id^="recQty_"]');
-            
+
             const { data: wh } = await supabaseClient.from('warehouses').select('id').limit(1).single();
             const defaultWhId = wh ? wh.id : null;
 
@@ -1353,23 +1381,46 @@ async function openReceivePOModal(poId) {
 
             let totalInvoiceAmount = 0;
             let receivedSomething = false;
+            let missingPrice = false;
+
+            // ✅ المهمة الثالثة: التحقق من إدخال سعر التوريد لكل صنف له كمية
+            for(const inp of inputs) {
+                const qty = parseInt(inp.value) || 0;
+                if(qty > 0) {
+                    const rowId = inp.id.split('_')[1];
+                    const priceInput = document.getElementById(`recPrice_${rowId}`);
+                    const price = priceInput ? parseFloat(priceInput.value) : NaN;
+
+                    if(!priceInput || isNaN(price) || price <= 0) {
+                        missingPrice = true;
+                        if(priceInput) priceInput.classList.add('border-red-600', 'bg-red-100');
+                    }
+                }
+            }
+
+            if(missingPrice) {
+                document.getElementById('btnConfirmReceive').disabled = false;
+                document.getElementById('btnConfirmReceive').innerHTML = 'تأكيد الاستلام وإنشاء الفاتورة';
+                return alert('يجب إدخال سعر التوريد الفعلي (من المورد) لكل صنف تريد استلامه!\n\nهذا الحقل إلزامي لضمان صحة الحسابات المحاسبية.');
+            }
 
             for(const inp of inputs) {
                 const qty = parseInt(inp.value) || 0;
                 if(qty > 0) {
                     receivedSomething = true;
-                    // استخراج ID الصنف في الجدول
                     const rowId = inp.id.split('_')[1];
                     const varId = inp.getAttribute('data-var');
                     const cId = inp.getAttribute('data-client') !== 'null' ? inp.getAttribute('data-client') : null;
-                    
-                    // قراءة السعر من الـ Input الخاص به
+
+                    // ✅ المهمة الثالثة: قراءة سعر التوريد الفعلي المُدخل من المستخدم
                     const priceInput = document.getElementById(`recPrice_${rowId}`);
                     const price = priceInput ? parseFloat(priceInput.value) : 0;
-                    
+
+                    // ✅ المهمة الثالثة: الفاتورة = الكمية الفعلية المستلمة × سعر التوريد الفعلي
                     totalInvoiceAmount += (qty * price);
 
-                    const { data: stock } = await supabaseClient.from('warehouse_stock').select('*').eq('warehouse_id', defaultWhId).eq('variant_id', varId).eq('client_id', cId).single();
+                    // ✅ المهمة الثالثة: تحديث warehouse_stock بالكمية الفعلية المستلمة مع ربطها بـ client_id (Allocated Stock)
+                    const { data: stock } = await supabaseClient.from('warehouse_stock').select('*').eq('warehouse_id', defaultWhId).eq('variant_id', varId).eq('client_id', cId).single().catch(() => ({ data: null }));
                     if(stock) {
                         await supabaseClient.from('warehouse_stock').update({ quantity: stock.quantity + qty }).eq('id', stock.id);
                     } else {
@@ -1387,23 +1438,25 @@ async function openReceivePOModal(poId) {
                 return alert("الرجاء إدخال كمية لواحد من الأصناف على الأقل.");
             }
 
+            // ✅ المهمة الثالثة: إنشاء فاتورة المورد بالمبلغ الصحيح (كمية فعلية × سعر توريد فعلي)
             if(totalInvoiceAmount > 0) {
                 const docNum = `PINV-${Date.now().toString().slice(-6)}`;
                 await supabaseClient.from('supplier_transactions').insert([{
-                    supplier_id: supplierId, type: 'invoice', amount: totalInvoiceAmount, description: `استلام آلي من طلب إنتاج`, document_number: docNum, warehouse_id: defaultWhId, is_taxable: false 
+                    supplier_id: supplierId, type: 'invoice', amount: totalInvoiceAmount, description: `استلام آلي من طلب إنتاج`, document_number: docNum, warehouse_id: defaultWhId, is_taxable: false
                 }]);
             }
 
             if(isCompleted) {
                 await supabaseClient.from('supplier_production_orders').update({status: 'completed'}).eq('id', poId);
             }
-            
-            alert('تم استلام الكميات المُدخلة للمخزن بنجاح وتحديث مديونية المورد بناءً على الأسعار المُدخلة.');
+
+            alert('تم استلام الكميات المُدخلة للمخزن بنجاح وتحديث مديونية المورد بناءً على سعر التوريد الفعلي المُدخل.');
             closeModal('receivePOModal');
             document.getElementById('btnConfirmReceive').disabled = false;
             document.getElementById('btnConfirmReceive').innerHTML = 'تأكيد الاستلام وإنشاء الفاتورة';
             fetchSupplierPOs();
         }
+
         // --- Manager, Invoices, Delivery ---
         function switchMgrTab(tabName) {
             document.querySelectorAll('#orderManagerModal .block, #orderManagerModal .hidden').forEach(el => {
@@ -1415,20 +1468,20 @@ async function openReceivePOModal(poId) {
             document.getElementById(`mgr-tab-${tabName}`).classList.add('active');
         }
 
-function openPaymentModal() {
+        function openPaymentModal() {
             document.getElementById('paymentAmount').value = '';
             document.getElementById('paymentMethod').value = 'bank_transfer';
             document.getElementById('paymentNotes').value = '';
             openModal('paymentModal');
         }
-// 1. دالة حفظ الدفعة (النسخة القياسية بعد ربط الداتا بيز)
+
         async function submitClientPayment() {
             const amount = parseFloat(document.getElementById('paymentAmount').value);
             const method = document.getElementById('paymentMethod').value;
             const notes = document.getElementById('paymentNotes').value;
             const orderId = document.getElementById('mgrActiveOrderId').value;
             let clientId = document.getElementById('mgrActiveClientId').value;
-            
+
             if(clientId === 'null' || clientId === 'undefined' || !clientId) {
                 clientId = null;
             }
@@ -1438,48 +1491,44 @@ function openPaymentModal() {
             document.getElementById('btnSubmitPayment').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
             try {
-                // تحديث المديونية في الأوامر
                 const { data: orderData, error: err1 } = await supabaseClient.from('orders').select('paid_amount, order_number').eq('id', orderId).single();
                 if(err1) throw new Error("فشل قراءة الأمر: " + err1.message);
 
                 const currentPaid = parseFloat(orderData?.paid_amount) || 0;
                 const newPaid = currentPaid + amount;
-                
+
                 const { error: err2 } = await supabaseClient.from('orders').update({ paid_amount: newPaid }).eq('id', orderId);
                 if(err2) throw new Error("فشل تحديث الأمر: " + err2.message);
 
-                // حفظ الدفعة في الجداول المنفصلة بشكل نظيف
                 const docNum = `REC-${Date.now().toString().slice(-6)}`;
-                
+
                 const { error: err3 } = await supabaseClient.from('client_transactions').insert([{
                     client_id: clientId,
-                    order_id: orderId, // تم الربط المباشر بأمر التشغيل
-                    type: 'payment', 
+                    order_id: orderId,
+                    type: 'payment',
                     amount: amount,
-                    payment_method: method, // تم حفظ الطريقة في عمود منفصل
-                    document_number: docNum, // تم حفظ رقم السند في عمود منفصل
+                    payment_method: method,
+                    document_number: docNum,
                     description: `دفعة مالية لأمر التشغيل #${orderData?.order_number || ''} ${notes ? '- '+notes : ''}`
                 }]);
-                
+
                 if(err3) throw new Error("فشل الإدراج: " + err3.message);
-                
-                // تحديث الواجهة (الفاتورة والجدول الرئيسي) فوراً بدون ريفريش
+
                 const advanceInput = document.getElementById('invAdvancePayment');
                 if (advanceInput) advanceInput.value = newPaid;
 
                 const orderIndex = allOrdersList.findIndex(o => String(o.id) === String(orderId));
                 if (orderIndex !== -1) allOrdersList[orderIndex].paid_amount = newPaid;
-                
+
                 const activeIndex = activeOrdersList.findIndex(o => String(o.id) === String(orderId));
                 if (activeIndex !== -1) activeOrdersList[activeIndex].paid_amount = newPaid;
 
-                filterClientOrders(); 
-                
-                // تحديث جدول الدفعات
+                filterClientOrders();
+
                 if (typeof fetchClientPayments === 'function') {
-                    await fetchClientPayments(orderId); 
+                    await fetchClientPayments(orderId);
                 }
-                
+
                 closeModal('paymentModal');
                 alert(`تم تسجيل الدفعة بنجاح!`);
             } catch (err) {
@@ -1489,68 +1538,13 @@ function openPaymentModal() {
                 document.getElementById('btnSubmitPayment').innerHTML = 'تأكيد وحفظ الدفعة';
             }
         }
-        // 2. الدالة المفقودة: جلب الدفعات وعرضها داخل إدارة الأمر
-// 2. دالة العرض (تم تعديلها لتبحث داخل الوصف لتفادي خطأ الأعمدة المفقودة)
-// دالة جلب الدفعات (محدثة لتبحث داخل الوصف وتستخرج البيانات بذكاء)
+
         async function fetchClientPayments(orderId) {
             const tbody = document.getElementById('mgrPaymentsBody');
             if(!tbody) return;
-            
+
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب الدفعات...</td></tr>';
-            
-            // 1. البحث باستخدام ilike داخل الوصف لأن الداتا بيز لا تحتوي على order_id
-            const { data, error } = await supabaseClient.from('client_transactions')
-                .select('*')
-                .eq('type', 'payment')
-                .ilike('description', `%[ORDER_ID:${orderId}]%`)
-                .order('created_at', {ascending: false});
 
-            tbody.innerHTML = '';
-            
-            if(!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد دفعات مسجلة لهذا الأمر حتى الآن</td></tr>';
-                return;
-            }
-
-            data.forEach(p => {
-                // 2. استخراج البيانات من النص (لأننا دمجناها في الوصف لحل مشكلة الداتا بيز)
-                let docNum = '-';
-                let method = 'حسب الوصف';
-                
-                try {
-                    // استخراج رقم السند
-                    if(p.description.includes('سند قبض (')) {
-                        docNum = p.description.split('سند قبض (')[1].split(')')[0];
-                    }
-                    // استخراج طريقة الدفع
-                    if(p.description.includes('طريقة الدفع: ')) {
-                        method = p.description.split('طريقة الدفع: ')[1].split(' |')[0];
-                    }
-                } catch(e) {}
-
-                // تنظيف الوصف لعرض الملاحظات الإضافية فقط
-                let cleanNotes = p.description.split(' | ').pop(); 
-                if(cleanNotes.includes('[ORDER_ID')) cleanNotes = '-'; // لو مفيش ملاحظات اتكتبت
-
-                tbody.innerHTML += `
-                    <tr class="border-b hover:bg-green-50/30">
-                        <td class="p-2 text-sm">${new Date(p.created_at).toLocaleDateString()}</td>
-                        <td class="p-2 font-mono text-xs text-gray-600">${docNum}</td>
-                        <td class="p-2 font-bold">${method}</td>
-                        <td class="p-2 font-bold text-green-700 text-lg">${p.amount}</td>
-                        <td class="p-2 text-xs text-gray-500">${cleanNotes}</td>
-                    </tr>
-                `;
-            });
-        }
-// 2. دالة عرض الدفعات (بحث قياسي وسريع جداً عبر order_id)
-        async function fetchClientPayments(orderId) {
-            const tbody = document.getElementById('mgrPaymentsBody');
-            if(!tbody) return;
-            
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400"><i class="fas fa-spinner fa-spin"></i> جاري جلب الدفعات...</td></tr>';
-            
-            // البحث الدقيق المباشر باستخدام order_id
             const { data, error } = await supabaseClient.from('client_transactions')
                 .select('*')
                 .eq('order_id', orderId)
@@ -1558,7 +1552,7 @@ function openPaymentModal() {
                 .order('created_at', {ascending: false});
 
             tbody.innerHTML = '';
-            
+
             if(!data || data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد دفعات مسجلة لهذا الأمر حتى الآن</td></tr>';
                 return;
@@ -1567,17 +1561,21 @@ function openPaymentModal() {
             const methodNames = { 'bank_transfer': 'تحويل بنكي', 'cash': 'كاش / نقدي', 'pos': 'شبكة / نقاط بيع', 'check': 'شيك' };
 
             data.forEach(p => {
+                // ✅ المهمة الثانية: إخفاء المبلغ إذا لم تكن الصلاحية متاحة
+                const amountDisplay = canViewCosts ? p.amount : '***';
+
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-green-50/30">
                         <td class="p-2 text-sm">${new Date(p.created_at).toLocaleDateString()}</td>
                         <td class="p-2 font-mono text-xs text-gray-600">${p.document_number || '-'}</td>
                         <td class="p-2 font-bold">${methodNames[p.payment_method] || p.payment_method || '-'}</td>
-                        <td class="p-2 font-bold text-green-700 text-lg">${p.amount}</td>
+                        <td class="p-2 font-bold text-green-700 text-lg cost-col">${amountDisplay}</td>
                         <td class="p-2 text-xs text-gray-500">${p.description || '-'}</td>
                     </tr>
                 `;
             });
         }
+
         async function manageOrder(orderId, clientId) {
             document.getElementById('mgrActiveOrderId').value = orderId;
             document.getElementById('mgrActiveClientId').value = clientId;
@@ -1586,11 +1584,14 @@ function openPaymentModal() {
             if(order) {
                 document.getElementById('mgrOrderNum').innerText = `#${order.order_number}`;
                 document.getElementById('mgrClientName').innerText = getClientName(order.client_id);
-                document.getElementById('invAdvancePayment').value = order.paid_amount || 0; 
+                document.getElementById('invAdvancePayment').value = order.paid_amount || 0;
             }
 
-            switchMgrTab('items'); 
+            switchMgrTab('items');
             openModal('orderManagerModal');
+
+            // تطبيق صلاحية التكلفة على modal إدارة الأمر
+            applyCostVisibility('#orderManagerModal');
 
             const tbody = document.getElementById('mgrItemsBody');
             const table = document.getElementById('mgrItemsTable');
@@ -1603,13 +1604,17 @@ function openPaymentModal() {
                 items.forEach(i => {
                     const total = i.quantity * i.unit_price;
                     const varDetails = getVariantDetails(i.variant_id);
-                    
+
+                    // ✅ المهمة الثانية: إخفاء الأسعار في جدول الأصناف
+                    const priceDisplay = canViewCosts ? i.unit_price : '***';
+                    const totalDisplay = canViewCosts ? total.toFixed(2) : '***';
+
                     tbody.innerHTML += `
                         <tr>
                             <td class="p-2 font-bold">${varDetails.name}</td>
                             <td class="p-2 text-center font-mono">${i.quantity}</td>
-                            <td class="p-2 text-center">${i.unit_price}</td>
-                            <td class="p-2 text-center text-purple-700 font-bold">${total.toFixed(2)}</td>
+                            <td class="p-2 text-center cost-col">${priceDisplay}</td>
+                            <td class="p-2 text-center text-purple-700 font-bold cost-col">${totalDisplay}</td>
                         </tr>`;
                 });
                 loading.classList.add('hidden'); table.classList.remove('hidden');
@@ -1626,39 +1631,51 @@ function openPaymentModal() {
         async function openInvoiceModal(type) {
             document.getElementById('invModalType').value = type;
             document.getElementById('invoiceModalTitle').innerText = type === 'proforma' ? 'إصدار فاتورة أولية (مالية)' : 'إصدار فاتورة مبيعات (خصم من المخزون)';
-            
+
             const orderId = document.getElementById('mgrActiveOrderId').value;
             const { data: items } = await supabaseClient.from('order_items').select('*').eq('order_id', orderId);
 
             invoiceItemsTemp = items || [];
             const tbody = document.getElementById('invoiceItemsBody');
             tbody.innerHTML = '';
-            
+
             invoiceItemsTemp.forEach((item, idx) => {
                 const varDetails = getVariantDetails(item.variant_id);
-                invoiceItemsTemp[idx].fullName = varDetails.name; 
+                invoiceItemsTemp[idx].fullName = varDetails.name;
+
+                // ✅ المهمة الثانية: إخفاء السعر في جدول الفاتورة
+                const priceInput = canViewCosts
+                    ? `<input type="number" id="invPrice_${idx}" value="${item.unit_price}" class="w-20 border rounded p-1 text-center" oninput="calcInvRow(${idx})">`
+                    : `<input type="number" id="invPrice_${idx}" value="${item.unit_price}" class="w-20 border rounded p-1 text-center" style="filter:blur(4px);pointer-events:none;" tabindex="-1">`;
+                const totalDisplay = canViewCosts ? `<span id="invTotal_${idx}">${(item.quantity * item.unit_price).toFixed(2)}</span>` : `<span id="invTotal_${idx}" style="filter:blur(4px);">${(item.quantity * item.unit_price).toFixed(2)}</span>`;
+
                 tbody.innerHTML += `
                     <tr>
                         <td class="p-2 font-bold text-xs">${varDetails.name}</td>
                         <td class="p-2 text-center"><input type="number" id="invQty_${idx}" value="${item.quantity}" class="w-20 border rounded p-1 text-center font-bold" oninput="calcInvRow(${idx})"></td>
-                        <td class="p-2 text-center"><input type="number" id="invPrice_${idx}" value="${item.unit_price}" class="w-20 border rounded p-1 text-center" oninput="calcInvRow(${idx})"></td>
-                        <td class="p-2 text-center text-purple-700 font-bold" id="invTotal_${idx}">${(item.quantity * item.unit_price).toFixed(2)}</td>
+                        <td class="p-2 text-center cost-col">${priceInput}</td>
+                        <td class="p-2 text-center text-purple-700 font-bold cost-col">${totalDisplay}</td>
                     </tr>`;
             });
             calcInvTotal();
             openModal('invoiceModal');
+            applyCostVisibility('#invoiceModal');
         }
 
         function calcInvRow(idx) {
             const q = parseFloat(document.getElementById(`invQty_${idx}`).value) || 0;
             const p = parseFloat(document.getElementById(`invPrice_${idx}`).value) || 0;
-            document.getElementById(`invTotal_${idx}`).innerText = (q*p).toFixed(2);
+            const totalEl = document.getElementById(`invTotal_${idx}`);
+            if(totalEl) totalEl.innerText = (q*p).toFixed(2);
             calcInvTotal();
         }
 
         function calcInvTotal() {
             let sub = 0;
-            invoiceItemsTemp.forEach((_, idx) => { sub += parseFloat(document.getElementById(`invTotal_${idx}`).innerText); });
+            invoiceItemsTemp.forEach((_, idx) => {
+                const totalEl = document.getElementById(`invTotal_${idx}`);
+                if(totalEl) sub += parseFloat(totalEl.innerText) || 0;
+            });
             const tax = sub * 0.15;
             const grand = sub + tax;
             const advance = parseFloat(document.getElementById('invAdvancePayment').value) || 0;
@@ -1669,14 +1686,15 @@ function openPaymentModal() {
             document.getElementById('invoiceRemainingVal').innerText = (rem > 0 ? rem : 0).toFixed(2);
         }
 
+        // ✅ المهمة الرابعة: submitInvoice مع رفض صارم للسالب في الكميات
         async function submitInvoice() {
             const type = document.getElementById('invModalType').value;
             const orderId = document.getElementById('mgrActiveOrderId').value;
             const clientId = document.getElementById('mgrActiveClientId').value;
-            
+
             let finalTotal = parseFloat(document.getElementById('invoiceTotalVal').innerText);
             let finalItems = [];
-            
+
             for(let i=0; i<invoiceItemsTemp.length; i++) {
                 const qty = parseFloat(document.getElementById(`invQty_${i}`).value) || 0;
                 const price = parseFloat(document.getElementById(`invPrice_${i}`).value) || 0;
@@ -1686,15 +1704,49 @@ function openPaymentModal() {
             }
 
             if(type === 'final') {
+                // ✅ المهمة الرابعة: التحقق من توفر الكمية قبل الخصم، رفض صارم للسالب
                 for(let item of finalItems) {
-                    const { data: stock } = await supabaseClient.from('warehouse_stock').select('*').eq('variant_id', item.variant_id).eq('client_id', clientId).limit(1).single();
-                    if(stock && stock.quantity >= item.qty) {
-                        await supabaseClient.from('warehouse_stock').update({quantity: stock.quantity - item.qty}).eq('id', stock.id);
+                    const { data: stock, error: stockErr } = await supabaseClient
+                        .from('warehouse_stock')
+                        .select('*')
+                        .eq('variant_id', item.variant_id)
+                        .eq('client_id', clientId)
+                        .limit(1)
+                        .single()
+                        .catch(() => ({ data: null, error: true }));
+
+                    const availableQty = stock ? stock.quantity : 0;
+
+                    // ✅ المهمة الرابعة: رفض الخصم إذا كان الرصيد أقل من المطلوب (لا قبول للسالب)
+                    if(availableQty < item.qty) {
+                        return alert(
+                            `⛔ خطأ محاسبي: رصيد المخزون غير كافٍ!\n\n` +
+                            `الصنف: ${item.name}\n` +
+                            `المتوفر في المخزن: ${availableQty}\n` +
+                            `المطلوب للخصم: ${item.qty}\n\n` +
+                            `الرجاء استلام البضاعة من المورد أولاً قبل إصدار الفاتورة النهائية.`
+                        );
+                    }
+                }
+
+                // جميع الأصناف تحققت - نبدأ الخصم الفعلي
+                for(let item of finalItems) {
+                    const { data: stock } = await supabaseClient
+                        .from('warehouse_stock')
+                        .select('*')
+                        .eq('variant_id', item.variant_id)
+                        .eq('client_id', clientId)
+                        .limit(1)
+                        .single()
+                        .catch(() => ({ data: null }));
+
+                    if(stock) {
+                        const newQty = stock.quantity - item.qty;
+                        // ✅ المهمة الرابعة: ضمان عدم الوصول للسالب (طبقة أمان إضافية)
+                        await supabaseClient.from('warehouse_stock').update({ quantity: Math.max(0, newQty) }).eq('id', stock.id);
                         await supabaseClient.from('inventory_transactions').insert([{
                             variant_id: item.variant_id, client_id: clientId, quantity: item.qty, transaction_type: 'dispense', delivery_status: 'pending', notes: 'خصم فاتورة مبيعات'
                         }]);
-                    } else {
-                        return alert(`تنبيه: الرصيد المخزني لا يكفي لخصم الكمية المطلوبة من الصنف: ${item.name}!\n يرجى استلام البضاعة من المورد أولاً.`);
                     }
                 }
             }
@@ -1703,9 +1755,9 @@ function openPaymentModal() {
             const invNum = `${prefix}-${Date.now().toString().slice(-6)}`;
             const advance = parseFloat(document.getElementById('invAdvancePayment').value) || 0;
 
-            await supabaseClient.from('client_invoices').insert([{ 
-                order_id: orderId, client_id: clientId, invoice_type: type, invoice_number: invNum, 
-                total_amount: finalTotal, down_payment: advance, items_snapshot: finalItems 
+            await supabaseClient.from('client_invoices').insert([{
+                order_id: orderId, client_id: clientId, invoice_type: type, invoice_number: invNum,
+                total_amount: finalTotal, down_payment: advance, items_snapshot: finalItems
             }]);
 
             alert("تم الإصدار بنجاح!");
@@ -1722,12 +1774,15 @@ function openPaymentModal() {
             if(data && data.length > 0) {
                 data.forEach(inv => {
                     const typeAr = inv.invoice_type === 'proforma' ? '<span class="text-blue-600 bg-blue-50 px-2 rounded">أولية (مالية)</span>' : '<span class="text-purple-600 bg-purple-50 px-2 rounded">مبيعات (نهائية)</span>';
+                    // ✅ المهمة الثانية: إخفاء مبلغ الفاتورة إذا لم تكن الصلاحية متاحة
+                    const amountDisplay = canViewCosts ? inv.total_amount : '***';
+
                     tbody.innerHTML += `
                         <tr class="border-b hover:bg-gray-50">
                             <td class="p-2">${new Date(inv.created_at).toLocaleDateString()}</td>
                             <td class="p-2 font-mono text-left">${inv.invoice_number}</td>
                             <td class="p-2">${typeAr}</td>
-                            <td class="p-2 font-bold">${inv.total_amount}</td>
+                            <td class="p-2 font-bold cost-col">${amountDisplay}</td>
                             <td class="p-2 text-center">
                                 <button onclick="printClientInvoice('${inv.id}')" class="text-gray-500 hover:text-purple-600 p-1 border rounded bg-white" title="طباعة"><i class="fas fa-print"></i></button>
                             </td>
@@ -1751,10 +1806,10 @@ function openPaymentModal() {
 
             const tbody = document.getElementById('printInvItemsBody');
             tbody.innerHTML = '';
-            
+
             let sub = 0;
             const items = typeof invData.items_snapshot === 'string' ? JSON.parse(invData.items_snapshot) : (invData.items_snapshot || []);
-            
+
             items.forEach((i, idx) => {
                 const rowTotal = (i.qty || 0) * (i.price || 0);
                 sub += rowTotal;
@@ -1777,7 +1832,7 @@ function openPaymentModal() {
 
             const tax = sub * 0.15;
             const grand = sub + tax;
-            const paid = invData.down_payment || parseFloat(document.getElementById('invAdvancePayment').value) || 0; 
+            const paid = invData.down_payment || parseFloat(document.getElementById('invAdvancePayment').value) || 0;
 
             document.getElementById('printInvSub').innerText = sub.toFixed(2);
             document.getElementById('printInvTax').innerText = tax.toFixed(2);
@@ -1791,6 +1846,7 @@ function openPaymentModal() {
 
         async function fetchDeliveriesLog(clientId) {
             const tbody = document.getElementById('mgrDeliveriesBody');
+            if(!tbody) return;
             const { data } = await supabaseClient.from('inventory_transactions').select('*').eq('client_id', clientId).eq('delivery_status', 'delivered').order('created_at', {ascending: false});
             tbody.innerHTML = '';
             if(data && data.length > 0) {
@@ -1808,7 +1864,7 @@ function openPaymentModal() {
             openModal('deliveryModal');
 
             const { data: pending } = await supabaseClient.from('inventory_transactions').select('*').eq('client_id', clientId).eq('delivery_status', 'pending');
-            
+
             tbody.innerHTML = '';
             if(pending && pending.length > 0) {
                 pending.forEach(p => {
@@ -1835,7 +1891,7 @@ function openPaymentModal() {
                 const transId = inp.id.split('_')[1];
                 const deliverQty = parseInt(inp.value);
                 const maxQty = parseInt(inp.getAttribute('max'));
-                
+
                 if(deliverQty > 0) {
                     if(deliverQty >= maxQty) {
                         await supabaseClient.from('inventory_transactions').update({delivery_status: 'delivered'}).eq('id', transId);
@@ -1863,8 +1919,20 @@ function openPaymentModal() {
             fetchClientOrders();
         }
 
-        async function fetchArchivedOrders() {
-            const { data } = await supabaseClient.from('orders').select('*').in('status', ['archived', 'completed']).order('created_at', {ascending: false});
+async function fetchArchivedOrders() {
+            // ✅ بناء الاستعلام للأرشيف
+            let query = supabaseClient.from('orders')
+                .select('*')
+                .in('status', ['archived', 'completed'])
+                .order('created_at', {ascending: false});
+
+            // 🚨 إصلاح الثغرة: فلترة الأرشيف حسب الموظف
+            if(loggedUser.permissions && !loggedUser.permissions.all_access && loggedUser.permissions.data_scope === 'personal_only') {
+                query = query.eq('created_by', loggedUser.id);
+            }
+
+            const { data } = await query;
+
             const tbody = document.getElementById('archivedOrdersTable');
             tbody.innerHTML = '';
             if(!data || data.length === 0) {
@@ -1872,12 +1940,13 @@ function openPaymentModal() {
                 return;
             }
             data.forEach(o => {
+                const grandTotalDisplay = canViewCosts ? o.grand_total : '***';
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-gray-50">
                         <td class="p-3 font-bold text-gray-600 serial-num">#${o.order_number}</td>
                         <td class="p-3 text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
                         <td class="p-3 font-bold">${getClientName(o.client_id)}</td>
-                        <td class="p-3">${o.grand_total}</td>
+                        <td class="p-3 cost-col">${grandTotalDisplay}</td>
                         <td class="p-3 text-center"><button class="text-blue-500 hover:underline text-xs" onclick="manageOrder('${o.id}', '${o.client_id}')">عرض التفاصيل</button></td>
                     </tr>
                 `;
@@ -1896,18 +1965,30 @@ function openPaymentModal() {
                 const reconstructedItems = poItems.map(i => {
                     const oi = (orderItems||[]).find(x => x.id === i.order_item_id);
                     if(!oi) return null;
+
                     const varDetails = getVariantDetails(oi.variant_id);
                     const parentOrder = allOrdersList.find(o => o.id === oi.order_id);
                     const clientName = parentOrder ? getClientName(parentOrder.client_id) : 'عميل نقدي';
-                    
+
                     return {
-                        design_status: i.design_status, notes: i.notes,
-                        _meta: { product: varDetails.name, client: clientName, qty: oi.quantity || 0, price: oi.unit_price || 0 }
+                        design_status: i.design_status,
+                        notes: i.notes,
+                        _meta: {
+                            product: varDetails.name,
+                            client: clientName,
+                            qty: oi.quantity || 0,
+                            price: varDetails.price || 0
+                        }
                     };
                 }).filter(Boolean);
 
-                buildAndPrintPO(poData, reconstructedItems, 'show', poData.supplier_id);
-            } catch(e) { alert("خطأ في الطباعة: " + e.message); }
+                const wantPrices = confirm("هل تريد إظهار الأسعار (السعر المرجعي) في أمر الطباعة للمورد؟ \n\n- اضغط 'موافق' (OK) لإظهار السعر.\n- اضغط 'إلغاء' (Cancel) لإخفائه تماماً.");
+                const printToggle = wantPrices ? 'show' : 'hide';
+
+                buildAndPrintPO(poData, reconstructedItems, printToggle, poData.supplier_id);
+            } catch(e) {
+                alert("خطأ في الطباعة: " + e.message);
+            }
         }
 
         function buildAndPrintPO(poData, itemsWithMeta, printToggle, supplierId) {
@@ -1946,69 +2027,99 @@ function openPaymentModal() {
             window.print();
             setTimeout(() => document.body.classList.remove('printing-po'), 1000);
         }
+
+        // ✅ المهمة الثانية: دالة مساعدة لإخفاء/إظهار الأعمدة المالية بناءً على الصلاحية
+        function applyCostVisibility(scope) {
+            const container = scope ? document.querySelector(scope) : document;
+            if(!container) return;
+            const costCols = container.querySelectorAll('.cost-col');
+            costCols.forEach(el => {
+                el.style.display = canViewCosts ? '' : 'none';
+            });
+        }
     </script>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            applyUserPermissions();
+            initSystemUI();
         });
 
-        function applyUserPermissions() {
-            // 1. جلب بيانات الموظف من المتصفح
+        // ✅ المهمة الأولى: استبدال applyUserPermissions بـ initSystemUI
+        function initSystemUI() {
             const userDataString = localStorage.getItem('gpack_user');
-            if (!userDataString) return; 
+            if (!userDataString) return;
 
-            const userData = JSON.parse(userDataString);
+            let userData;
+            try {
+                userData = JSON.parse(userDataString);
+            } catch(e) {
+                return;
+            }
 
-            // 2. تغيير الاسم والمسمى الوظيفي في القائمة الجانبية
+            // 1. تحديث اسم المستخدم والمسمى الوظيفي في الشريط الجانبي
             const nameEl = document.getElementById('sidebarUserName');
             const roleEl = document.getElementById('sidebarUserRole');
-            if(nameEl) nameEl.innerText = userData.name;
-            if(roleEl) roleEl.innerText = userData.role_name;
+            if(nameEl) nameEl.innerText = userData.name || 'مستخدم';
+            if(roleEl) roleEl.innerText = userData.role_name || '-';
 
-            // 3. تطبيق الصلاحيات (إخفاء الصفحات الممنوعة)
+            // 2. تفعيل الرابط النشط في القائمة الجانبية (Golden Sidebar)
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            document.querySelectorAll('nav .sidebar-item').forEach(link => {
+                link.classList.remove('active');
+                const href = link.getAttribute('href');
+                if (href && href === currentPage) {
+                    link.classList.add('active');
+                    link.classList.remove('text-gray-300');
+                    link.classList.add('text-white', 'font-medium');
+                }
+            });
+
             const perms = userData.permissions || {};
 
-            // لو الموظف "مدير عام" (عنده صلاحيات مطلقة)، متخفيش حاجة واخرج من الدالة
+            // 3. تطبيق صلاحية رؤية التكاليف (المهمة الثانية)
+            if (perms.all_access === true) {
+                canViewCosts = true;
+            } else {
+                canViewCosts = !!(perms.production && perms.production.view_costs === true);
+            }
+
+            // إذا كان مدير عام، أوقف الفلترة هنا
             if (perms.all_access === true) return;
 
-            // --- إذا لم يكن مديراً، نبدأ في فلترة القائمة الجانبية ---
-
-            // المبيعات (العملاء، عروض الأسعار)
+            // 4. إخفاء روابط القائمة الجانبية بناءً على الصلاحيات
             if (!perms.sales || !perms.sales.view) {
                 hideSidebarLink('clients.html');
                 hideSidebarLink('quotations.html');
             }
 
-            // الإنتاج (أوامر التشغيل، الموردين)
             if (!perms.production || !perms.production.view) {
                 hideSidebarLink('production_orders.html');
                 hideSidebarLink('suppliers.html');
             }
 
-            // المستودعات (المستودعات، الأصناف)
             if (!perms.inventory || !perms.inventory.view) {
                 hideSidebarLink('inventory.html');
                 hideSidebarLink('products.html');
             }
 
-            // الإعدادات وإدارة النظام (الموظفين، الصلاحيات، القوائم، الشروط)
             if (!perms.settings) {
                 hideSidebarLink('employees.html');
                 hideSidebarLink('permissions.html');
                 hideSidebarLink('lists.html');
                 hideSidebarLink('terms.html');
             }
+
+            // 5. تطبيق إخفاء الأعمدة المالية على الصفحة الرئيسية فوراً
+            applyCostVisibility('body');
         }
 
-        // دالة مساعدة لإخفاء الرابط من القائمة الجانبية
         function hideSidebarLink(href) {
             const link = document.querySelector(`a[href="${href}"]`);
             if (link) {
                 link.style.display = 'none';
             }
         }
-        
-        // دالة تسجيل الخروج (مربوطة بزر تسجيل الخروج في القائمة)
+
         function logout() {
             localStorage.removeItem('gpack_user');
             window.location.replace('login.html');
