@@ -22,20 +22,24 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; }
+/* --- Sidebar & Mobile Styles --- */
+        body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; overflow: hidden; }
         .gpack-purple { background-color: #3e206d; }
         .gpack-yellow { color: #fccf4d; }
         .gpack-btn { background-color: #fccf4d; color: #3e206d; transition: all 0.3s; }
         .gpack-btn:hover { background-color: #e6bd45; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .sidebar-item:hover { background-color: rgba(255,255,255,0.1); border-right: 4px solid #fccf4d; }
-        .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right: 4px solid #fccf4d; color: #fff; }
         
-        .modal { transition: opacity 0.2s ease-in-out; }
-        body.modal-active { overflow: hidden; }
-        .input-std { width: 100%; border: 1px solid #d1d5db; padding: 8px; border-radius: 6px; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }
-        .input-std:focus { border-color: #3e206d; box-shadow: 0 0 0 1px #3e206d; }
+        .sidebar-item { border-right: 4px solid transparent; transition: all 0.2s ease; }
+        .sidebar-item:hover { background-color: rgba(255,255,255,0.05); border-right-color: rgba(252, 207, 77, 0.5); }
+        .sidebar-item.active { background-color: rgba(255,255,255,0.15); border-right-color: #fccf4d; color: #fff; font-weight: bold; }
+        
+        /* شريط التمرير المخفي الأنيق للقائمة */
+        .nav-scroll::-webkit-scrollbar { width: 4px; }
+        .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .nav-scroll:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); }
 
-        #sidebar { transition: width 0.3s ease, transform 0.3s ease; }
+        /* التحكم في الموبايل والطي */
+        #sidebar { transition: width 0.3s ease, transform 0.3s ease; flex-shrink: 0; }
         .sidebar-collapsed { width: 0 !important; overflow: hidden; }
         @media (max-width: 768px) {
             .sidebar-mobile-hidden { transform: translateX(100%); }
@@ -45,45 +49,46 @@
 </head>
 <body class="flex h-screen overflow-hidden bg-gray-100">
 
-    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
+  <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
 
-    <aside id="sidebar" class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-30 fixed md:relative h-full sidebar-mobile-hidden md:transform-none shrink-0">
-        <div class="h-20 flex items-center justify-between px-6 border-b border-purple-800/50">
+    <aside id="sidebar" class="w-64 gpack-purple text-white flex flex-col shadow-2xl z-30 fixed md:relative h-full sidebar-mobile-hidden md:transform-none">
+        
+        <div class="h-20 flex items-center justify-between px-6 border-b border-purple-800/50 shrink-0">
             <h1 class="text-2xl font-bold tracking-wider flex items-center gap-2">
                 <i class="fas fa-box-open gpack-yellow"></i> <span class="whitespace-nowrap">G.PACK</span>
             </h1>
-            <button onclick="toggleSidebar()" class="md:hidden text-white hover:text-red-300"><i class="fas fa-times"></i></button>
+            <button onclick="toggleSidebar()" class="md:hidden text-white hover:text-red-300 text-xl"><i class="fas fa-times"></i></button>
         </div>
         
-        <div class="p-4 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20 whitespace-nowrap overflow-hidden">
+        <div class="p-4 flex items-center gap-3 border-b border-purple-800/50 bg-purple-900/20 whitespace-nowrap overflow-hidden shrink-0">
             <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-yellow-400 shrink-0">
-                <i class="fas fa-user-tie text-yellow-400"></i>
+                <i class="fas fa-user text-yellow-400"></i>
             </div>
-<div>
-                <p class="text-sm font-bold" id="sidebarUserName">المدير العام</p>
-                <p class="text-xs text-gray-300" id="sidebarUserRole">Admin</p>
+            <div>
+                <p class="text-sm font-bold" id="sidebarUserName">جاري التحميل...</p>
+                <p class="text-xs text-gray-300" id="sidebarUserRole">...</p>
             </div>
         </div>
 
-        <nav class="flex-1 overflow-y-auto py-4 space-y-1">
-            <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-th-large w-5"></i> الرئيسية</a>
-            <a href="products.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-box w-5"></i> الأصناف</a>
-            <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-file-invoice-dollar w-5"></i> عروض الأسعار</a>
-            <a href="production_orders.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-industry w-5"></i> أوامر التشغيل</a>
-            <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-cubes w-5"></i> المستودعات</a>
-            <a href="suppliers.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-truck w-5"></i> الموردين</a>
-            <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-users w-5"></i> العملاء</a>
-            <a href="employees.html" class="sidebar-item active flex items-center gap-3 px-6 py-3 text-white font-medium whitespace-nowrap"><i class="fas fa-id-card w-5"></i> الموظفين</a>
-            <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-list-alt w-5"></i> القوائم</a>
-            <a href="permissions.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-user-shield w-5"></i> الصلاحيات</a>
-            <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-tasks w-5"></i> المهام</a>
-            <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap"><i class="fas fa-file-signature w-5"></i> الشروط العامة</a>
+        <nav class="flex-1 overflow-y-auto py-4 space-y-1 nav-scroll">
+            <a href="index.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="index.html"><i class="fas fa-th-large w-5 text-center"></i> الرئيسية</a>
+            <a href="products.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="products.html"><i class="fas fa-box w-5 text-center"></i> الأصناف</a>
+            <a href="quotations.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="quotations.html"><i class="fas fa-file-invoice-dollar w-5 text-center"></i> عروض الأسعار</a>
+            <a href="production_orders.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="production_orders.html"><i class="fas fa-industry w-5 text-center"></i> أوامر التشغيل</a>
+            <a href="inventory.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="inventory.html"><i class="fas fa-cubes w-5 text-center"></i> المستودعات</a>
+            <a href="suppliers.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="suppliers.html"><i class="fas fa-truck w-5 text-center"></i> الموردين</a>
+            <a href="clients.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="clients.html"><i class="fas fa-users w-5 text-center"></i> العملاء</a>
+            <a href="employees.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="employees.html"><i class="fas fa-id-card w-5 text-center"></i> الموظفين</a>
+            <a href="lists.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="lists.html"><i class="fas fa-list-alt w-5 text-center"></i> القوائم</a>
+            <a href="permissions.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="permissions.html"><i class="fas fa-user-shield w-5 text-center"></i> الصلاحيات</a>
+            <a href="tasks.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="tasks.html"><i class="fas fa-tasks w-5 text-center"></i> المهام</a>
+            <a href="terms.html" class="sidebar-item flex items-center gap-3 px-6 py-3 text-gray-300 hover:text-white whitespace-nowrap" data-page="terms.html"><i class="fas fa-file-signature w-5 text-center"></i> الشروط العامة</a>
         </nav>
         
-        <div class="p-4 border-t border-purple-800/50">
-<button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2 whitespace-nowrap">
-    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-</button>
+        <div class="p-4 border-t border-purple-800/50 shrink-0">
+            <button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-red-300 hover:text-red-100 transition-colors py-2 whitespace-nowrap font-bold bg-purple-900/50 rounded-lg hover:bg-purple-900">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
         </div>
     </aside>
 
