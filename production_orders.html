@@ -2057,7 +2057,7 @@ async function fetchArchivedOrders() {
             initSystemUI();
         });
 
-// ✅ المهمة الأولى: استبدال applyUserPermissions بـ initSystemUI
+// ✅ المهمة الأولى: دالة التهيئة الشاملة (القائمة الجانبية والصلاحيات)
         function initSystemUI() {
             const userDataString = localStorage.getItem('gpack_user');
             if (!userDataString) return;
@@ -2075,37 +2075,28 @@ async function fetchArchivedOrders() {
             if(nameEl) nameEl.innerText = userData.name || 'مستخدم';
             if(roleEl) roleEl.innerText = userData.role_name || '-';
 
-            // 2. تفعيل الرابط النشط بذكاء عالي (صائد الروابط - متوافق مع Netlify)
-            const currentUrl = window.location.href.toLowerCase();
-            let matched = false;
+            // 2. تفعيل الرابط النشط بذكاء مطلق (Sniper Logic) معتمد على data-page
+            let currentPath = window.location.pathname.split('/').pop().toLowerCase();
+            currentPath = currentPath.replace('.html', ''); // مسح الامتداد لو موجود
+            if (currentPath === '') currentPath = 'index'; // لو الرابط فاضي يبقى دي الرئيسية
 
             document.querySelectorAll('.sidebar-item').forEach(link => {
-                // إرجاع كل الروابط للون الرمادي الباهت
+                // إرجاع كل الروابط للحالة المطفية (رمادي)
                 link.classList.remove('active', 'text-white', 'font-medium');
                 link.classList.add('text-gray-300');
                 
-                const href = link.getAttribute('href');
-                if (!href) return;
-                
-                const hrefLow = href.toLowerCase();
-                const hrefWithoutExt = hrefLow.replace('.html', '');
-
-                // البحث عن التطابق (سواء الرابط فيه .html أو لأ)
-                if (currentUrl.includes('/' + hrefLow) || currentUrl.endsWith('/' + hrefWithoutExt)) {
-                    link.classList.add('active', 'text-white', 'font-medium');
-                    link.classList.remove('text-gray-300');
-                    matched = true;
+                // جلب اسم الصفحة من الزرار نفسه (باستخدام data-page) ومطابقته
+                const dataPageAttr = link.getAttribute('data-page');
+                if (dataPageAttr) {
+                    const linkBaseName = dataPageAttr.toLowerCase().replace('.html', '');
+                    
+                    // لو اسم الصفحة في المتصفح بيطابق اسم الزرار بالظبط -> نور الزرار
+                    if (currentPath === linkBaseName) {
+                        link.classList.add('active', 'text-white', 'font-medium');
+                        link.classList.remove('text-gray-300');
+                    }
                 }
             });
-
-            // لو إنت في الصفحة الرئيسية للموقع من غير أي إضافات
-            if (!matched && (currentUrl.endsWith('/') || currentUrl.endsWith('.app') || currentUrl.endsWith('.com'))) {
-                const homeLink = document.querySelector('.sidebar-item[href="index.html"]');
-                if (homeLink) {
-                    homeLink.classList.add('active', 'text-white', 'font-medium');
-                    homeLink.classList.remove('text-gray-300');
-                }
-            }
 
             const perms = userData.permissions || {};
 
@@ -2145,8 +2136,9 @@ async function fetchArchivedOrders() {
             // 5. تطبيق إخفاء الأعمدة المالية على الصفحة الرئيسية فوراً
             applyCostVisibility('body');
         }
-        function hideSidebarLink(href) {
-            const link = document.querySelector(`a[href="${href}"]`);
+
+        function hideSidebarLink(pageName) {
+            const link = document.querySelector(`.sidebar-item[data-page="${pageName}"]`);
             if (link) {
                 link.style.display = 'none';
             }
